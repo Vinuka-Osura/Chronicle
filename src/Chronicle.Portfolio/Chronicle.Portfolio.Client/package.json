@@ -1,0 +1,45 @@
+{
+  "name": "chronicle-portfolio-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public site for Chronicle. Consumes the read-only API served by Chronicle.Portfolio.Server.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "gen:types": "openapi-typescript http://localhost:5080/openapi/v1.json -o src/lib/api-schema.d.ts"
+  },
+  "dependencies": {
+    "motion": "^12.42.2",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.12",
+    "openapi-typescript": "^7.13.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "//": "Transitive security pins. next 16.2.12 resolves postcss 8.4.31 and sharp 0.34.5, both of which",
+  "// ": "carry high-severity advisories; js-yaml and brace-expansion arrive via openapi-typescript and eslint.",
+  "//  ": "npm's own `audit fix --force` proposes downgrading next to 9.3.3, which is not a fix. Pinning",
+  "//   ": "forward clears all 14 advisories without touching the framework. Re-check on each Next upgrade",
+  "//    ": "and drop entries once the upstream dependency ships a patched version itself.",
+  "overrides": {
+    "postcss": "^8.5.24",
+    "sharp": "^0.35.3",
+    "js-yaml": "^4.2.1",
+    "brace-expansion": "^5.0.8"
+  }
+}

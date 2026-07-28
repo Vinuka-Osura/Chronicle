@@ -1,0 +1,219 @@
+@import "tailwindcss";
+
+/*
+  Design tokens - mission control / engineering telemetry.
+
+  A restrained palette with exactly one accent, on purpose: the site is a work sample,
+  so the craft should read as restraint rather than decoration. Tailwind v4 is
+  CSS-first, so these live here as @theme custom properties instead of in a
+  tailwind.config.ts, and generate utilities like bg-paper, text-signal, font-display.
+*/
+@theme {
+  --color-paper: #f2f4f6;
+  --color-paper-raised: #ffffff;
+  --color-ink: #0e1420;
+  --color-ink-soft: #4a5568;
+  --color-ink-faint: #8b97a8;
+  --color-signal: #b26b00;
+  --color-signal-soft: #f4ead9;
+  --color-rule: #d8dee5;
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --text-hero: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+
+  /* Motion is deliberately short. Atmosphere, not spectacle. */
+  --ease-out-quiet: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-node: 300ms;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/*
+  Recruiter Mode.
+
+  Set as a data attribute on <html> by a blocking inline script in the document head,
+  so the correct mode is painted on the very first frame with no flash - and without
+  reading cookies during render, which would force every page out of the static shell.
+
+  Everything expressible as style is handled here rather than by branching the React
+  tree, which keeps one code path to maintain instead of two.
+*/
+@layer utilities {
+  [data-recruiter="on"] * {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Single dense column, higher information density. */
+  [data-recruiter="on"] .rm-grid {
+    display: block;
+  }
+
+  [data-recruiter="on"] .rm-grid > * + * {
+    margin-top: 0.75rem;
+  }
+
+  [data-recruiter="on"] .rm-spacious {
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  /* Atmosphere is the first thing a hiring screen does not need. */
+  [data-recruiter="on"] .rm-hide {
+    display: none;
+  }
+
+  [data-recruiter="on"] .rm-compact {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+}
+
+/*
+  Rendered Markdown from the CMS.
+
+  Hand-rolled rather than @tailwindcss/typography: the case studies use a small,
+  known set of elements, and a plugin would ship styles for two dozen more.
+*/
+@layer components {
+  .prose-chronicle {
+    color: var(--color-ink-soft);
+    line-height: 1.7;
+  }
+
+  .prose-chronicle > * + * {
+    margin-top: 1rem;
+  }
+
+  .prose-chronicle strong {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .prose-chronicle a {
+    color: var(--color-signal);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose-chronicle h2,
+  .prose-chronicle h3 {
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    margin-top: 2rem;
+  }
+
+  .prose-chronicle h2 {
+    font-size: 1.15rem;
+  }
+
+  .prose-chronicle h3 {
+    font-size: 1rem;
+  }
+
+  .prose-chronicle ul,
+  .prose-chronicle ol {
+    padding-left: 1.25rem;
+  }
+
+  .prose-chronicle ul {
+    list-style: disc;
+  }
+
+  .prose-chronicle ol {
+    list-style: decimal;
+  }
+
+  .prose-chronicle li + li {
+    margin-top: 0.35rem;
+  }
+
+  .prose-chronicle code {
+    background: var(--color-signal-soft);
+    border-radius: 3px;
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.1em 0.35em;
+  }
+
+  .prose-chronicle pre {
+    background: var(--color-ink);
+    border-radius: 6px;
+    color: var(--color-paper);
+    font-size: 0.85rem;
+    overflow-x: auto;
+    padding: 1rem;
+  }
+
+  .prose-chronicle pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  .prose-chronicle blockquote {
+    border-left: 3px solid var(--color-signal);
+    padding-left: 1rem;
+  }
+}
+
+/* Honoured independently of Recruiter Mode, per WCAG. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .rm-hide-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
