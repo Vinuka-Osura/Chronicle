@@ -78,13 +78,7 @@
 
         if (result.Succeeded)
         {
-            // Only ever redirect to a local path; an open redirect here would let a
-            // phishing link bounce a freshly-authenticated admin off-site.
-            var destination = !string.IsNullOrEmpty(ReturnUrl) && Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative)
-                ? ReturnUrl
-                : "admin";
-
-            Navigation.NavigateTo(destination);
+            Navigation.NavigateTo(SafeReturnUrl(ReturnUrl));
             return;
         }
 
@@ -93,6 +87,32 @@
             // Deliberately identical for a wrong password and an unknown address, so
             // the form cannot be used to enumerate accounts.
             : "That email and password combination was not recognised.";
+    }
+
+    /// <summary>
+    /// Reduces an untrusted returnUrl to a same-site path, or falls back to the dashboard.
+    /// </summary>
+    /// <remarks>
+    /// A relative-URI check alone is not enough. "//evil.com" and "/\evil.com" are both
+    /// well-formed relative URIs, and a browser resolves them as protocol-relative
+    /// absolute URLs - so accepting them would let a crafted link bounce a
+    /// just-authenticated admin straight onto an attacker's page. Requiring a single
+    /// leading slash closes that.
+    /// </remarks>
+    internal static string SafeReturnUrl(string? candidate)
+    {
+        const string fallback = "/admin";
+
+        if (string.IsNullOrWhiteSpace(candidate)
+            || candidate[0] != '/'
+            || candidate.StartsWith("//", StringComparison.Ordinal)
+            || candidate.StartsWith("/\\", StringComparison.Ordinal)
+            || !Uri.IsWellFormedUriString(candidate, UriKind.Relative))
+        {
+            return fallback;
+        }
+
+        return candidate;
     }
 
     private sealed class LoginInput

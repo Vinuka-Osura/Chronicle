@@ -3,6 +3,8 @@ using Chronicle.Infrastructure.Data;
 using Chronicle.Infrastructure.Data.Interceptors;
 using Chronicle.Infrastructure.Identity;
 using Chronicle.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +37,26 @@ public static class DependencyInjection
 
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
             .AddIdentityCookies();
+
+        // Identity defaults these to /Account/Login, but the CMS lives under /admin.
+        // Without this the cookie middleware bounces an unauthenticated visitor to a
+        // path that does not exist, so /admin 404s instead of showing the sign-in page.
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.LoginPath = "/admin/login";
+            options.LogoutPath = "/admin/logout";
+            options.AccessDeniedPath = "/admin/login";
+
+            options.Cookie.Name = "chronicle.auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            // SameAsRequest rather than Always so the cookie still works over plain
+            // HTTP in local development; production is HTTPS-only via UseHttpsRedirection.
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
+        });
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
