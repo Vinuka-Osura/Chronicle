@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
 /*
+  Enables `dark:` utilities for the few cases a token swap cannot express - a shadow
+  that needs a different spread, say. Tailwind v4 has no tailwind.config.ts, so the
+  variant is declared here rather than in JS.
+*/
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
   Design tokens - mission control / engineering telemetry.
 
   A restrained palette with exactly one accent, on purpose: the site is a work sample,
-  so the craft should read as restraint rather than decoration. Tailwind v4 is
-  CSS-first, so these live here as @theme custom properties instead of in a
-  tailwind.config.ts, and generate utilities like bg-paper, text-signal, font-display.
+  so the craft should read as restraint rather than decoration.
+
+  These are SEMANTIC names, not colour names, and that is what makes dark mode nearly
+  free. Components say bg-paper and text-ink; the dark block below redefines what those
+  mean. Nothing that consumes a token needs a dark: variant, and any page written later
+  inherits both themes without knowing they exist.
 */
 @theme {
   --color-paper: #f2f4f6;
@@ -22,16 +32,38 @@
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
-  --text-hero: clamp(2.25rem, 1.4rem + 3.4vw, 4rem);
+  --text-hero: clamp(2rem, 1.2rem + 3.6vw, 4rem);
 
   /* Motion is deliberately short. Atmosphere, not spectacle. */
   --ease-out-quiet: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-node: 300ms;
 }
 
+/*
+  Night palette. Not the light one inverted - a dark surface needs a lighter accent to
+  hold its contrast ratio, so the amber lifts from #b26b00 to #e0973f rather than
+  staying put and going muddy.
+*/
+[data-theme="dark"] {
+  --color-paper: #0b0f16;
+  --color-paper-raised: #131a24;
+  --color-ink: #e8edf3;
+  --color-ink-soft: #9aa8b8;
+  --color-ink-faint: #6f7d8f;
+  --color-signal: #e0973f;
+  --color-signal-soft: #2b2015;
+  --color-rule: #232c38;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    /* Set inline by the pre-paint script too; this is the no-JS fallback. */
+    color-scheme: light;
+  }
+
+  html[data-theme="dark"] {
+    color-scheme: dark;
   }
 
   body {
@@ -59,15 +91,20 @@
     outline-offset: 2px;
     border-radius: 2px;
   }
+
+  /* Never let media force the page to scroll sideways on a phone. */
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 /*
   Recruiter Mode.
 
-  Set as a data attribute on <html> by a blocking inline script in the document head,
-  so the correct mode is painted on the very first frame with no flash - and without
-  reading cookies during render, which would force every page out of the static shell.
-
+  Set as a data attribute on <html> by the same pre-paint script that sets the theme.
   Everything expressible as style is handled here rather than by branching the React
   tree, which keeps one code path to maintain instead of two.
 */
@@ -105,8 +142,9 @@
 /*
   Rendered Markdown from the CMS.
 
-  Hand-rolled rather than @tailwindcss/typography: the case studies use a small,
-  known set of elements, and a plugin would ship styles for two dozen more.
+  Hand-rolled rather than @tailwindcss/typography: the case studies use a small, known
+  set of elements, and a plugin would ship styles for two dozen more. It reads the same
+  tokens, so it themes along with everything else.
 */
 @layer components {
   .prose-chronicle {
@@ -190,6 +228,13 @@
     border-left: 3px solid var(--color-signal);
     padding-left: 1rem;
   }
+
+  /* Wide content scrolls inside itself; the page body never scrolls sideways. */
+  .prose-chronicle table {
+    display: block;
+    overflow-x: auto;
+    width: 100%;
+  }
 }
 
 /* Honoured independently of Recruiter Mode, per WCAG. */
@@ -208,12 +253,19 @@
 }
 
 @media print {
+  nav,
+  footer,
   .rm-hide-print {
     display: none !important;
   }
 
-  body {
-    background: #fff;
-    color: #000;
+  /* Always print on white, whatever the on-screen theme. */
+  :root,
+  [data-theme="dark"] {
+    --color-paper: #ffffff;
+    --color-paper-raised: #ffffff;
+    --color-ink: #000000;
+    --color-ink-soft: #333333;
+    --color-rule: #cccccc;
   }
 }
