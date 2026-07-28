@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Scope: validators, Mapperly mappers, and pure projection logic (timeline merge,
+    reading-time calculation, career-graph shaping) — anything testable without a
+    database. Handler tests that need real SQL live in the IntegrationTests project
+    against PostgreSQL, because the schema uses Postgres-specific types (jsonb) that
+    SQLite and the EF in-memory provider cannot honour faithfully.
+  -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chronicle.Application\Chronicle.Application.csproj" />
+  </ItemGroup>
+
+</Project>

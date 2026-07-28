@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chronicle.Domain\Chronicle.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      ArchitectureTests parses Chronicle.Domain.csproj as XML to assert the layer
+      has no dependencies. Give it the path at compile time so the test does not
+      have to guess where the repository root is.
+    -->
+    <AssemblyMetadata Include="DomainProjectPath"
+                      Value="$(MSBuildThisFileDirectory)..\..\src\Chronicle.Domain\Chronicle.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

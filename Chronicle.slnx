@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Chronicle.AppHost/Chronicle.AppHost.csproj" />
+    <Project Path="src/Chronicle.Application/Chronicle.Application.csproj" />
+    <Project Path="src/Chronicle.Domain/Chronicle.Domain.csproj" />
+    <Project Path="src/Chronicle.Infrastructure/Chronicle.Infrastructure.csproj" />
+    <Project Path="src/Chronicle.ServiceDefaults/Chronicle.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/src/Chronicle.Portfolio/">
+    <Project Path="src/Chronicle.Portfolio/Chronicle.Portfolio.Server/Chronicle.Portfolio.Server.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Chronicle.Application.Tests/Chronicle.Application.Tests.csproj" />
+    <Project Path="tests/Chronicle.Domain.Tests/Chronicle.Domain.Tests.csproj" />
+    <Project Path="tests/Chronicle.Portfolio.Server.IntegrationTests/Chronicle.Portfolio.Server.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

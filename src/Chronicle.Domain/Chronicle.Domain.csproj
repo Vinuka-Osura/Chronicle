@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    ============================================================================
+    Chronicle.Domain — the innermost layer.
+
+    This project MUST have zero <PackageReference> and zero <ProjectReference>
+    elements. It is entities and enums over the BCL, nothing else.
+
+    Chronicle.Domain.Tests enforces this by parsing this file, so the boundary
+    cannot rot silently. If you find yourself wanting to add a package here,
+    the thing you are modelling belongs in Chronicle.Application instead.
+
+    Shared properties (net10.0, nullable, implicit usings) come from
+    Directory.Build.props at the repository root.
+    ============================================================================
+  -->
+
+</Project>

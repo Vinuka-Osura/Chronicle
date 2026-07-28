@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Chronicle.Portfolio\Chronicle.Portfolio.Server\Chronicle.Portfolio.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!--
+      Respawn resets a real PostgreSQL test database between tests.
+      Testcontainers is not usable here: no container runtime is installed.
+    -->
+    <PackageReference Include="Respawn" />
+  </ItemGroup>
+
+</Project>

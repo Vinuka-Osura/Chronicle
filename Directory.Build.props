@@ -1,0 +1,49 @@
+<Project>
+
+  <!--
+    Shared MSBuild properties for every project in Chronicle.
+    Package *versions* live in Directory.Packages.props (Central Package Management).
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Warnings are bugs that have not happened yet. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!--
+      CS1591  missing XML doc comment - this is an app, not a published library
+      NU1902/3/4  transitive-dependency advisories must not break an unrelated build;
+                  NuGetAudit still surfaces them as warnings so they stay visible
+    -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>Chronicle</Product>
+    <Authors>Vinuka Osura</Authors>
+    <RepositoryUrl>https://github.com/Vinuka-Osura/Chronicle</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <!-- Deterministic builds in CI so binaries are reproducible. -->
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+</Project>

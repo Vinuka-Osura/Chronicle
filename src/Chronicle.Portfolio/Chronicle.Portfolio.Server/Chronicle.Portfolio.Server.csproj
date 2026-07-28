@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    Chronicle.Portfolio.Server hosts BOTH delivery surfaces:
+      /api/*    anonymous, output-cached minimal APIs consumed by the Next.js client
+      /admin/*  Blazor Server CMS behind ASP.NET Core Identity
+    They share one host, separated by route, auth policy and CORS.
+  -->
+
+  <PropertyGroup>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <UserSecretsId>chronicle-portfolio-server</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Chronicle.Application\Chronicle.Application.csproj" />
+    <ProjectReference Include="..\..\Chronicle.Infrastructure\Chronicle.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Chronicle.ServiceDefaults\Chronicle.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Built-in .NET 10 OpenAPI + Scalar UI. Swashbuckle is deliberately not used. -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Settings.Configuration" />
+    <!-- Aspire EF Core integration: connection string, health checks, tracing. -->
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chronicle.Portfolio.Server.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

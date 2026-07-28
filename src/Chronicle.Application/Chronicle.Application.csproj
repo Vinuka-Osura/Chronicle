@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chronicle.Domain\Chronicle.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Riok.Mapperly" />
+    <!-- Reading time is computed from Markdown body word count on save. -->
+    <PackageReference Include="Markdig" />
+    <!--
+      EF Core abstractions only. IChronicleDbContext exposes DbSet<T>, which is the
+      accepted Clean Architecture trade-off: EF Core's DbContext already is a
+      repository + unit of work, so wrapping it in IRepository<T> would add
+      indirection and block Include/projection for no benefit.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Chronicle.Application.Tests" />
+  </ItemGroup>
+
+</Project>
