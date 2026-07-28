@@ -63,7 +63,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("IssueDate")
                         .IsDescending();
 
-                    b.ToTable("Certifications");
+                    b.ToTable("profile_certifications", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Experience", b =>
@@ -110,7 +110,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("StartDate")
                         .IsDescending();
 
-                    b.ToTable("Experiences");
+                    b.ToTable("portfolio_experiences", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.GitHubStatsCache", b =>
@@ -128,9 +128,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GitHubStatsCaches", t =>
+                    b.ToTable("site_github_stats_cache", null, t =>
                         {
-                            t.HasCheckConstraint("CK_GitHubStatsCaches_Singleton", "\"Id\" = '0195c0de-0000-7000-8000-000000000002'");
+                            t.HasCheckConstraint("ck_site_github_stats_cache_singleton", "\"Id\" = '0195c0de-0000-7000-8000-000000000002'");
                         });
                 });
 
@@ -173,9 +173,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("SortOrder");
 
-                    b.ToTable("LearningItems", t =>
+                    b.ToTable("knowledge_learning_items", null, t =>
                         {
-                            t.HasCheckConstraint("CK_LearningItems_ProgressPercent", "\"ProgressPercent\" IS NULL OR (\"ProgressPercent\" BETWEEN 0 AND 100)");
+                            t.HasCheckConstraint("ck_knowledge_learning_items_progress_percent", "\"ProgressPercent\" IS NULL OR (\"ProgressPercent\" BETWEEN 0 AND 100)");
                         });
                 });
 
@@ -210,7 +210,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("ProjectId", "SortOrder");
 
-                    b.ToTable("Media");
+                    b.ToTable("portfolio_media", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Post", b =>
@@ -262,7 +262,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsDescending(false, true)
                         .HasDatabaseName("IX_Posts_IsPublished_PublishedAt");
 
-                    b.ToTable("Posts");
+                    b.ToTable("knowledge_posts", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Project", b =>
@@ -353,7 +353,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsDescending(false, true)
                         .HasDatabaseName("IX_Projects_Featured_StartDate");
 
-                    b.ToTable("Projects");
+                    b.ToTable("portfolio_projects", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.RoadmapItem", b =>
@@ -391,7 +391,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("TargetDate");
 
-                    b.ToTable("RoadmapItems");
+                    b.ToTable("profile_roadmap_items", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.SiteStatus", b =>
@@ -417,9 +417,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SiteStatuses", t =>
+                    b.ToTable("site_status", null, t =>
                         {
-                            t.HasCheckConstraint("CK_SiteStatuses_Singleton", "\"Id\" = '0195c0de-0000-7000-8000-000000000001'");
+                            t.HasCheckConstraint("ck_site_status_singleton", "\"Id\" = '0195c0de-0000-7000-8000-000000000001'");
                         });
                 });
 
@@ -460,7 +460,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("Category", "SortOrder");
 
-                    b.ToTable("Skills");
+                    b.ToTable("profile_skills", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Tag", b =>
@@ -494,7 +494,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tags");
+                    b.ToTable("shared_tags", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Infrastructure.Identity.ApplicationUser", b =>
@@ -578,7 +578,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("TechStackId");
 
-                    b.ToTable("ExperienceSkills", (string)null);
+                    b.ToTable("portfolio_experience_skills", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -723,7 +723,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("PostTags", (string)null);
+                    b.ToTable("knowledge_post_tags", (string)null);
                 });
 
             modelBuilder.Entity("ProjectSkill", b =>
@@ -738,7 +738,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("TechStackId");
 
-                    b.ToTable("ProjectSkills", (string)null);
+                    b.ToTable("portfolio_project_skills", (string)null);
                 });
 
             modelBuilder.Entity("ProjectTag", b =>
@@ -753,7 +753,7 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasIndex("TagsId");
 
-                    b.ToTable("ProjectTags", (string)null);
+                    b.ToTable("portfolio_project_tags", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Media", b =>

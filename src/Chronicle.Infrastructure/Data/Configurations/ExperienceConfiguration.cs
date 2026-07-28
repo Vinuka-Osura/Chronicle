@@ -8,6 +8,8 @@ public sealed class ExperienceConfiguration : IEntityTypeConfiguration<Experienc
 {
     public void Configure(EntityTypeBuilder<Experience> builder)
     {
+        builder.ToTable("portfolio_experiences");
+
         builder.Property(e => e.Role).IsRequired().HasMaxLength(150);
         builder.Property(e => e.Company).IsRequired().HasMaxLength(150);
         builder.Property(e => e.Summary).IsRequired();
@@ -21,6 +23,6 @@ public sealed class ExperienceConfiguration : IEntityTypeConfiguration<Experienc
 
         builder.HasMany(e => e.TechStack)
             .WithMany(s => s.Experiences)
-            .UsingEntity(j => j.ToTable("ExperienceSkills"));
+            .UsingEntity(j => j.ToTable("portfolio_experience_skills"));
     }
 }

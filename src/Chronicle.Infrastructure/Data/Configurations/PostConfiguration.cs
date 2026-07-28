@@ -8,6 +8,8 @@ public sealed class PostConfiguration : IEntityTypeConfiguration<Post>
 {
     public void Configure(EntityTypeBuilder<Post> builder)
     {
+        builder.ToTable("knowledge_posts");
+
         builder.Property(p => p.Title).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Excerpt).IsRequired().HasMaxLength(300);
@@ -22,6 +24,6 @@ public sealed class PostConfiguration : IEntityTypeConfiguration<Post>
 
         builder.HasMany(p => p.Tags)
             .WithMany(t => t.Posts)
-            .UsingEntity(j => j.ToTable("PostTags"));
+            .UsingEntity(j => j.ToTable("knowledge_post_tags"));
     }
 }

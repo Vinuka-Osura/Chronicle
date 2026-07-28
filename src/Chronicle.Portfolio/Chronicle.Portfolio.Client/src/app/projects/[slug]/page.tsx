@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getProject } from "@/lib/api";
+import { getProject } from "../api";
 import { Markdown } from "@/components/Markdown";
 
 type Params = { slug: string };
@@ -94,7 +94,7 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
     <article className="max-w-3xl">
       <nav className="mb-8">
         <Link href="/projects" className="text-sm text-signal hover:underline">
-          ← All projects
+          â† All projects
         </Link>
       </nav>
 

@@ -8,6 +8,8 @@ public sealed class SkillConfiguration : IEntityTypeConfiguration<Skill>
 {
     public void Configure(EntityTypeBuilder<Skill> builder)
     {
+        builder.ToTable("profile_skills");
+
         builder.Property(s => s.Name).IsRequired().HasMaxLength(100);
         builder.HasIndex(s => s.Name).IsUnique();
 

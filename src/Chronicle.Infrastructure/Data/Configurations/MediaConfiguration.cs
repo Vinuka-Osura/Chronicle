@@ -8,6 +8,8 @@ public sealed class MediaConfiguration : IEntityTypeConfiguration<Media>
 {
     public void Configure(EntityTypeBuilder<Media> builder)
     {
+        builder.ToTable("portfolio_media");
+
         builder.Property(m => m.Url).IsRequired().HasMaxLength(500);
         builder.Property(m => m.Caption).HasMaxLength(200);
 

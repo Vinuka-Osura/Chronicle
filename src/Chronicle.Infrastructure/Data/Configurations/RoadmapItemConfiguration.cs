@@ -8,6 +8,8 @@ public sealed class RoadmapItemConfiguration : IEntityTypeConfiguration<RoadmapI
 {
     public void Configure(EntityTypeBuilder<RoadmapItem> builder)
     {
+        builder.ToTable("profile_roadmap_items");
+
         builder.Property(r => r.Title).IsRequired().HasMaxLength(150);
         builder.Property(r => r.Description).IsRequired().HasMaxLength(500);
 

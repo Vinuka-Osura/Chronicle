@@ -34,13 +34,21 @@ public sealed partial class ChronicleDbContextInitialiser(
     }
 
     /// <summary>
-    /// Seeds the admin account and the two singleton rows in every environment, and
-    /// sample content only when the content tables are empty.
+    /// Seeds the admin account, the two singleton rows and every feature's initial data
+    /// in all environments; sample content only in development, and only when the
+    /// content tables are empty.
     /// </summary>
+    /// <remarks>
+    /// One SaveChanges at the end, so the whole set lands in a single transaction and a
+    /// failure part-way through leaves nothing half-seeded.
+    /// </remarks>
     public async Task SeedAsync(bool includeSampleContent, CancellationToken cancellationToken = default)
     {
         await SeedAdminUserAsync().ConfigureAwait(false);
         await SeedSingletonsAsync(cancellationToken).ConfigureAwait(false);
+
+        // Per-feature initial data. Ships empty; each feature owns its own hook.
+        await Seeding.FeatureSeeders.RunAsync(context, cancellationToken).ConfigureAwait(false);
 
         if (includeSampleContent)
         {

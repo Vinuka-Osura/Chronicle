@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { getProjects } from "@/lib/api";
-import { ProjectCard } from "@/components/ProjectCard";
+﻿import type { Metadata } from "next";
+import { getProjects } from "./api";
+import { ProjectCard } from "./components/ProjectCard";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -16,7 +16,7 @@ export default async function ProjectsPage() {
       <header className="mb-10 max-w-2xl">
         <h1 className="mb-3 text-3xl font-semibold">Projects</h1>
         <p className="rm-compact text-ink-soft">
-          Each of these is written as a case study rather than a feature list — what the
+          Each of these is written as a case study rather than a feature list â€” what the
           problem was, which tradeoffs I made and why, and what happened afterwards.
         </p>
       </header>

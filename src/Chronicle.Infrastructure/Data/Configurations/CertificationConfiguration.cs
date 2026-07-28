@@ -8,6 +8,8 @@ public sealed class CertificationConfiguration : IEntityTypeConfiguration<Certif
 {
     public void Configure(EntityTypeBuilder<Certification> builder)
     {
+        builder.ToTable("profile_certifications");
+
         builder.Property(c => c.Name).IsRequired().HasMaxLength(200);
         builder.Property(c => c.Issuer).IsRequired().HasMaxLength(150);
         builder.Property(c => c.CredentialUrl).HasMaxLength(500);

@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { getProjects } from "@/lib/api";
-import { ProjectCard } from "@/components/ProjectCard";
+﻿import Link from "next/link";
+import { getProjects } from "@/app/projects/api";
+import { ProjectCard } from "@/app/projects/components/ProjectCard";
 
 export default async function MissionControl() {
   const featured = await getProjects({ featured: true });
@@ -18,7 +18,7 @@ export default async function MissionControl() {
 
         <p className="rm-compact mb-8 text-lg text-ink-soft">
           Most of my work is ledgers, statements and the unglamorous reliability around
-          them — the parts where being nearly right is the same as being wrong. This site
+          them â€” the parts where being nearly right is the same as being wrong. This site
           is a working example of it: a .NET&nbsp;10 API and CMS behind a Next.js
           frontend, so everything you read here is content I can edit without a deploy.
         </p>
@@ -34,7 +34,7 @@ export default async function MissionControl() {
             href="/resume"
             className="rounded-md border border-rule px-4 py-2 text-sm font-medium transition-colors hover:border-signal"
           >
-            Résumé
+            RÃ©sumÃ©
           </Link>
           <Link
             href="/timeline"
@@ -64,7 +64,7 @@ export default async function MissionControl() {
         ) : (
           <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">
             No projects are published yet. They are served from the API, so they appear
-            here as soon as they exist in the CMS — no rebuild required.
+            here as soon as they exist in the CMS â€” no rebuild required.
           </p>
         )}
       </section>

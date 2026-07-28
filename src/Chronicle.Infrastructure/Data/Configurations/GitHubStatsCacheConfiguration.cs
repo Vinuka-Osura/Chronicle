@@ -10,8 +10,8 @@ public sealed class GitHubStatsCacheConfiguration : IEntityTypeConfiguration<Git
     {
         builder.Property(g => g.PayloadJson).IsRequired().HasColumnType("jsonb");
 
-        builder.ToTable(t => t.HasCheckConstraint(
-            "CK_GitHubStatsCaches_Singleton",
+        builder.ToTable("site_github_stats_cache", t => t.HasCheckConstraint(
+            "ck_site_github_stats_cache_singleton",
             $"\"Id\" = '{GitHubStatsCache.SingletonId}'"));
     }
 }

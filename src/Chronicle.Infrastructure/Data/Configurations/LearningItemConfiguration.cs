@@ -14,8 +14,8 @@ public sealed class LearningItemConfiguration : IEntityTypeConfiguration<Learnin
 
         // The UI renders this as a percentage meter; anything outside 0-100 would be
         // a rendering bug rather than data, so the database refuses it outright.
-        builder.ToTable(t => t.HasCheckConstraint(
-            "CK_LearningItems_ProgressPercent",
+        builder.ToTable("knowledge_learning_items", t => t.HasCheckConstraint(
+            "ck_knowledge_learning_items_progress_percent",
             "\"ProgressPercent\" IS NULL OR (\"ProgressPercent\" BETWEEN 0 AND 100)"));
 
         builder.HasIndex(l => l.SortOrder);

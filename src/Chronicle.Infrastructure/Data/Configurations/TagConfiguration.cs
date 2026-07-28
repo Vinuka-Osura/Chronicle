@@ -8,6 +8,8 @@ public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
 {
     public void Configure(EntityTypeBuilder<Tag> builder)
     {
+        builder.ToTable("shared_tags");
+
         builder.Property(t => t.Name).IsRequired().HasMaxLength(60);
         builder.Property(t => t.Slug).IsRequired().HasMaxLength(60);
         builder.Property(t => t.Category).HasMaxLength(60);

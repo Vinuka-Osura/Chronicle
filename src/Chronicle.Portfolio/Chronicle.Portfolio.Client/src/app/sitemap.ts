@@ -1,5 +1,5 @@
-import type { MetadataRoute } from "next";
-import { getProjects } from "@/lib/api";
+﻿import type { MetadataRoute } from "next";
+import { getProjects } from "@/app/projects/api";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 

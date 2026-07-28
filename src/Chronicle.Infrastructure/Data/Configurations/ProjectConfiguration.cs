@@ -8,6 +8,8 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 {
     public void Configure(EntityTypeBuilder<Project> builder)
     {
+        builder.ToTable("portfolio_projects");
+
         builder.Property(p => p.Title).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Pitch).IsRequired().HasMaxLength(300);
@@ -37,10 +39,10 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.HasMany(p => p.Tags)
             .WithMany(t => t.Projects)
-            .UsingEntity(j => j.ToTable("ProjectTags"));
+            .UsingEntity(j => j.ToTable("portfolio_project_tags"));
 
         builder.HasMany(p => p.TechStack)
             .WithMany(s => s.Projects)
-            .UsingEntity(j => j.ToTable("ProjectSkills"));
+            .UsingEntity(j => j.ToTable("portfolio_project_skills"));
     }
 }
