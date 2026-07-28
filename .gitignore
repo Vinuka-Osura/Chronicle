@@ -1,0 +1,135 @@
+## ---------------------------------------------------------------
+## Chronicle — .gitignore
+## This repository is PUBLIC. Nothing secret may ever be committed.
+## Secrets live in dotnet user-secrets (dev) and CI secrets (deploy).
+## ---------------------------------------------------------------
+
+# ---------- Secrets & local environment ----------
+*.env
+.env
+.env.*
+!.env.example
+!.env.local.example
+secrets.json
+appsettings.Local.json
+appsettings.*.Local.json
+*.pfx
+*.p12
+*.key
+*.pem
+
+# ---------- .NET build output ----------
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+*.dll
+*.exe
+*.pdb
+*.cache
+project.lock.json
+project.fragment.lock.json
+
+# ---------- .NET / Visual Studio ----------
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.svclog
+*.VisualState.xml
+TestResult.xml
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+BenchmarkDotNet.Artifacts/
+
+# ---------- Test results & coverage ----------
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+coverage*.json
+coverage*.xml
+coverage*.info
+*.coverage
+*.coveragexml
+.coverlet/
+
+# ---------- Rider / JetBrains ----------
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# ---------- VS Code ----------
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# ---------- NuGet ----------
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+
+# ---------- .NET Aspire ----------
+**/.aspire/
+aspire-manifest.json
+
+# ---------- Node / Next.js (Chronicle.Portfolio.Client) ----------
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/versions
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# npm / yarn / pnpm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Test / lint caches
+.eslintcache
+.stylelintcache
+coverage/
+playwright-report/
+test-results/
+
+# Vercel
+.vercel
+
+# ---------- OS noise ----------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---------- Misc ----------
+*.bak
+*.tmp
+*.swp
+*~
