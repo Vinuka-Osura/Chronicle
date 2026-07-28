@@ -42,20 +42,110 @@ scoped and both commented at the point of use: `CA1707` for underscored test nam
 into a generic type, so generic classes delegate to a non-generic holder — see
 `BehaviourLog`.
 
+## Naming and layout conventions
+
+### Commit messages
+
+```
+(Type) - short imperative summary
+
+Body explaining why, wrapped at ~88 columns.
+```
+
+`Type` is the kind of work: `Feat`, `Bug Fix`, `Test`, `Refactor`, `Docs`, `Build`,
+`Chore`, `Perf`, `Style`. Capitalised, in brackets, followed by a space-hyphen-space.
+
+### Database tables
+
+Tables are **`<domain>_<plural_entity>`, lowercase snake_case**, so the schema groups
+itself by domain instead of sprawling into a flat alphabetical list. The C# entity keeps
+its singular PascalCase name; only the table is renamed, via `ToTable()` in that
+entity's configuration.
+
+| Domain prefix | Holds |
+|---|---|
+| `portfolio_` | the work — projects, experience, media, and their joins |
+| `profile_` | the person — skills, certifications, roadmap items |
+| `knowledge_` | posts and learning items |
+| `shared_` | cross-cutting reference data, currently just tags |
+| `site_` | singletons — site status, GitHub stats cache |
+
+```
+entity Project      -> portfolio_projects
+entity LearningItem -> knowledge_learning_items
+entity Tag          -> shared_tags
+Project <-> Tag     -> portfolio_project_tags
+```
+
+Identity keeps its own `identity` schema and its default table names — those are ASP.NET
+Core's, not ours.
+
+Columns stay PascalCase (EF Core's default). Mixing snake_case tables with PascalCase
+columns is a deliberate, contained trade: renaming columns too would mean either a
+naming-convention package or an entry per property, and the prefix already delivers the
+grouping this was for.
+
+### Per-feature seeders
+
+Every feature owns a seeder under `Infrastructure/Data/Seeding/`, registered in
+`FeatureSeeders`. **They ship empty on purpose** — the hook exists so real initial data
+has an obvious home the day it is needed, rather than being wedged into whatever file is
+nearest. Seeders must be idempotent: they run on every start, in every environment.
+
+`SampleContent` is different and stays separate — it is throwaway development data and
+only runs when the content tables are empty.
+
+### Frontend feature folders
+
+Everything a feature owns lives with it. Only genuinely shared things go up a level.
+
+```
+src/app/<feature>/
+  page.tsx           the route
+  api.ts             that feature's typed fetchers, with use cache + cacheTag
+  components/        components only this feature uses
+  [slug]/page.tsx    nested routes as needed
+
+src/lib/http.ts      shared fetch wrapper — the ONE place the base URL is read
+src/lib/types.ts     shared DTO types
+src/components/      used by three or more features (SiteHeader, Footer, Markdown)
+```
+
+Promote a component out of a feature folder only once a third feature needs it. Two
+users is a coincidence; three is a pattern.
+
+### Navigation
+
+Every route is reachable from the header, every link uses `next/link` (never a bare
+`<a>` for internal routes, which would cost a full page load), and the active route is
+always marked with `aria-current="page"`. A visitor should never reach a dead end or
+have to use the back button to continue.
+
 ## Adding a feature slice
 
 Copy the Projects slice; it is the reference pattern.
 
 ```
+Domain/Entities/<Entity>.cs                          POCO, no annotations
+Infrastructure/Data/Configurations/<Entity>Configuration.cs
+                                                     ToTable("<domain>_<plural>"),
+                                                     lengths, indexes, relationships
+Infrastructure/Data/Seeding/<Area>Seeder.cs          empty hook, registered in FeatureSeeders
+
 Application/Features/<Area>/Queries/<Name>/
   <Name>Query.cs           record, IRequest<TResponse>
   <Name>QueryHandler.cs    filter IQueryable, project straight to the DTO
   <Name>QueryValidator.cs  optional, runs in ValidationBehaviour
 Application/Features/<Area>/<Area>Dtos.cs
-Portfolio.Server/Api/Endpoints/<Area>Endpoints.cs
+
+Portfolio.Server/Api/Endpoints/<Area>Endpoints.cs    cached group + rate limit
+
+Client/src/app/<area>/api.ts                         fetchers, use cache + cacheTag
+Client/src/app/<area>/components/                    feature-local components
+Client/src/app/<area>/page.tsx                       the route
 ```
 
-Then map the group in `Program.cs`.
+Then map the endpoint group in `Program.cs` and add the route to the header's `links`.
 
 **Read handlers project inside the query.** `.Select(x => new Dto(...))` on the
 `IQueryable`, never materialise entities and map afterwards — a card query should not
