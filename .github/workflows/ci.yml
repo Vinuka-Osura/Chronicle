@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Chronicle.slnx
+
+      # Warnings are errors, so this is also the analyzer and layering gate.
+      - name: Build
+        run: dotnet build Chronicle.slnx --no-restore --configuration Release
+
+      # Includes the architecture tests that assert Chronicle.Domain stays dependency-free.
+      - name: Test
+        run: dotnet test Chronicle.slnx --no-build --configuration Release --verbosity normal
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Chronicle.Portfolio/Chronicle.Portfolio.Client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/Chronicle.Portfolio/Chronicle.Portfolio.Client/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # No API is reachable here. The content fetchers degrade to empty results on
+      # purpose so the build still proves the app compiles and prerenders.
+      - name: Build
+        run: npm run build
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # Both ecosystems are currently clean thanks to the transitive pins in
+      # Directory.Packages.props and the client's package.json overrides. This job
+      # exists to tell us when that stops being true.
+      - name: npm audit
+        working-directory: src/Chronicle.Portfolio/Chronicle.Portfolio.Client
+        run: npm audit --audit-level=high
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: NuGet vulnerability scan
+        run: |
+          dotnet restore Chronicle.slnx
+          dotnet list Chronicle.slnx package --vulnerable --include-transitive 2>&1 | tee audit.log
+          if grep -q "has the following vulnerable packages" audit.log; then
+            echo "::error::Vulnerable NuGet packages found"
+            exit 1
+          fi
