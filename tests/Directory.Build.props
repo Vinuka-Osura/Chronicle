@@ -6,6 +6,12 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!--
+      CA1707 forbids underscores in member names. That is an API-surface rule and test
+      methods are not API: Method_Scenario_Expectation is the conventional, readable
+      naming here. Suppressed for test projects only - it stays enforced in src/.
+    -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup Label="Every test project gets these">
