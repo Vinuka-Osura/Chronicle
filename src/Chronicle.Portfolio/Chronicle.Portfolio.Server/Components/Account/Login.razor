@@ -1,0 +1,108 @@
+@page "/admin/login"
+@layout Chronicle.Portfolio.Server.Components.Layout.BareLayout
+@attribute [AllowAnonymous]
+
+@using System.ComponentModel.DataAnnotations
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager Navigation
+
+@*
+    Static SSR on purpose - no @rendermode here.
+
+    SignInManager writes an auth cookie, which means it needs a live HttpContext with
+    unsent response headers. An interactive Server circuit runs over a WebSocket long
+    after headers are flushed, so signing in from one silently fails to set the cookie.
+    A plain form POST is the correct mechanism, not a fallback.
+*@
+
+<PageTitle>Sign in - Chronicle</PageTitle>
+
+<div class="auth-card">
+    <p class="auth-eyebrow">Chronicle</p>
+    <h1>Content admin</h1>
+
+    <EditForm Model="Input" method="post" OnValidSubmit="SignInAsync" FormName="login">
+        <DataAnnotationsValidator />
+
+        @if (errorMessage is not null)
+        {
+            <p class="auth-error" role="alert">@errorMessage</p>
+        }
+
+        <label for="email">Email</label>
+        <InputText id="email" @bind-Value="Input.Email" autocomplete="username" />
+        <ValidationMessage For="() => Input.Email" />
+
+        <label for="password">Password</label>
+        <InputText id="password" type="password" @bind-Value="Input.Password" autocomplete="current-password" />
+        <ValidationMessage For="() => Input.Password" />
+
+        <label class="auth-checkbox">
+            <InputCheckbox @bind-Value="Input.RememberMe" />
+            <span>Stay signed in</span>
+        </label>
+
+        <button type="submit">Sign in</button>
+    </EditForm>
+</div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private LoginInput _input = new();
+
+    // Backing field rather than a property initializer. BL0008 warns that the form-post
+    // binder can assign null over an initialised property; the guarded setter fixes that
+    // cause instead of suppressing the symptom, and keeps the property non-nullable so
+    // the bindings below need no null-forgiving operators.
+    [SupplyParameterFromForm]
+    private LoginInput Input
+    {
+        get => _input;
+        set => _input = value ?? new LoginInput();
+    }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? errorMessage;
+
+    private async Task SignInAsync()
+    {
+        var result = await SignInManager.PasswordSignInAsync(
+            Input.Email,
+            Input.Password,
+            Input.RememberMe,
+            lockoutOnFailure: true);
+
+        if (result.Succeeded)
+        {
+            // Only ever redirect to a local path; an open redirect here would let a
+            // phishing link bounce a freshly-authenticated admin off-site.
+            var destination = !string.IsNullOrEmpty(ReturnUrl) && Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative)
+                ? ReturnUrl
+                : "admin";
+
+            Navigation.NavigateTo(destination);
+            return;
+        }
+
+        errorMessage = result.IsLockedOut
+            ? "That account is locked. Try again in 15 minutes."
+            // Deliberately identical for a wrong password and an unknown address, so
+            // the form cannot be used to enumerate accounts.
+            : "That email and password combination was not recognised.";
+    }
+
+    private sealed class LoginInput
+    {
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required, DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+}

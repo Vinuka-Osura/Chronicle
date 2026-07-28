@@ -1,0 +1,59 @@
+@page "/admin"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Interfaces
+@using Microsoft.EntityFrameworkCore
+@inject IChronicleDbContext Db
+
+<PageTitle>Dashboard - Chronicle admin</PageTitle>
+
+<h1>Dashboard</h1>
+<p class="lede">
+    Content here publishes to the public site immediately - saving evicts the matching
+    output-cache tag rather than waiting out the TTL.
+</p>
+
+@if (counts is null)
+{
+    <p class="muted">Loading content counts...</p>
+}
+else
+{
+    <ul class="stat-grid">
+        @foreach (var (label, value) in counts)
+        {
+            <li class="stat">
+                <span class="stat-value">@value</span>
+                <span class="stat-label">@label</span>
+            </li>
+        }
+    </ul>
+}
+
+<section class="next-up">
+    <h2>Not built yet</h2>
+    <p>
+        CRUD screens for each content type are the next increment (spec epic D2).
+        Until they exist, content is managed through the seed data and the database.
+    </p>
+</section>
+
+@code {
+    private List<(string Label, int Count)>? counts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        counts =
+        [
+            ("Projects", await Db.Projects.CountAsync()),
+            ("Experience", await Db.Experiences.CountAsync()),
+            ("Posts", await Db.Posts.CountAsync()),
+            ("Skills", await Db.Skills.CountAsync()),
+            ("Learning", await Db.LearningItems.CountAsync()),
+            ("Roadmap", await Db.RoadmapItems.CountAsync()),
+            ("Certifications", await Db.Certifications.CountAsync()),
+            ("Tags", await Db.Tags.CountAsync())
+        ];
+    }
+}

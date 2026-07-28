@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+@*
+    Shell for the admin CMS only. The public site is the Next.js client; this host
+    serves /api/* and /admin/*, so there is no Bootstrap and no public-facing chrome.
+*@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -6,11 +10,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <ResourcePreloader />
-    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["Chronicle.Portfolio.Server.styles.css"]" />
     <ImportMap />
     <link rel="icon" type="image/png" href="favicon.png" />
+    @* Admin pages are private; keep them out of search results entirely. *@
+    <meta name="robots" content="noindex, nofollow" />
     <HeadOutlet />
 </head>
 
