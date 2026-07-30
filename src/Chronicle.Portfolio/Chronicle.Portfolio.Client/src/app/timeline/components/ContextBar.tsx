@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { TimelineItemType } from "@/lib/types";
 import { ALL_LENSES, LENSES, LENS_COOKIE, parseLenses } from "../lenses";
 
@@ -28,6 +28,14 @@ const serverLens = () => ALL_LENSES.join(" ");
 function useLenses(): [TimelineItemType[], (key: TimelineItemType) => void] {
   const raw = useSyncExternalStore(subscribeToLens, readLens, serverLens);
   const active = parseLenses(raw);
+  const urlTimer = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (urlTimer.current !== null) window.clearTimeout(urlTimer.current);
+    },
+    [],
+  );
 
   const toggle = useCallback((key: TimelineItemType) => {
     const current = parseLenses(document.documentElement.dataset.lens);
@@ -39,18 +47,40 @@ function useLenses(): [TimelineItemType[], (key: TimelineItemType) => void] {
     // filtered, so the last one on cannot be switched off.
     const resolved = next.length > 0 ? next : current;
 
+    // Attribute and cookie update immediately — they are cheap and the filter must feel
+    // instant.
     document.documentElement.dataset.lens = resolved.join(" ");
     document.cookie = `${LENS_COOKIE}=${encodeURIComponent(resolved.join(" "))}; path=/; max-age=31536000; samesite=lax`;
 
-    // replaceState rather than push: filtering is not a navigation, and it should not
-    // fill the back button with every chip the visitor tried.
-    const url = new URL(window.location.href);
-    if (resolved.length === ALL_LENSES.length) {
-      url.searchParams.delete("lens");
-    } else {
-      url.searchParams.set("lens", resolved.join(","));
-    }
-    window.history.replaceState(null, "", url);
+    /*
+      The URL write is debounced, and that is not a nicety.
+
+      Browsers rate-limit history.replaceState — Chromium allows on the order of a
+      hundred calls per ten seconds and throws a SecurityError past that. Writing on
+      every click meant someone drumming on the chips could break the page outright.
+      Coalescing to one write after the clicking stops keeps the URL shareable without
+      ever approaching the limit.
+
+      replaceState rather than pushState throughout: filtering is not a navigation, and
+      it should not fill the back button with every chip the visitor tried.
+    */
+    if (urlTimer.current !== null) window.clearTimeout(urlTimer.current);
+
+    urlTimer.current = window.setTimeout(() => {
+      urlTimer.current = null;
+      try {
+        const url = new URL(window.location.href);
+        if (resolved.length === ALL_LENSES.length) {
+          url.searchParams.delete("lens");
+        } else {
+          url.searchParams.set("lens", resolved.join(","));
+        }
+        window.history.replaceState(null, "", url);
+      } catch {
+        // Belt and braces. A shareable URL is a convenience; the filter itself already
+        // works from the attribute and the cookie, so this must never take the page down.
+      }
+    }, 300);
   }, []);
 
   return [active, toggle];
