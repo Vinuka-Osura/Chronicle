@@ -21,38 +21,49 @@ Two practical rules follow:
 
 ---
 
-## 1. Media storage — local disk now, R2 only if hosting forces it
+## 1. Media storage — Cloudflare R2
 
-**Decision: `LocalMediaStorage` writing to the server's own disk.** The implementation
-spec allows for this explicitly, and at this data volume it is not a compromise.
+**Decision: R2, with a usage gauge in the admin dashboard.**
 
-Why not R2 straight away, despite it being the best paid-tier-free option:
+| | **R2** | Cloudinary | Supabase Storage | Local disk |
+|---|---|---|---|---|
+| Free storage | **10 GB, permanent** | ~10 GB shared quota | 1 GB | host's disk |
+| Egress | **$0, uncapped** | counts against the quota | 5 GB/month | host's bandwidth |
+| Video | yes | **not on free tier** | yes | yes |
+| API | **S3-compatible** | proprietary | S3-compatible | filesystem |
+| Ties media to the server | **no** | no | no | **yes** |
 
-| | Local disk | Cloudflare R2 |
-|---|---|---|
-| Card required | **no** | **yes, even on the free tier** |
-| Spend cap available | **n/a, cannot bill** | **no — Cloudflare does not offer one** |
-| Free allowance | the disk you already pay for | 10 GB, 10M reads/month, permanent |
-| Guarantee | **hard** | soft |
+### On the cost risk
 
-R2's free tier is permanent and genuinely generous, and realistically this site would
-need to grow a hundredfold to leave it. But it requires a card on file with no cap
-behind it, which is a different kind of promise from one that cannot charge at all.
+R2 needs a card on file and Cloudflare offers no hard spend cap, which is worth stating
+plainly. It is not, however, a real risk here, because the gap between the limit and the
+requirement is an order of magnitude:
 
-**When to revisit.** Only if the deployment target has no persistent disk. Azure App
-Service and any VM or VPS with a volume do; ephemeral container platforms do not. If
-that is where this lands, swap the implementation — `IMediaStorage` already exists for
-exactly this, so it is a config change, not a rewrite.
+| | Free allowance | Realistic use | Headroom |
+|---|---|---|---|
+| Storage | 10 GB | well under 1 GB — dozens of screenshots and a few short videos | **10×+** |
+| Class B ops (reads) | 10 M/month | thousands, and CDN cache hits do not count | **~1000×** |
+| Class A ops (writes) | 1 M/month | one per CMS upload | effectively unbounded |
+| Egress | unlimited | — | n/a |
 
-**Then the order of preference is:** R2 (10 GB, zero egress, S3-compatible) → Cloudinary
-for images only (no card, but cannot transform video on the free plan) → never a
-consumer sync product like Dropbox or Drive, which rate-limit hot-linking and rewrite
-share URLs.
+Exceeding this would take a hundredfold change in what the site is. A cap protects
+against runaway *usage*; there is no mechanism here by which usage runs away, because
+nothing writes to the bucket except a human uploading a file in the CMS.
 
-### Consequence for hosting
+**Mitigation, and it is the part that closes the question:** the admin dashboard shows
+current object count and total bytes against the 10 GB allowance. Usage becomes
+something you glance at while editing rather than something you would have to remember
+to check in Cloudflare's console — so the number is visible long before it could matter.
 
-Local media storage means **the server needs a persistent disk**, which narrows the
-free hosting options. Worth deciding together, not separately — see below.
+### The advantage local disk would have cost us
+
+Local storage would have tied the deployment to a host with a persistent disk, ruling
+out every ephemeral container platform. R2 keeps media independent of wherever the
+server runs, so the hosting decision below stays open — and media survives a redeploy,
+a host migration, or the server being rebuilt from scratch.
+
+**Never a consumer sync product** — Dropbox, Google Drive and similar rate-limit
+hot-linking, rewrite share URLs, and offer no cache headers.
 
 ---
 
