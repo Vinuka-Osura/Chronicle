@@ -29,8 +29,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const project = await getProject(slug);
 
+  /*
+    Renders the not-found page but returns HTTP 200 — notFound() fires inside the
+    Suspense boundary below, after the status line has been sent. A true 404 would need
+    generateStaticParams, which would mean any project published in the CMS 404s until
+    the next deploy. noindex keeps the soft 404 out of search results instead, which is
+    the harm that actually matters. Same reasoning as the article route.
+  */
   if (!project) {
-    return { title: "Project not found" };
+    return {
+      title: "Project not found",
+      robots: { index: false, follow: false },
+    };
   }
 
   return {

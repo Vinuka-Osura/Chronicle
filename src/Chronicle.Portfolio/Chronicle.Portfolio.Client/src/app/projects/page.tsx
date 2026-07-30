@@ -1,6 +1,6 @@
 ﻿import type { Metadata } from "next";
 import { getProjects } from "./api";
-import { ProjectCard } from "./components/ProjectCard";
+import { TagFilter } from "./components/TagFilter";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -22,11 +22,7 @@ export default async function ProjectsPage() {
       </header>
 
       {projects.length > 0 ? (
-        <div className="rm-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <ProjectCard key={project.slug} project={project} />
-          ))}
-        </div>
+        <TagFilter projects={projects} />
       ) : (
         <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">
           Nothing published yet.
