@@ -259,6 +259,30 @@ nothing to keep.
 
 ---
 
+## Chrome budget — the constraint that shapes the rest
+
+The page is accumulating persistent furniture: lens chips, jump controls, a sticky
+context bar, a scrubber. Four things competing with the content they exist to serve.
+
+**On a 667px phone the budget is 140px, about 21% of the viewport.** That is the ceiling.
+It is spent as:
+
+| Element | Height | Sticky? |
+|---|---|---|
+| Site header | 56px | yes, already exists |
+| Context bar — era + year + jump | 44px | yes |
+| Scrubber | 40px | yes, hides on scroll down |
+| Lens chips | ~40px | **no** — they scroll away with the page header |
+
+Two consequences, and both are decisions rather than accidents:
+
+- **The era and the year share one bar.** Two stacked stickies would cost 88px for
+  information that reads as a single fact: *where am I*.
+- **Lens chips are not sticky.** You choose a lens once and then read. Making a
+  set-and-forget control permanent would be paying rent for something used once.
+
+---
+
 ## Interaction
 
 **Scroll** is native and never hijacked. Nodes reveal on entry, ~300ms, fade plus a
@@ -266,22 +290,124 @@ small translate.
 
 **Entry** is at the today line, so the first thing seen is the present.
 
-**Era bands** stick to the top of the viewport while you are inside that chapter, so you
-always know which one you are reading.
+**Context bar** sticks below the site header: the current era, the current year, and the
+jump controls, in one row.
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  BANKING SYSTEMS · 2025          ⤒ Start   ◉ Today   ⤓ Next │
+└────────────────────────────────────────────────────────────┘
+```
+
+Three anchors rather than one button, because they cost the same and answer the three
+questions anyone actually has: *where did this begin*, *where is now*, *what comes next*.
+Each scrolls smoothly, or jumps instantly under `prefers-reduced-motion`.
 
 **Lenses** filter node types. Persisted in a cookie *and* in the URL
 (`?lens=roles,projects`), so a roles-only view is a link you can send someone.
+
+**The lens chips are the legend.** Each chip carries the same glyph its nodes use, so the
+filter control doubles as the key and the page needs no separate legend nobody reads.
 
 **Connections** are listed inside the node. Hovering or focusing a node gives its
 related nodes a subtle ring elsewhere on the page — the "one node is an ecosystem" read,
 without drawing lines across a scrolling document.
 
 **Scrubber** shows eras, density and position. Click or drag to travel; the page scrolls
-smoothly to meet you.
+smoothly to meet you. It hides on scroll-down and returns on scroll-up, so reading
+reclaims its 40px.
 
 **On this day** appears at the today line only when an event genuinely shares today's
 date. Silent otherwise — a feature that fabricates a coincidence is worse than one that
 waits for a real one.
+
+**Shareable anchors.** Every era and year heading is linkable — clicking one updates the
+URL to `#era-banking-systems` or `#year-2024`, and arriving at that URL scrolls there.
+Together with lens state in the query string, any view of this page is a link.
+
+*Not adopted: a copy-link button on every node.* It would add a control to every card to
+serve a rare need, and the era and year anchors already cover the useful case.
+
+---
+
+## Node vocabulary
+
+Five shapes, and no more. A vocabulary large enough to need a legend has failed.
+
+| Glyph | Type | Track |
+|---|---|---|
+| **●** | role — a period of employment | career |
+| **■** | project — links to its case study | career |
+| **◆** | certification | life |
+| **▲** | milestone — education, recognition, community | life |
+| **○** dotted | goal — has not happened | future |
+
+Shape is never the only carrier. Every node also states its type in text, and screen
+readers get that text rather than the glyph, which is `aria-hidden`.
+
+Glyphs must stay legible at 12px — that constraint is why there are five and not eight.
+
+---
+
+## Motion inventory
+
+Everything that moves, why, and what it costs. Anything not on this list does not move.
+
+| Motion | Where | Implementation | Notes |
+|---|---|---|---|
+| **Fade + translate** | node reveal on entry | `opacity` + `translateY(8px)`, 300ms | Compositor-only. The workhorse |
+| **Line drawing** | the spine, as you scroll | `transform: scaleY()` on the spine, scroll-linked | **Not** `stroke-dashoffset` — that repaints every frame |
+| **Card expansion** | role highlights, in place | height transition on a grid row | Reserve the space; never push content below |
+| **Hover response** | any node | `scale(1.01)` + ring, 150ms, **one shot** | See the pulse note below |
+| **Connection ring** | related nodes, on hover/focus | ring `opacity`, 150ms | The ecosystem read |
+| **Today marker** | the today line only | slow breathing `opacity` | The **only** looping animation on the page |
+
+### On "node pulse on hover"
+
+Taken, but as a **single** response rather than a loop. A pulse that repeats while the
+cursor rests is noise — and the site already has one breathing element in the Mission
+Control status dot.
+
+**Exactly one thing loops on this page: the today marker.** That is what makes it read as
+*now* rather than as another date. A second looping element would cost the first one its
+meaning.
+
+### Rules
+
+1. `transform` and `opacity` only. Anything else triggers layout or paint and drops
+   frames on the mid-range phone a recruiter is holding.
+2. Every animation no-ops — not degrades, **stops** — under Recruiter Mode and
+   `prefers-reduced-motion`. Both already wired globally.
+3. Reserve space before animating. An element animating in must already occupy its final
+   size, or the animation is a layout shift in disguise.
+
+---
+
+## Timeline search — deferred, with a threshold
+
+**Not built now.** With eras, lenses, a scrubber and roughly thirty nodes, everything is
+already two interactions away. A search field would be chrome earning nothing, and it
+duplicates the real search Knowledge Core needs — which belongs in the database as a
+`tsvector`, not as a client-side filter over one page.
+
+**Revisit when the timeline passes ~50 items.** Recording the number so this is a
+decision with a trigger rather than something quietly forgotten.
+
+---
+
+## Responsive and accessibility gate the phase
+
+They are **not** a pass at the end. A phase is not done until its work is correct at
+360px and by keyboard. Concretely, before any Phase A item is ticked:
+
+- It reads correctly at **360px** with no horizontal scroll anywhere on the page.
+- It is reachable and operable by **keyboard alone**, with a visible focus ring.
+- It survives **Recruiter Mode** and `prefers-reduced-motion`.
+- Its meaning survives **without colour**.
+
+The reason for gating rather than auditing: retrofitting keyboard support into a hover
+interaction, or a 360px layout into a component built at 1440px, is a rewrite. Doing it
+as you go is a constraint.
 
 ---
 
@@ -301,25 +427,29 @@ waits for a real one.
 
 ## Build order
 
+Every item below is subject to the responsive and accessibility gate above.
+
 **Phase A — core. The page is not shippable without these.**
 
 - [ ] `Era` and `Milestone` entities, configurations, seeders, migration
 - [ ] `Certification ↔ Skill` join
 - [ ] `GET /api/timeline` — merged, era-grouped, with derived connections
-- [ ] Era bands, dual track, year markers, four node types
+- [ ] Era bands, dual track, year markers, five node shapes
+- [ ] Sticky context bar — era + year + the three jump anchors
 - [ ] Today line, blueprint future
-- [ ] Lens chips: persistence and URL state
-- [ ] Scroll reveal
+- [ ] Lens chips doubling as the legend: persistence and URL state
+- [ ] Scroll reveal (fade + translate) and the spine drawing itself
+- [ ] Shareable era and year anchors
 - [ ] Recruiter Mode / reduced-motion static list, grouped by era
-- [ ] Mobile single column
+- [ ] Mobile single column within the chrome budget
 - [ ] `docs/user-guide.md` section
 
 **Phase B — same day if Phase A lands early. In this order.**
 
-- [ ] Bottom scrubber: eras, density, position, click to travel
+- [ ] Bottom scrubber: eras, density, position, click to travel, hide on scroll
 - [ ] Connection highlighting on hover and focus
-- [ ] On this day
 - [ ] In-place expansion of role highlights
+- [ ] On this day
 
 **Phase C — after launch**
 
