@@ -199,7 +199,7 @@ public class MediaPipelineTests(ChronicleTestHost host) : IAsyncLifetime
         "A one-line pitch.",
         "The problem.",
         "The solution.",
-        null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
         new DateOnly(2025, 1, 1),
         null,
         Featured: false,

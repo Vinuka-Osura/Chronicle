@@ -21,6 +21,17 @@ public class Project : AuditableEntity
     public string? KeyDecisions { get; set; }
     public string? ArchitectureNotes { get; set; }
     public string? ArchitectureDiagramUrl { get; set; }
+
+    /// <summary>
+    /// The architecture, described one edge per line: <c>Browser -&gt; API : HTTPS</c>.
+    /// </summary>
+    /// <remarks>
+    /// Rendered as an animated SVG rather than stored as a picture. A description can be
+    /// themed, searched, read aloud and kept in step with the system; an uploaded PNG can
+    /// do none of those and goes stale the moment the architecture changes.
+    /// <see cref="ArchitectureDiagramUrl"/> remains for diagrams this cannot express.
+    /// </remarks>
+    public string? ArchitectureDiagram { get; set; }
     public string? Results { get; set; }
     public string? LessonsLearned { get; set; }
 

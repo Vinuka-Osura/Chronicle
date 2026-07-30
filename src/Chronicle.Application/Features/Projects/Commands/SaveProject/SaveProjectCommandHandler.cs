@@ -70,6 +70,7 @@ public sealed class SaveProjectCommandHandler(
         project.KeyDecisions = Blank(request.KeyDecisions);
         project.ArchitectureNotes = Blank(request.ArchitectureNotes);
         project.ArchitectureDiagramUrl = Blank(request.ArchitectureDiagramUrl);
+        project.ArchitectureDiagram = Blank(request.ArchitectureDiagram);
         project.Results = Blank(request.Results);
         project.LessonsLearned = Blank(request.LessonsLearned);
         project.VideoUrl = Blank(request.VideoUrl);

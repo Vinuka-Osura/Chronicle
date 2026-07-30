@@ -390,6 +390,10 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ArchitectureDiagram")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<string>("ArchitectureDiagramUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");

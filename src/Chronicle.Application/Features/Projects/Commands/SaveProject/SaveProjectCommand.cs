@@ -22,6 +22,7 @@ public sealed record SaveProjectCommand(
     string? KeyDecisions,
     string? ArchitectureNotes,
     string? ArchitectureDiagramUrl,
+    string? ArchitectureDiagram,
     string? Results,
     string? LessonsLearned,
     string? VideoUrl,
@@ -48,6 +49,7 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
             .WithMessage("Use lowercase letters, numbers and single hyphens, e.g. 'core-banking-ledger'.");
 
         RuleFor(c => c.Pitch).NotEmpty().MaximumLength(300);
+        RuleFor(c => c.ArchitectureDiagram).MaximumLength(2000);
         RuleFor(c => c.Problem).NotEmpty();
         RuleFor(c => c.Solution).NotEmpty();
 

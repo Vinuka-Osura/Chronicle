@@ -341,6 +341,29 @@ leaving the rest empty is a real editorial choice, and the public page *hides* t
 sections rather than printing an empty heading. **Preview** shows the assembled case
 study in the order a visitor reads it.
 
+**The architecture diagram is written, not drawn.** One connection per line:
+
+```
+Client -> API : HTTPS
+API -> Posting handler
+Posting handler -> Journal : one transaction
+Snapshot worker -> Snapshots : scheduled
+```
+
+The site works out the layout and animates it — edges draw themselves and each box
+lights up as the flow reaches it, once, when the diagram scrolls into view. There is a
+Replay link; it does not loop, because a diagram pulsing away in the middle of a case
+study competes with the writing it is meant to support.
+
+This beats uploading a picture on every count that matters. It changes colour with the
+theme, it is real text so it can be searched and read aloud, it weighs a couple of
+kilobytes instead of a couple of hundred, and it cannot go stale — change the
+description and the picture changes. The image field is still there for anything this
+cannot express.
+
+The label after `:` is optional and `#` starts a comment. A line it cannot parse is
+skipped rather than breaking the page.
+
 Two rules that will stop you if you break them:
 
 - **Links must be full `http(s)` addresses.** A relative one would resolve against

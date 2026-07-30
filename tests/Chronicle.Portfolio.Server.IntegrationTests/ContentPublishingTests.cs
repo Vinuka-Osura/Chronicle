@@ -249,7 +249,7 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
         "A one-line pitch.",
         "The problem it solved.",
         "How it solved it.",
-        null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null,
         new DateOnly(2025, 1, 1),
         null,
         Featured: false,

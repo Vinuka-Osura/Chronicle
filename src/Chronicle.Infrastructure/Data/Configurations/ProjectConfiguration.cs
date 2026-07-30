@@ -20,6 +20,9 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.Solution).IsRequired();
 
         builder.Property(p => p.ArchitectureDiagramUrl).HasMaxLength(500);
+        // Enough for a couple of dozen edges. Past that the picture stops being a
+        // diagram and becomes a map nobody reads, which is prose's job.
+        builder.Property(p => p.ArchitectureDiagram).HasMaxLength(2000);
         builder.Property(p => p.VideoUrl).HasMaxLength(500);
         builder.Property(p => p.GithubUrl).HasMaxLength(500);
         builder.Property(p => p.DemoUrl).HasMaxLength(500);

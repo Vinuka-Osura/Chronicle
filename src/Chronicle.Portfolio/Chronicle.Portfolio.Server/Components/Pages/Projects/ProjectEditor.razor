@@ -83,6 +83,17 @@ else
             </div>
 
             <div class="field">
+                <label for="diagram">Architecture diagram <span class="optional">optional</span></label>
+                <InputTextArea id="diagram" rows="6" class="mono" @bind-Value="form.ArchitectureDiagram" />
+                <p class="field-help">
+                    One connection per line: <code>Browser -&gt; API : HTTPS</code>. The
+                    label after the colon is optional, and <code>#</code> starts a comment.
+                    The site lays this out and animates it, so there is nothing to draw
+                    and nothing to re-upload when the architecture changes.
+                </p>
+            </div>
+
+            <div class="field">
                 <label for="results">Results <span class="optional">optional</span></label>
                 <InputTextArea id="results" rows="5" class="mono" @bind-Value="form.Results" />
             </div>
@@ -132,9 +143,13 @@ else
             </div>
 
             <div class="field">
-                <label for="diagram">Architecture diagram URL <span class="optional">optional</span></label>
-                <InputText id="diagram" @bind-Value="form.ArchitectureDiagramUrl" />
-                <p class="field-help">Full http(s) address. Relative paths and other schemes are rejected.</p>
+                <label for="diagram-url">Architecture diagram image <span class="optional">optional</span></label>
+                <InputText id="diagram-url" @bind-Value="form.ArchitectureDiagramUrl" />
+                <p class="field-help">
+                    Full http(s) address. A fallback for diagrams the text description
+                    above cannot express — prefer that one, which themes, scales and
+                    can be read aloud.
+                </p>
             </div>
         </fieldset>
 
@@ -227,6 +242,7 @@ else
         public string Solution { get; set; } = string.Empty;
         public string? KeyDecisions { get; set; }
         public string? ArchitectureNotes { get; set; }
+        public string? ArchitectureDiagram { get; set; }
         public string? ArchitectureDiagramUrl { get; set; }
         public string? Results { get; set; }
         public string? LessonsLearned { get; set; }
@@ -257,6 +273,7 @@ else
             form.Solution = project.Solution;
             form.KeyDecisions = project.KeyDecisions;
             form.ArchitectureNotes = project.ArchitectureNotes;
+            form.ArchitectureDiagram = project.ArchitectureDiagram;
             form.ArchitectureDiagramUrl = project.ArchitectureDiagramUrl;
             form.Results = project.Results;
             form.LessonsLearned = project.LessonsLearned;
@@ -306,6 +323,7 @@ else
                 form.KeyDecisions,
                 form.ArchitectureNotes,
                 form.ArchitectureDiagramUrl?.Trim(),
+                form.ArchitectureDiagram,
                 form.Results,
                 form.LessonsLearned,
                 form.VideoUrl?.Trim(),

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getProject } from "../api";
+import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
 import { breadcrumbSchema, projectSchema } from "@/lib/structuredData";
@@ -57,20 +58,30 @@ export async function generateMetadata({
   };
 }
 
-/** A case-study section that simply does not render when its content is absent. */
+/**
+ * One case-study section, which disappears entirely when there is nothing to put in it.
+ *
+ * `extra` is for anything richer than prose — the architecture diagram. The section
+ * appears if *either* the prose or the extra content exists, so a project can have a
+ * diagram with no written notes, or notes with no diagram, and neither case leaves an
+ * empty heading behind.
+ */
 function Section({
   heading,
   body,
+  extra,
 }: {
   heading: string;
   body: string | null | undefined;
+  extra?: React.ReactNode;
 }) {
-  if (!body) return null;
+  if (!body && !extra) return null;
 
   return (
     <section className="mb-12">
       <h2 className="text-section mb-3 font-semibold">{heading}</h2>
-      <Markdown>{body}</Markdown>
+      {body && <Markdown>{body}</Markdown>}
+      {extra}
     </section>
   );
 }
@@ -151,7 +162,21 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
       <Section heading="The problem" body={project.problem} />
       <Section heading="Solution and key decisions" body={project.solution} />
       <Section heading="Tradeoffs" body={project.keyDecisions} />
-      <Section heading="Architecture" body={project.architectureNotes} />
+      {/* The element is only passed when there is a diagram to draw. Passing it
+          unconditionally would make `extra` truthy even when it renders nothing, and
+          a project with neither notes nor diagram would show an empty heading. */}
+      <Section
+        heading="Architecture"
+        body={project.architectureNotes}
+        extra={
+          project.architectureDiagram ? (
+            <ArchitectureDiagram
+              source={project.architectureDiagram}
+              caption={`How ${project.title} fits together.`}
+            />
+          ) : undefined
+        }
+      />
       <Section heading="Results" body={project.results} />
       <Section heading="What I learned" body={project.lessonsLearned} />
 

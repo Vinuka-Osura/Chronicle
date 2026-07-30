@@ -24,6 +24,7 @@ public sealed class GetProjectBySlugQueryHandler(IChronicleDbContext db)
                 p.KeyDecisions,
                 p.ArchitectureNotes,
                 p.ArchitectureDiagramUrl,
+                p.ArchitectureDiagram,
                 p.Results,
                 p.LessonsLearned,
                 p.VideoUrl,

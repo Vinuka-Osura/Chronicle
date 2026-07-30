@@ -115,6 +115,19 @@ internal static partial class SampleContent
                 + "weeks found three edge cases that no test had.\n\n"
                 + "I would also start the snapshot worker earlier next time. It was treated as an "
                 + "optimisation and built last, which meant the first load test measured the wrong thing.",
+            // Rendered as an animated SVG on the case study, not stored as a picture.
+            // Reads as the request path it describes: in at the API, through the command
+            // handler, out to the journal, with the worker on its own branch.
+            ArchitectureDiagram =
+                """
+                # The posting path, and the worker that keeps reads bounded
+                Client -> API : HTTPS
+                API -> Posting handler
+                Posting handler -> Journal : one transaction
+                Journal -> Snapshots
+                Snapshot worker -> Snapshots : scheduled
+                API -> Snapshots : statement reads
+                """,
             StartDate = new DateOnly(2023, 8, 1),
             EndDate = new DateOnly(2024, 10, 31),
             Featured = true,

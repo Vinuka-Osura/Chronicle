@@ -277,6 +277,61 @@
 }
 
 /*
+  ── Architecture diagram ──────────────────────────────────────────────────────
+  Edges draw themselves, nodes light up as the flow reaches them.
+
+  The default — with no `.diagram-playing` — is the finished diagram, fully
+  drawn. Animation is added by a class the component only sets once the diagram
+  is on screen and motion is allowed, so no JavaScript, reduced motion and
+  Recruiter Mode all land on the same static picture rather than an empty box.
+  That inversion is the whole safety mechanism.
+
+  stroke-dashoffset is the one place this site animates something other than
+  transform and opacity. It is a deliberate exception: line drawing cannot be
+  expressed any other way, the paths are a handful of elements rather than a
+  list, and it runs once.
+*/
+@layer components {
+  .diagram-playing .diagram-edge {
+    /* Longer than any edge this layout can produce, so a single value covers them
+       all without measuring each path in JavaScript. */
+    stroke-dasharray: 900;
+    stroke-dashoffset: 900;
+    animation: diagram-draw var(--edge-ms, 420ms) var(--ease-out-quiet) forwards;
+  }
+
+  .diagram-playing .diagram-node,
+  .diagram-playing .diagram-label {
+    opacity: 0;
+    animation: diagram-appear 320ms var(--ease-out-quiet) forwards;
+  }
+
+  .diagram-playing .diagram-node {
+    /* Scaled from its own centre rather than the SVG origin, or boxes on the right
+       swing in from off-canvas. */
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+
+@keyframes diagram-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes diagram-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
   ── Page transitions ──────────────────────────────────────────────────────────
   A short cross-fade between routes instead of a cut.
 

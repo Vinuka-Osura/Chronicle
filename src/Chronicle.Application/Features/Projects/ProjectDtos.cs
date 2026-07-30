@@ -29,6 +29,7 @@ public sealed record ProjectDetailDto(
     string? KeyDecisions,
     string? ArchitectureNotes,
     string? ArchitectureDiagramUrl,
+    string? ArchitectureDiagram,
     string? Results,
     string? LessonsLearned,
     string? VideoUrl,

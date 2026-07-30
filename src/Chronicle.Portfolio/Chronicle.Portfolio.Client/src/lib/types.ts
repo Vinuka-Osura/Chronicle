@@ -36,6 +36,8 @@ export interface ProjectDetail {
   keyDecisions: string | null;
   architectureNotes: string | null;
   architectureDiagramUrl: string | null;
+  /** The architecture as text, one edge per line. Rendered as an animated SVG. */
+  architectureDiagram: string | null;
   results: string | null;
   lessonsLearned: string | null;
   videoUrl: string | null;
