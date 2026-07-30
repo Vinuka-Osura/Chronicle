@@ -19,14 +19,21 @@
   inherits both themes without knowing they exist.
 */
 @theme {
-  --color-paper: #f2f4f6;
-  --color-paper-raised: #ffffff;
-  --color-ink: #0e1420;
-  --color-ink-soft: #4a5568;
-  --color-ink-faint: #8b97a8;
-  --color-signal: #b26b00;
-  --color-signal-soft: #f4ead9;
-  --color-rule: #d8dee5;
+  /* Light: a warm off-white rather than a cold grey. The previous #f2f4f6 read as
+     slightly clinical against the amber accent; this sits in the same hue family. */
+  --color-paper: #f6f5f2;
+  --color-paper-raised: #fffefc;
+  --color-ink: #14181f;
+  --color-ink-soft: #4e5661;
+  --color-ink-faint: #8a919c;
+  --color-signal: #a8630a;
+  --color-signal-soft: #f6ecdd;
+  --color-rule: #e0ddd6;
+
+  /* Two stops for the page wash. Very close together on purpose - a gradient you
+     can point at is a gradient that will date badly. */
+  --color-wash-top: #fbfaf7;
+  --color-wash-bottom: #f1efea;
 
   --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
@@ -46,13 +53,16 @@
 */
 [data-theme="dark"] {
   --color-paper: #0b0f16;
-  --color-paper-raised: #131a24;
+  --color-paper-raised: #141b25;
   --color-ink: #e8edf3;
   --color-ink-soft: #9aa8b8;
   --color-ink-faint: #6f7d8f;
   --color-signal: #e0973f;
   --color-signal-soft: #2b2015;
   --color-rule: #232c38;
+
+  --color-wash-top: #101720;
+  --color-wash-bottom: #080b11;
 }
 
 @layer base {
@@ -67,7 +77,16 @@
   }
 
   body {
+    /* Flat colour first: if the gradient is unsupported or fails to paint, the page is
+       still the right colour rather than white. */
     background-color: var(--color-paper);
+    background-image: linear-gradient(
+      to bottom,
+      var(--color-wash-top) 0%,
+      var(--color-paper) 38%,
+      var(--color-wash-bottom) 100%
+    );
+    background-attachment: fixed;
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -456,27 +475,48 @@
     }
   }
 
-  /* Node reveal. Transform and opacity only, and gated the same way as the spine. */
-  @supports (animation-timeline: view()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .timeline-node > article {
-        animation: timeline-node-in linear both;
-        animation-timeline: view();
-        animation-range: entry 0% entry 40%;
-      }
-    }
+  /*
+    Card entrance, driven by an IntersectionObserver rather than animation-timeline.
+
+    The scroll-driven CSS version only ran on Chromium 115+, so the page animated in one
+    browser and sat still in another depending on which version happened to be installed.
+    A class toggled from JavaScript behaves identically everywhere.
+
+    The hidden state applies only when [data-reveal="ready"] is present, which the
+    reveal component sets on mount. No JavaScript means no attribute means every card is
+    simply visible — never stuck at opacity zero.
+  */
+  [data-reveal="ready"] .timeline-node > article,
+  [data-reveal="ready"] .timeline-today {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      opacity 520ms var(--ease-out-quiet),
+      transform 520ms var(--ease-out-quiet);
   }
 
-  @keyframes timeline-node-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
+  [data-reveal="ready"] .timeline-node.is-visible > article,
+  [data-reveal="ready"] .timeline-today.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* On the two-track layout each card arrives from its own side of the spine, so the
+     movement reinforces which track it belongs to instead of being decoration. */
+  @media (width >= 64rem) {
+    [data-reveal="ready"] .timeline-node[data-track="career"] > article {
+      transform: translate3d(-18px, 10px, 0);
     }
-    to {
-      opacity: 1;
+
+    [data-reveal="ready"] .timeline-node[data-track="life"] > article {
+      transform: translate3d(18px, 10px, 0);
+    }
+
+    [data-reveal="ready"] .timeline-node.is-visible > article {
       transform: none;
     }
   }
+
 }
 
 /*

@@ -28,17 +28,22 @@ const plexMono = IBM_Plex_Mono({
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+/*
+ * DEMO IDENTITY. Sam Iversen is the fictional engineer the seed data describes, so the
+ * running application is coherent end to end before real content exists. Change these
+ * three strings and the About page when the site becomes someone's for real.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Vinuka Osura - Software Engineer",
-    template: "%s - Vinuka Osura",
+    default: "Sam Iversen - Software Engineer",
+    template: "%s - Sam Iversen",
   },
   description:
-    "Backend-leaning software engineer working on banking systems and reliability. Case studies, a career timeline, and the engineering behind this site.",
+    "Backend-leaning software engineer working on payments systems and reliability. Case studies, a career timeline, and the engineering behind this site.",
   openGraph: {
     type: "website",
-    siteName: "Vinuka Osura",
+    siteName: "Sam Iversen",
     locale: "en_GB",
   },
   twitter: { card: "summary_large_image" },

@@ -17,16 +17,20 @@ export default async function AboutPage() {
       <h1 className="mb-6 text-3xl font-semibold">About</h1>
 
       {/*
+        DEMO CONTENT. This is Sam Iversen, the fictional engineer the seed data
+        describes — written so the application reads as a finished thing before anyone's
+        real history is in it.
+
         Prose lives in the page for now. It moves into the CMS with the About editor, at
         which point this becomes a Markdown render like the case studies and the copy
         stops needing a deploy to change.
       */}
       <div className="rm-compact space-y-4 text-ink-soft">
         <p>
-          I am a software engineer working on core banking systems — ledgers, statements,
-          and the reliability work around them. It is a domain where being nearly right
-          is indistinguishable from being wrong, which turns out to be a good way to
-          learn how to build things properly.
+          I am a software engineer working on payments systems — ledgers, settlement,
+          reconciliation, and the reliability work around them. It is a domain where
+          being nearly right is indistinguishable from being wrong, which turns out to be
+          a good way to learn how to build things properly.
         </p>
         <p>
           I started out automating a month-end statement process that used to be done by

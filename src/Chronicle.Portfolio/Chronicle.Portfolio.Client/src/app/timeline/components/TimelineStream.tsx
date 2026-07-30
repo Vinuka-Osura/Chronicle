@@ -1,5 +1,6 @@
 import type { Timeline, TimelineEra, TimelineItem } from "@/lib/types";
 import { TimelineNode } from "./TimelineNode";
+import { TimelineReveal } from "./TimelineReveal";
 
 /**
  * Groups items into eras, then years within an era, preserving chronological order and
@@ -55,7 +56,9 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
   const boundaryKey = firstFuture ? itemKey(firstFuture) : null;
 
   return (
-    <div id="timeline-start" className="relative">
+    <div id="timeline-start" data-timeline className="relative">
+      <TimelineReveal />
+
       {/* The spine. Decorative: the ordered lists below carry the actual structure. */}
       <span aria-hidden className="timeline-spine" />
 
