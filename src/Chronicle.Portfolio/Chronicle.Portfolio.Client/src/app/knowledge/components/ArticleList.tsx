@@ -176,7 +176,7 @@ export function ArticleList({ posts }: { posts: PostCard[] }) {
         >
           {shown.map((post) => (
             <li key={post.slug}>
-              <article className="group relative rounded-lg border border-rule bg-paper-raised p-4 transition-colors hover:border-signal">
+              <article className="group relative surface surface-interactive p-4">
                 <p className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-[0.68rem] tracking-[0.12em] text-ink-faint uppercase">
                   <span>{published(post.publishedAt)}</span>
                   <span aria-hidden>&middot;</span>

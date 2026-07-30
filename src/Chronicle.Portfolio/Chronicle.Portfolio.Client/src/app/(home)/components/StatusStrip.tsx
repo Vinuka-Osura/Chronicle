@@ -34,7 +34,7 @@ export async function StatusStrip() {
   return (
     <aside
       aria-label="Current status"
-      className="rm-compact mb-12 flex flex-col gap-3 rounded-lg border border-rule bg-paper-raised px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6"
+      className="rm-compact mb-12 flex flex-col gap-3 surface px-4 py-3 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6"
     >
       <p className="flex items-center gap-2">
         <span
@@ -76,7 +76,7 @@ export function StatusStripSkeleton() {
   return (
     <div
       aria-hidden
-      className="mb-12 h-[3.25rem] animate-pulse rounded-lg border border-rule bg-paper-raised"
+      className="mb-12 h-[3.25rem] animate-pulse surface"
     />
   );
 }

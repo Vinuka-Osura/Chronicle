@@ -37,7 +37,7 @@ export function CertificationsStrip({ items }: { items: Certification[] }) {
           return (
             <li
               key={`${cert.issuer}-${cert.name}`}
-              className="rounded-lg border border-rule bg-paper-raised p-4 transition-colors hover:border-signal"
+              className="surface surface-interactive p-4"
             >
               {cert.credentialUrl ? (
                 <a

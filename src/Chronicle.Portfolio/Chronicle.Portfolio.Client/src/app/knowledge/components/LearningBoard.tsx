@@ -46,7 +46,7 @@ export function LearningBoard({ items }: { items: LearningItem[] }) {
         {items.map((item) => (
           <li
             key={item.topic}
-            className="rounded-lg border border-rule bg-paper-raised p-4"
+            className="surface p-4"
           >
             <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
               <h3 className="font-display font-semibold text-ink">

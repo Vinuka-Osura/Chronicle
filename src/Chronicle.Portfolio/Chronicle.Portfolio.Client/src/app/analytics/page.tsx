@@ -89,7 +89,7 @@ function Provenance({ stats }: { stats: GitHubStats }) {
  */
 function NotConnected() {
   return (
-    <div className="rounded-lg border border-rule bg-paper-raised px-6 py-8">
+    <div className="surface px-6 py-8">
       <h2 className="font-display text-lg font-semibold">Not connected yet</h2>
       <p className="mt-2 max-w-prose text-sm text-ink-soft">
         This page reads from the GitHub API, and the server has not reached it — either

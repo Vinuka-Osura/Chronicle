@@ -28,7 +28,7 @@ function years(value: number): string {
 
 export function SkillCard({ skill }: { skill: Skill }) {
   return (
-    <article className="rounded-lg border border-rule bg-paper-raised p-4">
+    <article className="surface p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h3 className="font-display font-semibold">{skill.name}</h3>
         <ProficiencyMeter rank={skill.proficiencyRank} label={skill.proficiency} />

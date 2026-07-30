@@ -13,7 +13,7 @@ function formatRange(start: string, end: string | null): string {
 
 export function ProjectCard({ project }: { project: ProjectCardData }) {
   return (
-    <article className="group relative flex flex-col rounded-lg border border-rule bg-paper-raised p-5 transition-colors hover:border-signal">
+    <article className="group relative flex flex-col surface surface-interactive p-5">
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <h3 className="font-display text-lg font-semibold">
           {/*

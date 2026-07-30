@@ -38,7 +38,7 @@ export function StatTiles({ stats }: { stats: GitHubStats }) {
       {tiles.map((tile) => (
         <div
           key={tile.label}
-          className="rounded-lg border border-rule bg-paper-raised px-4 py-3.5"
+          className="surface px-4 py-3.5"
         >
           <dt className="font-mono text-[0.65rem] tracking-[0.12em] text-ink-faint uppercase">
             {tile.label}
