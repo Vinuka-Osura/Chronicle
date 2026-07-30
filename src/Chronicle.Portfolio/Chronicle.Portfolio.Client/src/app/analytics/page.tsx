@@ -20,7 +20,7 @@ export default async function AnalyticsPage() {
         <p className="mb-2 font-mono text-xs tracking-[0.2em] text-ink-faint uppercase">
           Engineering Analytics
         </p>
-        <h1 className="text-hero font-semibold">The work, measured</h1>
+        <h1 className="text-title font-semibold">The work, measured</h1>
         <p className="mt-4 max-w-prose text-ink-soft">
           Activity from GitHub rather than claims about it. The numbers are fetched by
           the server every few hours and cached — your browser never talks to GitHub, so
@@ -90,7 +90,7 @@ function Provenance({ stats }: { stats: GitHubStats }) {
 function NotConnected() {
   return (
     <div className="surface px-6 py-8">
-      <h2 className="font-display text-lg font-semibold">Not connected yet</h2>
+      <h2 className="text-section font-display font-semibold">Not connected yet</h2>
       <p className="mt-2 max-w-prose text-sm text-ink-soft">
         This page reads from the GitHub API, and the server has not reached it — either
         no account is configured or the request did not get through. Nothing is shown

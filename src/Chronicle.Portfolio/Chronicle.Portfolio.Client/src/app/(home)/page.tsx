@@ -25,7 +25,7 @@ export default async function MissionControl() {
         <StatusStrip />
       </Suspense>
 
-      <section className="mb-20 max-w-3xl">
+      <section data-rise="0" className="mb-20 max-w-3xl">
         <p className="mb-4 font-mono text-xs tracking-[0.2em] text-signal uppercase">
           Software Engineer &middot; Banking systems
         </p>
@@ -63,9 +63,9 @@ export default async function MissionControl() {
         </div>
       </section>
 
-      <section aria-labelledby="featured-heading">
+      <section data-rise="1" aria-labelledby="featured-heading">
         <div className="mb-5 flex items-baseline justify-between gap-4">
-          <h2 id="featured-heading" className="text-xl font-semibold">
+          <h2 id="featured-heading" className="text-section font-semibold">
             Selected work
           </h2>
           <Link href="/projects" className="text-sm text-signal hover:underline">

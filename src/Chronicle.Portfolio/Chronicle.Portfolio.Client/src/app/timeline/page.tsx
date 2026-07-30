@@ -22,7 +22,7 @@ export default async function TimelinePage() {
   return (
     <>
       <header className="mb-6 max-w-2xl">
-        <h1 className="mb-3 text-3xl font-semibold">Timeline</h1>
+        <h1 className="text-title mb-3 font-semibold">Timeline</h1>
         <p className="rm-compact text-ink-soft">
           Career and life on one axis{span ? `, ${span}` : ""}. Everything below the
           &ldquo;you are here&rdquo; line is a stated goal rather than something already

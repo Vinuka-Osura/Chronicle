@@ -19,7 +19,7 @@ export function CertificationsStrip({ items }: { items: Certification[] }) {
 
   return (
     <section aria-labelledby="certs-heading" className="mt-14">
-      <h2 id="certs-heading" className="mb-4 text-xl font-semibold">
+      <h2 id="certs-heading" className="text-section mb-4 font-semibold">
         Certifications
       </h2>
 

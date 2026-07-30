@@ -79,7 +79,7 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
                 address bar. Native anchor behaviour: no JavaScript, and it works from a
                 pasted URL on first load.
               */}
-              <h2 className="font-display text-lg font-semibold tracking-tight text-ink">
+              <h2 className="text-section font-display font-semibold text-ink">
                 <a href={`#era-${group.era.id}`} className="timeline-anchor">
                   {group.era.name}
                 </a>

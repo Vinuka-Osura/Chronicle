@@ -39,7 +39,7 @@ export default async function ResumePage() {
       </div>
 
       <header className="resume-header">
-        <h1 className="text-3xl font-semibold">Sam Iversen</h1>
+        <h1 className="text-title font-semibold">Sam Iversen</h1>
         <p className="text-ink-soft">Software Engineer &middot; payments systems and reliability</p>
         <p className="resume-contact font-mono text-xs text-ink-faint">
           <Link href="/contact" className="rm-hide-print text-signal hover:underline">

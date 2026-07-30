@@ -34,7 +34,7 @@ export function LearningBoard({ items }: { items: LearningItem[] }) {
 
   return (
     <section aria-labelledby="learning-heading">
-      <h2 id="learning-heading" className="mb-2 text-xl font-semibold">
+      <h2 id="learning-heading" className="text-section mb-2 font-semibold">
         Currently learning
       </h2>
       <p className="rm-compact mb-5 max-w-prose text-sm text-ink-soft">

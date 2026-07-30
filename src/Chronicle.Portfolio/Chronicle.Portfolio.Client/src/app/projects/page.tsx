@@ -14,7 +14,7 @@ export default async function ProjectsPage() {
   return (
     <>
       <header className="mb-10 max-w-2xl">
-        <h1 className="mb-3 text-3xl font-semibold">Projects</h1>
+        <h1 className="text-title mb-3 font-semibold">Projects</h1>
         <p className="rm-compact text-ink-soft">
           Each of these is written as a case study rather than a feature list â€” what the
           problem was, which tradeoffs I made and why, and what happened afterwards.

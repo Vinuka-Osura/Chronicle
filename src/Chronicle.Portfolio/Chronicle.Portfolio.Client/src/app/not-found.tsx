@@ -15,7 +15,7 @@ export default function NotFound() {
         Not found
       </p>
 
-      <h1 className="mb-4 text-3xl font-semibold">
+      <h1 className="text-title mb-4 font-semibold">
         There is nothing at this address.
       </h1>
 

@@ -14,7 +14,7 @@ export default function ContactPage() {
         <p className="mb-2 font-mono text-xs tracking-[0.2em] text-ink-faint uppercase">
           Contact
         </p>
-        <h1 className="text-hero font-semibold">Say hello</h1>
+        <h1 className="text-title font-semibold">Say hello</h1>
         <p className="mt-4 max-w-prose text-ink-soft">
           Roles, collaborations, or a question about something on this site — all
           welcome. Messages reach my inbox directly; nothing is stored here.

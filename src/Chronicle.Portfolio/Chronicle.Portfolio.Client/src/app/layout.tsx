@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
+import { Reveal } from "@/components/Reveal";
 import { appearanceScript } from "@/lib/appearance";
 import { lensScript } from "@/app/timeline/lenses";
 import "./globals.css";
@@ -93,6 +94,9 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        {/* Renders nothing. Arms the scroll reveal for any page using data-rise, and
+            stays inert under reduced motion or Recruiter Mode. */}
+        <Reveal />
       </body>
     </html>
   );

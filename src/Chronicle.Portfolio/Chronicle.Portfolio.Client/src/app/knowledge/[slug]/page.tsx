@@ -107,7 +107,7 @@ async function Article({ params }: { params: Promise<Params> }) {
       </nav>
 
       <header className="mb-8">
-        <h1 className="mb-3 text-3xl font-semibold">{post.title}</h1>
+        <h1 className="text-title mb-3 font-semibold">{post.title}</h1>
 
         <p className="mb-4 flex flex-wrap items-center gap-x-2 font-mono text-[0.7rem] tracking-[0.12em] text-ink-faint uppercase">
           {published && <span>{published}</span>}

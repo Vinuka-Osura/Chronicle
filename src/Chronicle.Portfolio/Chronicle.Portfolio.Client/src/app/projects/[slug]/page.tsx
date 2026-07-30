@@ -69,7 +69,7 @@ function Section({
 
   return (
     <section className="mb-12">
-      <h2 className="mb-3 text-xl font-semibold">{heading}</h2>
+      <h2 className="text-section mb-3 font-semibold">{heading}</h2>
       <Markdown>{body}</Markdown>
     </section>
   );
@@ -130,7 +130,7 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
 
       {/* 1. Hero */}
       <header className="mb-12">
-        <h1 className="mb-3 text-4xl font-semibold">{project.title}</h1>
+        <h1 className="text-title mb-3 font-semibold">{project.title}</h1>
         <p className="rm-compact mb-5 text-lg text-ink-soft">{project.pitch}</p>
 
         {project.techStack.length > 0 && (
@@ -158,7 +158,7 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
       {/* 8. Artifacts */}
       {links.length > 0 && (
         <section className="mb-12">
-          <h2 className="mb-3 text-xl font-semibold">Links</h2>
+          <h2 className="text-section mb-3 font-semibold">Links</h2>
           <ul className="flex flex-wrap gap-3">
             {links.map((link) => (
               <li key={link.label}>

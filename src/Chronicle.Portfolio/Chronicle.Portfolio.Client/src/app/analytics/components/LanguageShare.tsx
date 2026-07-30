@@ -23,7 +23,7 @@ export function LanguageShare({ languages }: { languages: Language[] }) {
 
   return (
     <section aria-labelledby="languages-heading">
-      <h2 id="languages-heading" className="font-display text-lg font-semibold">
+      <h2 id="languages-heading" className="text-section font-display font-semibold">
         Languages by volume
       </h2>
       <p className="mb-4 text-sm text-ink-soft">

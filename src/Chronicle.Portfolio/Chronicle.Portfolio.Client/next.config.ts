@@ -12,6 +12,20 @@ const nextConfig: NextConfig = {
    */
   cacheComponents: true,
 
+  experimental: {
+    /*
+     * React's View Transitions integration, so navigating between routes cross-fades
+     * rather than cutting.
+     *
+     * Experimental, and taken on deliberately: the entire feature degrades to nothing.
+     * A browser without the View Transitions API navigates exactly as before, and
+     * `prefers-reduced-motion` and Recruiter Mode both switch it off in `globals.css`.
+     * There is no fallback path to maintain and no behaviour that depends on it, so the
+     * cost of the flag changing under us is one line here.
+     */
+    viewTransition: true,
+  },
+
   // Screenshots and diagrams are served from object storage, not committed to the repo.
   images: {
     remotePatterns: [

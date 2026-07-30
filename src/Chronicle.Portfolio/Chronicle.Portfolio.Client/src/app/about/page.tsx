@@ -14,7 +14,7 @@ export default async function AboutPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="mb-6 text-3xl font-semibold">About</h1>
+      <h1 className="text-title mb-6 font-semibold">About</h1>
 
       {/*
         DEMO CONTENT. This is Sam Iversen, the fictional engineer the seed data

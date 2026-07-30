@@ -19,7 +19,7 @@ export function ComingSoon({
       <p className="mb-2 font-mono text-xs tracking-[0.2em] text-signal uppercase">
         {phase}
       </p>
-      <h1 className="mb-4 text-3xl font-semibold">{title}</h1>
+      <h1 className="text-title mb-4 font-semibold">{title}</h1>
       <p className="text-ink-soft">{summary}</p>
     </section>
   );

@@ -65,7 +65,7 @@ export function ContributionHeatmap({
     <section aria-labelledby="heatmap-heading">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h2 id="heatmap-heading" className="font-display text-lg font-semibold">
+          <h2 id="heatmap-heading" className="text-section font-display font-semibold">
             {total.toLocaleString("en-GB")} contributions
           </h2>
           <p className="text-sm text-ink-soft">

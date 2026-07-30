@@ -277,6 +277,82 @@
 }
 
 /*
+  ── Page transitions ──────────────────────────────────────────────────────────
+  A short cross-fade between routes instead of a cut.
+
+  Deliberately opacity only, and deliberately brief. Sliding pages sideways looks
+  impressive once and is irritating by the fourth navigation, and anything longer
+  than ~180ms makes a fast site feel slow — the transition becomes the thing you
+  are waiting for.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: chronicle-fade-out 120ms var(--ease-out-quiet) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: chronicle-fade-in 180ms var(--ease-out-quiet) both;
+  }
+}
+
+/* Recruiter Mode opts out too: it is the one place on the site where every
+   millisecond of ceremony is working against the reader. */
+[data-recruiter="on"] ::view-transition-old(root),
+[data-recruiter="on"] ::view-transition-new(root) {
+  animation: none;
+}
+
+@keyframes chronicle-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes chronicle-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+  ── Scroll reveal ─────────────────────────────────────────────────────────────
+  Anything with data-rise lifts into place as it enters the viewport.
+
+  The hidden state is gated on [data-reveal="ready"], which only the Reveal
+  component sets. No JavaScript means no attribute means nothing is ever hidden —
+  the failure mode this guards against is a page permanently at opacity zero,
+  which is how most scroll-reveal implementations break.
+
+  transform and opacity only, so it stays on the compositor.
+*/
+@layer utilities {
+  [data-reveal="ready"] [data-rise] {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+    transition:
+      opacity 460ms var(--ease-out-quiet),
+      transform 460ms var(--ease-out-quiet);
+  }
+
+  [data-reveal="ready"] [data-rise].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /*
+    Sections stagger by their own index rather than a wrapper orchestrating them,
+    so a page can add or reorder sections without anything being rewired. Capped
+    at five: past that the delay is longer than the animation and the last item
+    looks broken rather than choreographed.
+  */
+  [data-reveal="ready"] [data-rise="1"] { transition-delay: 60ms; }
+  [data-reveal="ready"] [data-rise="2"] { transition-delay: 120ms; }
+  [data-reveal="ready"] [data-rise="3"] { transition-delay: 180ms; }
+  [data-reveal="ready"] [data-rise="4"] { transition-delay: 240ms; }
+  [data-reveal="ready"] [data-rise="5"] { transition-delay: 300ms; }
+}
+
+/*
   ── Surfaces ──────────────────────────────────────────────────────────────────
   One card treatment, defined once.
 

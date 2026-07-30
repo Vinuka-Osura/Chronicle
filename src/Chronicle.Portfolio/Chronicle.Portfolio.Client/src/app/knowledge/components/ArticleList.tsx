@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { PostCard } from "@/lib/types";
+import { CardGrid } from "@/components/CardGrid";
 import { searchPosts } from "../search";
 
 function published(iso: string | null): string {
@@ -85,7 +86,7 @@ export function ArticleList({ posts }: { posts: PostCard[] }) {
 
   return (
     <section aria-labelledby="articles-heading" className="mb-16">
-      <h2 id="articles-heading" className="mb-2 text-xl font-semibold">
+      <h2 id="articles-heading" className="text-section mb-2 font-semibold">
         Articles
       </h2>
       <p className="rm-compact mb-5 max-w-prose text-sm text-ink-soft">
@@ -171,11 +172,13 @@ export function ArticleList({ posts }: { posts: PostCard[] }) {
           opacity rather than replaced by a skeleton: the layout does not jump, and the
           old answer stays readable until a better one arrives. */}
       {shown.length > 0 ? (
-        <ul
-          className={`rm-grid grid gap-3 transition-opacity ${searching ? "opacity-60" : ""}`}
-        >
-          {shown.map((post) => (
-            <li key={post.slug}>
+        <div className={`transition-opacity ${searching ? "opacity-60" : ""}`}>
+          <CardGrid
+            items={shown}
+            keyOf={(post) => post.slug}
+            className="rm-grid grid gap-3"
+          >
+            {(post) => (
               <article className="group relative surface surface-interactive p-4">
                 <p className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-[0.68rem] tracking-[0.12em] text-ink-faint uppercase">
                   <span>{published(post.publishedAt)}</span>
@@ -207,9 +210,9 @@ export function ArticleList({ posts }: { posts: PostCard[] }) {
                   </ul>
                 )}
               </article>
-            </li>
-          ))}
-        </ul>
+            )}
+          </CardGrid>
+        </div>
       ) : (
         <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">
           Nothing published yet.

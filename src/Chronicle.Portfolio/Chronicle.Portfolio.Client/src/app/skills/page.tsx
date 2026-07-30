@@ -14,7 +14,7 @@ export default async function SkillsPage() {
   return (
     <>
       <header className="mb-10 max-w-2xl">
-        <h1 className="mb-3 text-3xl font-semibold">Skills</h1>
+        <h1 className="text-title mb-3 font-semibold">Skills</h1>
         <p className="rm-compact text-ink-soft">
           Every skill below links to the work that used it. Those links are worked out
           from the projects and roles themselves rather than typed in, so nothing here

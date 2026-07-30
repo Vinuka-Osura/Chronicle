@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ProjectCard as ProjectCardData } from "@/lib/types";
+import { CardGrid } from "@/components/CardGrid";
 import { ProjectCard } from "./ProjectCard";
 
 /**
@@ -72,11 +73,13 @@ export function TagFilter({ projects }: { projects: ProjectCardData[] }) {
       */}
       <h2 className="sr-only">All projects</h2>
 
-      <div className="rm-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {shown.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
-        ))}
-      </div>
+      <CardGrid
+        items={shown}
+        keyOf={(project) => project.slug}
+        className="rm-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {(project) => <ProjectCard project={project} />}
+      </CardGrid>
     </>
   );
 }
