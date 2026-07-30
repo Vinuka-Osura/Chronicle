@@ -157,6 +157,23 @@ Two things on one page: **articles** you have written, tag-filterable and showin
 reading time, and a **learning board** of what you are studying right now, each with an
 honest progress state — Exploring, Learning or Comfortable.
 
+**Search reads the whole article, not just the title.** Titles count most, then the
+summary, then the body — so an article *about* a subject comes above one that mentions
+it once in passing. It also understands word endings: searching "ledgers" finds
+"ledger", and "snapshot" finds "Snapshotting".
+
+You can be more precise if you want to:
+
+| Type this | And you get |
+|---|---|
+| `double entry` | articles containing both words, anywhere |
+| `"double entry"` | only that exact phrase |
+| `postgres OR redis` | either one |
+| `audit -migration` | audit, but not the ones about migrations |
+
+Anything it cannot parse is treated as ordinary words rather than an error — a stray
+quote is a typo, not something worth showing you a failure for.
+
 Drafts never appear. An article is invisible to the public site until you publish it.
 
 **Working now.**

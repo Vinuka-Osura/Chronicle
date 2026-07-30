@@ -38,6 +38,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddScoped<IPostSearch, PostgresPostSearch>();
         services.AddScoped<AuditableEntityInterceptor>();
 
         // A typed client rather than a bare HttpClient: the base address, the required

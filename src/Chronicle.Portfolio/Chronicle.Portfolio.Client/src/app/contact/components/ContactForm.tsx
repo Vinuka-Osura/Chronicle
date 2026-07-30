@@ -188,7 +188,7 @@ function Field({
         id,
         name,
         required: true,
-        className: "contact-input",
+        className: "field-input",
         "aria-invalid": Boolean(error),
         "aria-describedby": error ? errorId : undefined,
       })}

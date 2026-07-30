@@ -294,13 +294,13 @@
 }
 
 /*
-  ── Contact form ──────────────────────────────────────────────────────────────
-  The only form on the public site, so its inputs live here rather than in a
-  component: three fields do not justify an abstraction, and a class keeps the
-  focus ring and the themed border in one place.
+  ── Text inputs ───────────────────────────────────────────────────────────────
+  Shared by the contact form and the article search box. A class rather than a
+  component, because what those two have in common is the focus ring and the
+  themed border, not any behaviour worth wrapping.
 */
 @layer components {
-  .contact-input {
+  .field-input {
     width: 100%;
     border: 1px solid var(--color-rule);
     border-radius: 0.375rem;
@@ -313,19 +313,19 @@
     transition: border-color 150ms var(--ease-out-quiet);
   }
 
-  .contact-input::placeholder {
+  .field-input::placeholder {
     color: var(--color-ink-faint);
   }
 
-  .contact-input:hover {
+  .field-input:hover {
     border-color: var(--color-ink-faint);
   }
 
-  .contact-input:focus-visible {
+  .field-input:focus-visible {
     border-color: var(--color-signal);
   }
 
-  .contact-input[aria-invalid="true"] {
+  .field-input[aria-invalid="true"] {
     border-color: var(--color-alert);
   }
 
