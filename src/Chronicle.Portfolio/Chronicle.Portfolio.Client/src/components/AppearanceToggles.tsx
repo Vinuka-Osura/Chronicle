@@ -5,23 +5,22 @@ import { useAppearance } from "@/lib/appearance";
 /**
  * Light/dark switch.
  *
- * `ready` gates only the ARIA state, never the rendering: the button must exist in the
- * server HTML so the header does not reflow when React hydrates. Until the client has
- * read the DOM the label says "theme" rather than asserting the wrong current value.
+ * Both icons ship and CSS picks one, so the visible state is correct from the first
+ * paint - it follows the `data-theme` attribute the pre-paint script already set,
+ * with no JavaScript involved. Only the label needs the resolved value.
  */
 export function ThemeToggle() {
-  const { theme, toggleTheme, ready } = useAppearance();
-  const isDark = ready && theme === "dark";
+  const { theme, toggleTheme } = useAppearance();
+  const label = `Switch to ${theme === "dark" ? "light" : "dark"} mode`;
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      title={ready ? `Switch to ${isDark ? "light" : "dark"} mode` : "Switch theme"}
-      aria-label={ready ? `Switch to ${isDark ? "light" : "dark"} mode` : "Switch theme"}
+      title={label}
+      aria-label={label}
       className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-rule text-ink-soft transition-colors hover:border-signal hover:text-ink"
     >
-      {/* Both icons ship; CSS picks one, so there is nothing to swap on hydration. */}
       <svg
         aria-hidden
         viewBox="0 0 24 24"
@@ -57,14 +56,14 @@ export function ThemeToggle() {
  * seconds and should not have to decode an icon.
  */
 export function RecruiterToggle({ className = "" }: { className?: string }) {
-  const { isRecruiterMode, toggleRecruiterMode, ready } = useAppearance();
+  const { isRecruiterMode, toggleRecruiterMode } = useAppearance();
 
   return (
     <button
       type="button"
       onClick={toggleRecruiterMode}
       role="switch"
-      aria-checked={ready ? isRecruiterMode : false}
+      aria-checked={isRecruiterMode}
       className={`group inline-flex shrink-0 items-center gap-2 rounded-full border border-rule px-3 py-1.5 text-xs font-medium text-ink-soft transition-colors hover:border-signal hover:text-ink ${className}`}
     >
       <span

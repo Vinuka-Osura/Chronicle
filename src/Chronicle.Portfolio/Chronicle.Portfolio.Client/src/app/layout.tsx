@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { AppearanceProvider, appearanceScript } from "@/lib/appearance";
+import { appearanceScript } from "@/lib/appearance";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -74,17 +74,19 @@ export default function RootLayout({
         */}
         <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
       </head>
+      {/*
+        No appearance provider: the <html> data attributes are the source of truth and
+        useAppearance subscribes to them directly, so there is no state to hoist.
+      */}
       <body className="flex min-h-full flex-col antialiased">
-        <AppearanceProvider>
-          <SiteHeader />
-          <main
-            id="main"
-            className="mx-auto w-full max-w-6xl grow px-4 py-10 sm:px-5 sm:py-12"
-          >
-            {children}
-          </main>
-          <Footer />
-        </AppearanceProvider>
+        <SiteHeader />
+        <main
+          id="main"
+          className="mx-auto w-full max-w-6xl grow px-4 py-10 sm:px-5 sm:py-12"
+        >
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );

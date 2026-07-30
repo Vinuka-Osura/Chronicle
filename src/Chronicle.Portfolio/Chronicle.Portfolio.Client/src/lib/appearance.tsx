@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export const THEME_COOKIE = "theme";
 export const RECRUITER_COOKIE = "recruiterMode";
@@ -32,72 +25,72 @@ export type Theme = "light" | "dark";
  */
 export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);d.dataset.recruiter=r&&r[1]==="1"?"on":"off"}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.recruiter="off"}})();`;
 
+/*
+  The <html> data attributes are the single source of truth, not React state.
+
+  The pre-paint script writes them before React exists, so mirroring them into state
+  would mean two sources that can disagree - and the obvious way to sync them, a
+  setState inside useEffect, is exactly what react-hooks/set-state-in-effect warns
+  about. useSyncExternalStore is the primitive built for this: subscribe to an external
+  mutable source, with a server snapshot for hydration.
+*/
+
+function subscribeToRoot(onStoreChange: () => void) {
+  const observer = new MutationObserver(onStoreChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme", "data-recruiter"],
+  });
+  return () => observer.disconnect();
+}
+
+const readTheme = (): Theme =>
+  document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+
+const readRecruiterMode = (): boolean =>
+  document.documentElement.dataset.recruiter === "on";
+
+// Used for SSR and for the hydrating render, so server and client agree; React then
+// re-reads the live value immediately afterwards.
+const serverTheme = (): Theme => "light";
+const serverRecruiterMode = () => false;
+
 function writeCookie(name: string, value: string) {
   // Lax rather than Strict: the preference should survive arriving from a link in an
   // email or an ATS, which is exactly how a recruiter reaches this site.
   document.cookie = `${name}=${value}; path=/; max-age=31536000; samesite=lax`;
 }
 
-interface AppearanceValue {
+export interface Appearance {
   theme: Theme;
   toggleTheme: () => void;
   isRecruiterMode: boolean;
   toggleRecruiterMode: () => void;
-  /** False until the client has read the DOM, so SSR and hydration agree. */
-  ready: boolean;
 }
 
-const AppearanceContext = createContext<AppearanceValue | null>(null);
-
-export function AppearanceProvider({ children }: { children: ReactNode }) {
-  // Both start at their server-rendered defaults so the first client render matches the
-  // HTML. The real values arrive in the effect below; the visuals are already correct
-  // because the inline script set the attributes before paint.
-  const [theme, setTheme] = useState<Theme>("light");
-  const [isRecruiterMode, setIsRecruiterMode] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    setTheme(root.dataset.theme === "dark" ? "dark" : "light");
-    setIsRecruiterMode(root.dataset.recruiter === "on");
-    setReady(true);
-  }, []);
+export function useAppearance(): Appearance {
+  const theme = useSyncExternalStore(subscribeToRoot, readTheme, serverTheme);
+  const isRecruiterMode = useSyncExternalStore(
+    subscribeToRoot,
+    readRecruiterMode,
+    serverRecruiterMode,
+  );
 
   const toggleTheme = useCallback(() => {
-    setTheme((previous) => {
-      const next: Theme = previous === "dark" ? "light" : "dark";
-      const root = document.documentElement;
-      root.dataset.theme = next;
-      // Keeps native controls, scrollbars and form widgets in step with the page.
-      root.style.colorScheme = next;
-      writeCookie(THEME_COOKIE, next);
-      return next;
-    });
+    const root = document.documentElement;
+    const next: Theme = root.dataset.theme === "dark" ? "light" : "dark";
+    root.dataset.theme = next;
+    // Keeps native controls, scrollbars and form widgets in step with the page.
+    root.style.colorScheme = next;
+    writeCookie(THEME_COOKIE, next);
   }, []);
 
   const toggleRecruiterMode = useCallback(() => {
-    setIsRecruiterMode((previous) => {
-      const next = !previous;
-      document.documentElement.dataset.recruiter = next ? "on" : "off";
-      writeCookie(RECRUITER_COOKIE, next ? "1" : "0");
-      return next;
-    });
+    const root = document.documentElement;
+    const next = root.dataset.recruiter !== "on";
+    root.dataset.recruiter = next ? "on" : "off";
+    writeCookie(RECRUITER_COOKIE, next ? "1" : "0");
   }, []);
 
-  return (
-    <AppearanceContext
-      value={{ theme, toggleTheme, isRecruiterMode, toggleRecruiterMode, ready }}
-    >
-      {children}
-    </AppearanceContext>
-  );
-}
-
-export function useAppearance(): AppearanceValue {
-  const value = useContext(AppearanceContext);
-  if (!value) {
-    throw new Error("useAppearance must be used inside an AppearanceProvider");
-  }
-  return value;
+  return { theme, toggleTheme, isRecruiterMode, toggleRecruiterMode };
 }

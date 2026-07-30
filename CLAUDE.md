@@ -187,8 +187,21 @@ throw.
 ```bash
 dotnet build Chronicle.slnx      # warnings are errors
 dotnet test  Chronicle.slnx      # includes the architecture tests
-dotnet run --project src/Chronicle.AppHost
+
+# In the client directory. Run ALL THREE - `next build` uses Turbopack and does not
+# invoke ESLint, so a build that passes tells you nothing about lint.
+npm run lint
+npm run typecheck
+npm run build
+
+dotnet run --project src/Chronicle.AppHost   # needs the launch profile for user-secrets
 ```
+
+**Dependency overrides must stay within a major version.** An override that crosses one
+is an API change wearing a patch's clothes: forcing `brace-expansion` to v5 to clear an
+advisory broke the `minimatch@3` inside ESLint, which needs the v1 API. If the only
+fixed version is in a different major, the honest move is to leave it, confine it to dev
+dependencies, and write down why.
 
 Then check the dashboard shows all three resources healthy, `/scalar/v1` lists the
 endpoint, and — for a CMS change — that saving in `/admin` is visible on the public page

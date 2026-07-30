@@ -31,15 +31,19 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   },
-  "//": "Transitive security pins. next 16.2.12 resolves postcss 8.4.31 and sharp 0.34.5, both of which",
-  "// ": "carry high-severity advisories; js-yaml and brace-expansion arrive via openapi-typescript and eslint.",
-  "//  ": "npm's own `audit fix --force` proposes downgrading next to 9.3.3, which is not a fix. Pinning",
-  "//   ": "forward clears all 14 advisories without touching the framework. Re-check on each Next upgrade",
-  "//    ": "and drop entries once the upstream dependency ships a patched version itself.",
+  "//": "Transitive security pins for RUNTIME dependencies. next 16.2.12 resolves postcss 8.4.31 and",
+  "// ": "sharp 0.34.5, both carrying high-severity advisories; js-yaml arrives via openapi-typescript.",
+  "//  ": "npm's own `audit fix --force` proposes downgrading next to 9.3.3, which is not a fix. Each pin",
+  "//   ": "below stays WITHIN its major, so it is a patch rather than an API change. Re-check on each",
+  "//    ": "Next upgrade and drop entries once upstream ships a fixed version itself.",
+  "//     ": "Deliberately NOT pinned: brace-expansion. Its advisory is only fixed in 5.0.8+, but eslint's",
+  "//      ": "tree contains minimatch@3 and minimatch@5, which need the v1 and v2 APIs - forcing v5 on them",
+  "//       ": "breaks eslint outright with 'expand is not a function'. There is no version that satisfies",
+  "//        ": "both, so this waits on eslint dropping minimatch@3. It is dev-only and production audits",
+  "//         ": "clean; CI gates on `npm audit --omit=dev` for that reason and reports the rest for visibility.",
   "overrides": {
     "postcss": "^8.5.24",
     "sharp": "^0.35.3",
-    "js-yaml": "^4.2.1",
-    "brace-expansion": "^5.0.8"
+    "js-yaml": "^4.2.1"
   }
 }
