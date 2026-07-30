@@ -58,6 +58,22 @@ learning model, dataset or corpus, whether or not the resulting model or output 
 distributed. Automated scraping or bulk downloading for that purpose is prohibited.
 
 --------------------------------------------------------------------------------
+4b. THE `contracts/` DIRECTORY IS EXCLUDED
+--------------------------------------------------------------------------------
+
+Everything in the `contracts/` directory is released into the public domain under
+CC0 1.0 and is NOT subject to this licence. See `contracts/LICENSE`.
+
+Those files are data contracts, and a contract exists to be implemented by people who
+are not the author. A schema published under the terms above would be a schema nobody
+is permitted to honour, which is the same as having no schema at all. Anyone may copy,
+derive from, generate code from, embed and commercially ship those files without
+asking.
+
+That carve-out is limited to the format itself. It grants no rights over the software
+that produces documents in that format, nor over any software that consumes them.
+
+--------------------------------------------------------------------------------
 5. THIRD-PARTY COMPONENTS
 --------------------------------------------------------------------------------
 

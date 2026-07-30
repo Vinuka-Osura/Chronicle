@@ -1,5 +1,7 @@
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Application.Features.Analytics;
+using Chronicle.Application.Features.CareerGraph;
+using Chronicle.Application.Features.CareerGraph.Queries.GetCareerGraph;
 using Chronicle.Application.Features.Analytics.Queries.GetGitHubStats;
 using Chronicle.Application.Features.Certifications;
 using Chronicle.Application.Features.Certifications.Queries.GetCertifications;
@@ -74,6 +76,20 @@ public static class ContentEndpoints
             .Produces<SiteStatusDto>()
             // Shorter TTL than the rest: this is the one surface that claims to be live.
             .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(30)).Tag(CacheTags.Status))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/career-graph", (ISender sender, CancellationToken ct) =>
+                sender.Send(new GetCareerGraphQuery(), ct))
+            .WithTags("Career graph")
+            .WithName("GetCareerGraph")
+            .WithSummary("The career as timestamped entities, for the Software City renderer")
+            .WithDescription(
+                "Conforms to contracts/career-graph.v1.schema.json, which is CC0 and versioned. " +
+                "This endpoint is one producer of that shape and has no special status: anything " +
+                "emitting the same document can drive the same renderer. The schema is the " +
+                "contract, not this endpoint.")
+            .Produces<CareerGraphDto>()
+            .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(60)).Tag(CacheTags.CareerGraph))
             .RequireRateLimiting("api");
 
         app.MapGet("/api/github/stats", (ISender sender, CancellationToken ct) =>

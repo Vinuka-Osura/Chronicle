@@ -111,6 +111,7 @@ builder.Services.AddAuthorization();
 builder.Services.Configure<PublicSiteOptions>(options =>
     options.Origin = allowedOrigins.FirstOrDefault());
 builder.Services.AddScoped<PublicSite>();
+builder.Services.AddScoped<IPublicSiteUrls>(sp => sp.GetRequiredService<PublicSite>());
 
 var app = builder.Build();
 

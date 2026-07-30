@@ -5,7 +5,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      The contract test validates the endpoint's output against the committed schema, so
+      the schema itself has to travel with the test assembly. Linked rather than copied
+      into the project, because there must be exactly one of these files and it lives in
+      contracts/ where consumers can find it.
+    -->
+    <None Include="..\..\contracts\career-graph.v1.schema.json"
+          Link="career-graph.v1.schema.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <!-- Validates the career-graph contract. MIT, and the alternative is hand-rolling a
+         JSON Schema validator badly. -->
+    <PackageReference Include="JsonSchema.Net" />
     <!--
       Respawn resets a real PostgreSQL test database between tests.
       Testcontainers is not usable here: no container runtime is installed.

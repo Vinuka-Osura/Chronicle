@@ -1,3 +1,4 @@
+using Chronicle.Application.Common.Interfaces;
 using Microsoft.Extensions.Options;
 
 namespace Chronicle.Portfolio.Server.Components;
@@ -16,7 +17,7 @@ namespace Chronicle.Portfolio.Server.Components;
 /// wrong. A "view on site" button that 404s costs more trust than a missing one.
 /// </para>
 /// </remarks>
-public sealed class PublicSite(IOptions<PublicSiteOptions> options)
+public sealed class PublicSite(IOptions<PublicSiteOptions> options) : IPublicSiteUrls
 {
     private readonly string? _origin = options.Value.Origin?.TrimEnd('/');
 
@@ -27,6 +28,14 @@ public sealed class PublicSite(IOptions<PublicSiteOptions> options)
     public string? Article(string slug) => IsKnown ? $"{_origin}/knowledge/{slug}" : null;
 
     public string? Home => _origin;
+
+    // --- IPublicSiteUrls -------------------------------------------------------
+
+    public string? Origin => _origin;
+
+    /// <summary>Null when the origin is unknown, never a relative path. See the port.</summary>
+    public string? Absolute(string relativePath) =>
+        IsKnown ? $"{_origin}/{relativePath.TrimStart('/')}" : null;
 }
 
 public sealed class PublicSiteOptions

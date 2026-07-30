@@ -1,4 +1,7 @@
+using System.Reflection;
+using Chronicle.Application.Common.Interfaces;
 using Chronicle.Infrastructure.Data;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -110,6 +113,14 @@ public sealed class ChronicleTestHost : WebApplicationFactory<Program>, IAsyncLi
     }
 
     /// <summary>Empties the content tables so each test starts from a known state.</summary>
+    /// <remarks>
+    /// <b>The output cache is cleared too, and it has to be.</b> Respawn truncates tables
+    /// directly, which no command knows about, so nothing evicts the tags — and the next
+    /// test reads the previous test's cached response from an apparently empty database.
+    /// That is not hypothetical: it made the career-graph contract test fail on data it
+    /// had never created, and the symptom looked like a schema violation rather than a
+    /// stale read.
+    /// </remarks>
     public async Task ResetAsync()
     {
         if (_respawner is null)
@@ -120,7 +131,20 @@ public sealed class ChronicleTestHost : WebApplicationFactory<Program>, IAsyncLi
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync().ConfigureAwait(false);
         await _respawner.ResetAsync(connection).ConfigureAwait(false);
+
+        var cache = Services.GetRequiredService<IOutputCacheStore>();
+        foreach (var tag in AllCacheTags)
+        {
+            await cache.EvictByTagAsync(tag, CancellationToken.None).ConfigureAwait(false);
+        }
     }
+
+    /// <summary>Every tag the application uses, read off the constants so it cannot drift.</summary>
+    private static readonly string[] AllCacheTags =
+        [.. typeof(CacheTags)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(string) && field.IsLiteral)
+            .Select(field => (string)field.GetRawConstantValue()!)];
 
     /// <summary>Runs work in its own DI scope, the way a request would.</summary>
     public async Task<T> ScopedAsync<T>(Func<IServiceProvider, Task<T>> work)

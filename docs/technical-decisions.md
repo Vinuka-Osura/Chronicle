@@ -322,3 +322,55 @@ shade; quartiles give both a readable spread of the year they actually had.
   stream of noise; the table carries the same values.
 - **No dual axes, ever** — two y-scales on one plot invent a correlation that is not in
   the data. Two measures of different scale get two charts.
+
+---
+
+## 5. Software City as a saleable product, and what that forces
+
+Software City is now intended to be **sold separately**, not just kept in its own
+repository. That changes almost nothing about Chronicle and one thing about the licence.
+
+### The contract is the product's input, not Chronicle's output
+
+If people buy the renderer they feed it **their** data. So the thing being depended on is
+`contracts/career-graph.v1.schema.json`, and Chronicle is one producer of that shape with
+no special status. Framed the other way round — "the city reads Chronicle's API" — the
+product is unsellable, because every buyer would need a Chronicle.
+
+### Which is why the schema had to be relicensed
+
+The repository licence reserves essentially all rights: no copying, no deriving, no
+reuse. A schema under those terms is a document describing a contract that **nobody is
+permitted to honour**, which is the same as having no contract.
+
+`contracts/` is therefore carved out under **CC0**. A buyer can copy it, generate types
+from it, embed it, and ship commercially without asking. The carve-out covers the format
+only — no rights over the producer or any consumer. See `contracts/LICENSE` and §4b of the
+root licence.
+
+### Build it later, not now
+
+Weeks of work: a WebGL renderer, a city generator, time scrubbing, and real performance
+work for a mid-range phone. Chronicle is not deployed yet, and a 3D city attached to a
+portfolio nobody can reach is worth what the portfolio is worth.
+
+The endpoint, the schema and the contract test are done, so the seam is finished and the
+city is unblocked whenever it starts. That was a day, not weeks.
+
+### Rules the commercial framing imposes
+
+1. **Develop it in its own repository from commit 1.** Provenance matters when selling
+   software; code that was ever inside a proprietary repo is a question a buyer's lawyer
+   asks.
+2. **It must never import Chronicle code** — only read the contract.
+3. **Version the schema, never edit v1 in place.** A shipped consumer is entitled to
+   assume v1 means what it meant when they built against it. A change is `v2`, a new file.
+4. **The contract test is not optional.** It is the only thing in this repository
+   protecting software outside it, and a rename nobody notices here is a broken renderer
+   days later with no obvious cause.
+
+### What is still an open product question
+
+Not decided, and not decidable from here: what a buyer actually buys — hosted service,
+npm package, licensed source — and how they get their data in. That decision shapes the
+renderer's architecture, so it wants answering before the code starts, not after.
