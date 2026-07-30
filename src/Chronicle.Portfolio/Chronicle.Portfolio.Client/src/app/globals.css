@@ -248,7 +248,7 @@
     position: relative;
   }
 
-  /* The spine. Drawn with transform so the reveal animation stays on the compositor -
+  /* The spine. Drawn with transform so the reveal stays on the compositor -
      stroke-dashoffset would repaint every frame. */
   .timeline-spine {
     position: absolute;
@@ -258,9 +258,24 @@
     width: 1px;
     background: var(--color-rule);
     transform-origin: top;
-    animation: timeline-spine-draw linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 0 60%;
+  }
+
+  /*
+    Scroll-driven animation, gated on support rather than left to chance.
+
+    Without the guard, a browser that does not understand animation-timeline falls back
+    to the document timeline with an unspecified duration - which happens to end in the
+    right place, but by accident. Gating it means unsupported browsers simply get a
+    fully drawn spine and fully visible cards, which is the correct static result.
+  */
+  @supports (animation-timeline: scroll()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .timeline-spine {
+        animation: timeline-spine-draw linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 60%;
+      }
+    }
   }
 
   @keyframes timeline-spine-draw {
@@ -270,6 +285,15 @@
     to {
       transform: scaleY(1);
     }
+  }
+
+  .timeline-anchor {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .timeline-anchor:hover {
+    color: var(--color-signal);
   }
 
   .timeline-era-band {
@@ -432,12 +456,14 @@
     }
   }
 
-  /* Node reveal. Transform and opacity only. */
-  @media (prefers-reduced-motion: no-preference) {
-    .timeline-node > article {
-      animation: timeline-node-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 40%;
+  /* Node reveal. Transform and opacity only, and gated the same way as the spine. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .timeline-node > article {
+        animation: timeline-node-in linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
+      }
     }
   }
 

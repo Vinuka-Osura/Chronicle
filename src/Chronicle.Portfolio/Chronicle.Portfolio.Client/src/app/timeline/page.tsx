@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTimeline } from "./api";
 import { ContextBar } from "./components/ContextBar";
+import { Scrubber } from "./components/Scrubber";
 import { TimelineStream } from "./components/TimelineStream";
 
 export const metadata: Metadata = {
@@ -32,7 +33,11 @@ export default async function TimelinePage() {
       {timeline.items.length > 0 ? (
         <>
           <ContextBar eraNames={eraNames} />
-          <TimelineStream timeline={timeline} />
+          {/* Clears the fixed scrubber, so the last node is never hidden behind it. */}
+          <div className="pb-24">
+            <TimelineStream timeline={timeline} />
+          </div>
+          <Scrubber timeline={timeline} />
         </>
       ) : (
         <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">

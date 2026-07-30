@@ -115,10 +115,20 @@ shared skill rather than the most common one, because "shared Docker, SQL Server
 you something and "shared C#" does not.
 
 **Getting around.** A bar under the site header always shows which chapter and year you
-are in, with three jumps: start, today, and what comes next.
+are in, with three jumps: start, today, and what comes next. Chapter and year headings
+are links to themselves, so clicking one puts it in the address bar and you can send
+somebody straight to 2024.
 
-**Working now.** A scrubber along the bottom showing chapter density and letting you
-drag through time is the next addition.
+Along the bottom is a scrubber: one bar per year, its height showing how much happened
+that year, grouped under chapter names. It answers "when was he busiest" at a glance and
+clicking any bar travels there. It slides out of the way as you scroll down and comes
+back when you scroll up.
+
+**On this day.** If something on the timeline happened on today's date in an earlier
+year, a line by the "you are here" marker says so. If nothing did, it stays quiet rather
+than inventing a coincidence.
+
+**Working now.**
 
 ### Projects
 

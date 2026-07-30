@@ -154,8 +154,10 @@ function ConnectionChip({ connection }: { connection: TimelineItem["connections"
     </>
   );
 
+  // max-w-full + break-words: an article title plus its reason can be long, and at 360px
+  // a single unbroken chip would push the page into horizontal scroll.
   const className =
-    "inline-block rounded border border-rule px-1.5 py-0.5 text-xs text-ink-soft transition-colors hover:border-signal hover:text-ink";
+    "inline-block max-w-full rounded border border-rule px-1.5 py-0.5 text-xs break-words text-ink-soft transition-colors hover:border-signal hover:text-ink";
 
   if (connection.kind === "project" && connection.slug) {
     return (
