@@ -1,3 +1,4 @@
+using Chronicle.Application.Common.Content;
 using FluentValidation;
 using MediatR;
 
@@ -55,6 +56,9 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
             .When(c => c.EndDate.HasValue)
             .WithMessage("A project cannot finish before it started. Leave the end date empty if it is ongoing.");
 
+        // Every operator-supplied link goes through the same check: absolute http(s)
+        // only. See Common/Content/Urls for why that is a security rule rather than a
+        // formatting preference.
         foreach (var url in new[]
         {
             (Selector: (Func<SaveProjectCommand, string?>)(c => c.ArchitectureDiagramUrl), Name: "Diagram URL"),
@@ -65,7 +69,7 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
         })
         {
             RuleFor(c => url.Selector(c))
-                .Must(BeAnAbsoluteHttpUrl)
+                .Must(Urls.IsAbsoluteHttp)
                 .When(c => !string.IsNullOrWhiteSpace(url.Selector(c)))
                 .WithName(url.Name)
                 .WithMessage("Must be a full http(s) address.");
@@ -74,13 +78,4 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
         RuleForEach(c => c.Tags).NotEmpty().MaximumLength(60);
         RuleForEach(c => c.TechStack).NotEmpty().MaximumLength(60);
     }
-
-    /// <summary>
-    /// Absolute and http(s) only. A relative value would resolve against the visitor's
-    /// current page, and `javascript:` in an href is a stored cross-site scripting hole
-    /// with an editor's login behind it.
-    /// </summary>
-    private static bool BeAnAbsoluteHttpUrl(string? value) =>
-        Uri.TryCreate(value, UriKind.Absolute, out var uri)
-        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 }

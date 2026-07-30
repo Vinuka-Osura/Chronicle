@@ -439,6 +439,25 @@ a:hover { text-decoration: underline; }
 .md-preview table { display: block; overflow-x: auto; width: 100%; }
 .md-preview img { height: auto; max-width: 100%; }
 
+/* ---------- grouped admin nav ---------- */
+
+/* Related links sit together with a hairline between groups, so ten destinations read
+   as three areas rather than one long row. */
+.admin-nav-group {
+  display: inline-flex;
+  gap: 0.9rem;
+  align-items: center;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--line);
+}
+
+.section-gap { margin-top: 3rem; }
+
+@media (max-width: 60rem) {
+  .admin-nav { flex-wrap: wrap; row-gap: 0.4rem; }
+  .admin-nav-group { border-left: 0; padding-left: 0; flex-wrap: wrap; }
+}
+
 /* ---------- media + storage gauge ---------- */
 
 .storage {

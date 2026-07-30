@@ -1,0 +1,433 @@
+@page "/admin/chronology"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Chronology.Commands.DeleteEra
+@using Chronicle.Application.Features.Chronology.Commands.DeleteMilestone
+@using Chronicle.Application.Features.Chronology.Commands.SaveEra
+@using Chronicle.Application.Features.Chronology.Commands.SaveMilestone
+@using Chronicle.Application.Features.Chronology.Queries.GetChronologyForAdmin
+@using Chronicle.Domain.Enums
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+
+@*
+    Eras and milestones on one screen, because they are only meaningful together: a
+    milestone is hard to place until you can see which chapter it lands in. Separate
+    pages would mean flipping between them to do one job.
+*@
+
+<PageTitle>Timeline - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Timeline</h1>
+        <p class="lede">
+            Eras are the chapters; milestones are the punctuation. Projects and roles
+            sort themselves into eras by date, so you never assign them by hand.
+        </p>
+    </div>
+</div>
+
+<SaveResult Errors="errors" Message="@message" />
+
+@* ------------------------------- Eras ------------------------------- *@
+
+<section>
+    <div class="page-head">
+        <div>
+            <h2>Eras</h2>
+            <p class="lede">
+                Three to six is right. Fewer is not a story; more is a list. Name them the
+                way you would in conversation — "Finding my feet" reads better than
+                "Junior Developer, 2021–2023".
+            </p>
+        </div>
+        <button type="button" class="button-primary" @onclick="StartNewEra">New era</button>
+    </div>
+
+    @if (era is not null)
+    {
+        <EditForm Model="era" OnValidSubmit="SaveEraAsync" FormName="era-editor">
+            <fieldset class="field-group">
+                <legend>@(era.Id is null ? "New era" : "Edit era")</legend>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="era-name">Name</label>
+                        <InputText id="era-name" @bind-Value="era.Name" />
+                    </div>
+                    <div class="field">
+                        <label for="era-start">Started</label>
+                        <InputDate id="era-start" @bind-Value="era.StartDate" />
+                    </div>
+                    <div class="field">
+                        <label for="era-end">Ended <span class="optional">optional</span></label>
+                        <InputDate id="era-end" @bind-Value="era.EndDate" />
+                        <p class="field-help">Empty means this is the current chapter.</p>
+                    </div>
+                    <div class="field">
+                        <label for="era-order">Order</label>
+                        <InputNumber id="era-order" @bind-Value="era.SortOrder" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="era-tagline">Tagline <span class="optional">optional</span></label>
+                    <InputText id="era-tagline" @bind-Value="era.Tagline" />
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="button-primary" disabled="@saving">
+                        @(saving ? "Saving…" : "Save era")
+                    </button>
+                    <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+                </div>
+            </fieldset>
+        </EditForm>
+    }
+
+    @if (data is null)
+    {
+        <p class="muted">Loading...</p>
+    }
+    else if (data.Eras.Count == 0)
+    {
+        <p class="muted">No eras yet. Without them the timeline is a flat list of dates.</p>
+    }
+    else
+    {
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th scope="col">Era</th>
+                    <th scope="col">Span</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in data.Eras)
+                {
+                    <tr>
+                        <th scope="row">
+                            @row.Name
+                            @if (row.Tagline is { } tagline)
+                            {
+                                <span class="row-sub">@tagline</span>
+                            }
+                        </th>
+                        <td class="row-sub">
+                            @row.StartDate.ToString("MMM yyyy") –
+                            @(row.EndDate?.ToString("MMM yyyy") ?? "present")
+                        </td>
+                        <td class="row-actions">
+                            <button type="button" class="button-quiet" @onclick="() => StartEditEra(row)">Edit</button>
+                            @if (confirmingEra == row.Id)
+                            {
+                                <button type="button" class="button-danger" @onclick="() => DeleteEraAsync(row.Id)">
+                                    Really delete
+                                </button>
+                                <button type="button" class="button-quiet" @onclick="() => confirmingEra = null">Cancel</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="button-quiet" @onclick="() => confirmingEra = row.Id">Delete</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@* ---------------------------- Milestones ---------------------------- *@
+
+<section class="section-gap">
+    <div class="page-head">
+        <div>
+            <h2>Milestones</h2>
+            <p class="lede">
+                Dated moments that are neither a job nor a project. Education entries also
+                feed the résumé.
+            </p>
+        </div>
+        <button type="button" class="button-primary" @onclick="StartNewMilestone">New milestone</button>
+    </div>
+
+    @if (milestone is not null)
+    {
+        <EditForm Model="milestone" OnValidSubmit="SaveMilestoneAsync" FormName="milestone-editor">
+            <fieldset class="field-group">
+                <legend>@(milestone.Id is null ? "New milestone" : "Edit milestone")</legend>
+
+                <div class="field-row">
+                    <div class="field">
+                        <label for="ms-title">Title</label>
+                        <InputText id="ms-title" @bind-Value="milestone.Title" />
+                    </div>
+                    <div class="field">
+                        <label for="ms-category">Category</label>
+                        <InputSelect id="ms-category" @bind-Value="milestone.Category">
+                            @foreach (var category in Enum.GetValues<MilestoneCategory>())
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="field">
+                        <label for="ms-date">Date</label>
+                        <InputDate id="ms-date" @bind-Value="milestone.Date" />
+                    </div>
+                    <div class="field">
+                        <label for="ms-end">Ended <span class="optional">optional</span></label>
+                        <InputDate id="ms-end" @bind-Value="milestone.EndDate" />
+                        <p class="field-help">For something spanning time, like a degree.</p>
+                    </div>
+                    <div class="field">
+                        <label for="ms-order">Order</label>
+                        <InputNumber id="ms-order" @bind-Value="milestone.SortOrder" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="ms-description">Description</label>
+                    <InputTextArea id="ms-description" rows="2" @bind-Value="milestone.Description" />
+                </div>
+
+                <div class="field">
+                    <label for="ms-link">Link <span class="optional">optional</span></label>
+                    <InputText id="ms-link" @bind-Value="milestone.Link" />
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="button-primary" disabled="@saving">
+                        @(saving ? "Saving…" : "Save milestone")
+                    </button>
+                    <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+                </div>
+            </fieldset>
+        </EditForm>
+    }
+
+    @if (data is { Milestones.Count: 0 })
+    {
+        <p class="muted">No milestones yet.</p>
+    }
+    else if (data is not null)
+    {
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th scope="col">Milestone</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">When</th>
+                    <th scope="col">Era</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in data.Milestones)
+                {
+                    <tr>
+                        <th scope="row">@row.Title</th>
+                        <td class="row-sub">@row.Category</td>
+                        <td class="row-sub">
+                            @row.Date.ToString("MMM yyyy")
+                            @if (row.EndDate is { } finished)
+                            {
+                                <text> – @finished.ToString("MMM yyyy")</text>
+                            }
+                        </td>
+                        @* Shown, not stored: the timeline works this out by date, and
+                           seeing it here is how you notice a milestone that fell into
+                           the wrong chapter or into none. *@
+                        <td class="row-sub">@(EraFor(row.Date) ?? "—")</td>
+                        <td class="row-actions">
+                            <button type="button" class="button-quiet" @onclick="() => StartEditMilestone(row)">Edit</button>
+                            @if (confirmingMilestone == row.Id)
+                            {
+                                <button type="button" class="button-danger" @onclick="() => DeleteMilestoneAsync(row.Id)">
+                                    Really delete
+                                </button>
+                                <button type="button" class="button-quiet" @onclick="() => confirmingMilestone = null">Cancel</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="button-quiet" @onclick="() => confirmingMilestone = row.Id">Delete</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>
+
+@code {
+    private AdminChronology? data;
+    private EraForm? era;
+    private MilestoneForm? milestone;
+    private Guid? confirmingEra;
+    private Guid? confirmingMilestone;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+
+    private sealed class EraForm
+    {
+        public Guid? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? Tagline { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public DateTime? EndDate { get; set; }
+        public int SortOrder { get; set; }
+    }
+
+    private sealed class MilestoneForm
+    {
+        public Guid? Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Date { get; set; } = DateTime.Today;
+        public DateTime? EndDate { get; set; }
+        public MilestoneCategory Category { get; set; } = MilestoneCategory.Personal;
+        public string? Link { get; set; }
+        public int SortOrder { get; set; }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => data = await Sender.Send(new GetChronologyForAdminQuery());
+
+    /// <summary>Which era covers a date. Last match wins, matching the timeline's own rule.</summary>
+    private string? EraFor(DateOnly date) => data?.Eras
+        .Where(e => date >= e.StartDate && (e.EndDate is null || date <= e.EndDate))
+        .Select(e => e.Name)
+        .LastOrDefault();
+
+    private void Clear()
+    {
+        era = null;
+        milestone = null;
+        confirmingEra = null;
+        confirmingMilestone = null;
+        errors = null;
+        message = null;
+    }
+
+    private void StartNewEra()
+    {
+        Clear();
+        era = new EraForm
+        {
+            SortOrder = data is { Eras.Count: > 0 } ? data.Eras.Max(e => e.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEditEra(AdminEraRow row)
+    {
+        Clear();
+        era = new EraForm
+        {
+            Id = row.Id,
+            Name = row.Name,
+            Tagline = row.Tagline,
+            StartDate = row.StartDate.ToDateTime(TimeOnly.MinValue),
+            EndDate = row.EndDate?.ToDateTime(TimeOnly.MinValue),
+            SortOrder = row.SortOrder
+        };
+    }
+
+    private void StartNewMilestone()
+    {
+        Clear();
+        milestone = new MilestoneForm
+        {
+            SortOrder = data is { Milestones.Count: > 0 } ? data.Milestones.Max(m => m.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEditMilestone(AdminMilestoneRow row)
+    {
+        Clear();
+        milestone = new MilestoneForm
+        {
+            Id = row.Id,
+            Title = row.Title,
+            Description = row.Description,
+            Date = row.Date.ToDateTime(TimeOnly.MinValue),
+            EndDate = row.EndDate?.ToDateTime(TimeOnly.MinValue),
+            Category = row.Category,
+            Link = row.Link,
+            SortOrder = row.SortOrder
+        };
+    }
+
+    private async Task SaveEraAsync()
+    {
+        if (era is null) return;
+        await RunAsync(() => Sender.Send(new SaveEraCommand(
+            era.Id,
+            era.Name,
+            era.Tagline,
+            DateOnly.FromDateTime(era.StartDate),
+            era.EndDate is { } end ? DateOnly.FromDateTime(end) : null,
+            era.SortOrder)));
+    }
+
+    private async Task SaveMilestoneAsync()
+    {
+        if (milestone is null) return;
+        await RunAsync(() => Sender.Send(new SaveMilestoneCommand(
+            milestone.Id,
+            milestone.Title,
+            milestone.Description,
+            DateOnly.FromDateTime(milestone.Date),
+            milestone.EndDate is { } end ? DateOnly.FromDateTime(end) : null,
+            milestone.Category,
+            milestone.Link,
+            milestone.SortOrder)));
+    }
+
+    private async Task DeleteEraAsync(Guid id)
+    {
+        await Sender.Send(new DeleteEraCommand(id));
+        confirmingEra = null;
+        await LoadAsync();
+    }
+
+    private async Task DeleteMilestoneAsync(Guid id)
+    {
+        await Sender.Send(new DeleteMilestoneCommand(id));
+        confirmingMilestone = null;
+        await LoadAsync();
+    }
+
+    /// <summary>Both forms save the same way; only the command differs.</summary>
+    private async Task RunAsync(Func<Task<Guid>> save)
+    {
+        saving = true;
+        errors = null;
+        message = null;
+
+        try
+        {
+            await save();
+            message = "Saved.";
+            era = null;
+            milestone = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

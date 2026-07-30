@@ -7,9 +7,10 @@ assumption that you have read the code.
 `README.md` covers setup, `CLAUDE.md` covers code conventions, and
 `implementation-spec.md` covers the technical design. This is the plain-language one.
 
-> **Status.** Chronicle is mid-build. Sections marked **Not built yet** describe what a
-> surface will do; the site says the same thing honestly rather than showing a
-> half-finished page. Last updated 30 July 2026.
+> **Status.** Every public page and every admin screen is built. What remains is a
+> final pass over the visual design and animation, and deployment. The content is
+> still a fictional engineer, Sam Iversen, until real details replace it — see
+> `content-template.md`. Last updated 30 July 2026.
 
 ---
 
@@ -39,14 +40,15 @@ The landing surface. A short positioning statement, entry points into the rest o
 site, and a **status strip** showing what you are currently working on.
 
 The status strip has two halves. The editorial half — current focus and an optional
-mood — you write in the admin. The live half, your most recent commit, arrives with the
-Analytics work; until then that part is simply absent rather than faked.
+mood — you write in the admin. The live half is your most recent commit, from the
+cached GitHub data. If GitHub cannot be reached that half is simply absent rather than
+faked.
 
 The strip loads separately from the rest of the page, so a slow or unavailable status
 never delays the content behind it, and its space is reserved so nothing jumps when it
 appears.
 
-**Working now**, apart from the last-commit half.
+**Working now.**
 
 ### About
 
@@ -55,8 +57,8 @@ The narrative: who you are, how you got here, what you care about building. A
 verifiable record, so recognitions live alongside the story rather than on a page nobody
 visits. Credentials without a verifiable link render plainly rather than as a dead link.
 
-**Working now.** The prose still lives in the code and moves into the CMS with the
-About editor.
+**Working now.** The prose still lives in the code rather than the CMS — it changes
+about once a year, so it did not earn a screen.
 
 ### Skills
 
@@ -157,7 +159,7 @@ honest progress state — Exploring, Learning or Comfortable.
 
 Drafts never appear. An article is invisible to the public site until you publish it.
 
-*Page not built yet — the API behind it is ready.*
+**Working now.**
 
 ### Engineering Analytics
 
@@ -289,11 +291,15 @@ Counts for every content type, so you can see at a glance what exists.
 
 ### Editing content
 
-Three things are editable here: **Projects**, **Articles** and the **Status strip**.
+**Everything on the public site is editable here.** Nothing needs a deploy to change.
 
-Everything else — experience, skills, eras, milestones, certifications, learning items
-and roadmap goals — still comes from the seed data. Those change once or twice a year,
-and a screen for each would be a lot of scaffolding to maintain for that.
+The navigation groups the screens by what you are doing: the work (projects, articles),
+the person (experience, skills, certifications), and the timeline (eras, milestones,
+learning, roadmap, status).
+
+> **Start with Skills.** Projects, roles and certifications can only name a skill that
+> already exists, so an empty Skills page will block you everywhere else. That is
+> deliberate — see below.
 
 #### Articles
 
@@ -353,6 +359,69 @@ saved — an image has to belong to something.
 
 The one-line "Now" on the home page, plus an optional mood. The last-commit half of the
 strip comes from GitHub and is shown here read-only — there is nothing to edit.
+
+#### Experience
+
+Roles held. **Highlights are one per line** — three to five is right. Write what you did
+and what changed because of it, with numbers where you have them and nothing invented
+where you do not.
+
+A role feeds three places at once: the timeline, the résumé, and the "used in" lists on
+the skills page. Saving one refreshes all three.
+
+#### Skills
+
+The vocabulary everything else draws on, and **the page to fill in first**.
+
+A project, role or certification can only name a skill that already exists here. That is
+deliberate: a skill carries years of experience and a proficiency level that only you can
+set, so accepting an unknown name would quietly create a "Kubernets" with zero years
+against it and put it on your public skills page.
+
+Names match **regardless of case**, so you cannot accidentally create both "EF Core" and
+"ef core" — which would each filter to half your work and neither would look broken.
+
+**A skill in use cannot be deleted.** The attempt tells you exactly what is holding it —
+"used by 2 projects, 1 role" — rather than silently stripping that technology out of
+every case study that listed it.
+
+Be honest about levels. An inflated one is a trap you set for yourself in an interview.
+
+#### Certifications
+
+Credentials, and the skills each attests to. Those skills are what link a certificate to
+the skills page, so AZ-204 can point at both "Azure" and "C#".
+
+Add the verification URL where you have one. A credential nobody can check is worth less
+than one they can.
+
+#### Timeline — eras and milestones
+
+Both on one screen, because they only make sense together.
+
+**Eras are the chapters** and only you can define them: no algorithm can find where one
+period of your life ended and the next began. Three to six is right — fewer is not a
+story, more is a list. Name them the way you would in conversation: "Finding my feet"
+reads better than "Junior Developer, 2021–2023".
+
+**You never assign anything to an era.** Projects, roles and milestones sort themselves
+in by date. The milestone list shows which era each one lands in so you can spot one that
+fell into the wrong chapter, or into none at all.
+
+**Deleting an era loses only the heading.** Nothing points at it, so its contents
+reappear under whichever era now covers those dates.
+
+**Milestones** are the dated moments that are neither a job nor a project — graduating,
+a talk, an award, a move. Education entries also feed the résumé.
+
+#### Learning and Roadmap
+
+**Learning** is what you are working through now, with an honest status. Leave progress
+empty rather than guessing a number.
+
+**Roadmap** is stated intentions, drawn below the timeline's "you are here" line and
+labelled as goals. That framing is the only reason they are worth stating — a roadmap
+presented as accomplishment is just an inaccurate CV.
 
 ### The storage gauge
 
@@ -417,10 +486,10 @@ Read-only, needs no key, and returns JSON. Browse and try every endpoint at
 | `GET /api/roadmap` | Future goals, soonest first | Working |
 | `GET /api/certifications` | Credentials, most recent first | Working |
 | `GET /api/status` | Mission Control status strip | Working |
-| `GET /api/timeline` | Experience, projects and roadmap merged | Not built yet |
-| `GET /api/github/stats` | Cached GitHub activity | Not built yet |
-| `GET /api/career-graph` | Career data for Software City | Not built yet |
-| `POST /api/contact` | Sends you a message | Not built yet |
+| `GET /api/timeline` | Everything dated, merged and sorted into eras | Working |
+| `GET /api/github/stats` | Cached GitHub activity | Working |
+| `POST /api/contact` | Sends you a message | Working |
+| `GET /api/career-graph` | Career data for Software City | Phase 2 |
 
 Article text and case-study sections come back as **Markdown**, unrendered. The site
 turns that into HTML and sanitises it, so the API stays a content service rather than a

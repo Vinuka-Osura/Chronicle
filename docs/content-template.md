@@ -362,6 +362,11 @@ work differently.
 4. **From then on you edit projects, articles and the status strip yourself in `/admin`,
    and changes are live on the next page load** — no deploy, no waiting for a cache.
 
-The parts still seeded rather than editable (experience, skills, eras, milestones,
-certifications, learning, roadmap) change once or twice a year. If you would rather edit
-those yourself too, say so and I will build the screens.
+**Every one of these sections is now editable in `/admin` too.** So this template is a
+convenience, not a requirement — if you would rather type it straight into the CMS, do
+that instead and skip the document entirely. It is still the faster route for §7
+(projects), where the writing is the work and a text editor beats a web form.
+
+If you do use the CMS directly, **fill in Skills first**: projects, roles and
+certifications can only name a skill that already exists, so an empty Skills page blocks
+everything else.

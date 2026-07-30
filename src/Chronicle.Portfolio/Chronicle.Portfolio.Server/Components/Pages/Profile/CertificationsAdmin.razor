@@ -1,0 +1,240 @@
+@page "/admin/certifications"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Certifications.Commands.DeleteCertification
+@using Chronicle.Application.Features.Certifications.Commands.SaveCertification
+@using Chronicle.Application.Features.Certifications.Queries.GetCertificationsForAdmin
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Certifications - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Certifications</h1>
+        <p class="lede">
+            Credentials, and what each one attests to. The skills you name here are what
+            link a certificate to the skills page.
+        </p>
+    </div>
+    <button type="button" class="button-primary" @onclick="StartNew">New certification</button>
+</div>
+
+<SaveResult Errors="errors" Message="@message" />
+
+@if (editing is not null)
+{
+    <EditForm Model="editing" OnValidSubmit="SaveAsync" FormName="certification-editor">
+        <fieldset class="field-group">
+            <legend>@(editing.Id is null ? "New certification" : "Edit certification")</legend>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="name">Name</label>
+                    <InputText id="name" @bind-Value="editing.Name" />
+                </div>
+
+                <div class="field">
+                    <label for="issuer">Issuer</label>
+                    <InputText id="issuer" @bind-Value="editing.Issuer" />
+                </div>
+
+                <div class="field">
+                    <label for="issued">Issued</label>
+                    <InputDate id="issued" @bind-Value="editing.IssueDate" />
+                </div>
+
+                <div class="field">
+                    <label for="order">Order</label>
+                    <InputNumber id="order" @bind-Value="editing.SortOrder" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="credential">Credential URL <span class="optional">optional</span></label>
+                <InputText id="credential" @bind-Value="editing.CredentialUrl" />
+                <p class="field-help">
+                    Where someone can verify it. Full http(s) address.
+                    A credential nobody can check is worth less than one they can.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="logo">Logo URL <span class="optional">optional</span></label>
+                <InputText id="logo" @bind-Value="editing.LogoUrl" />
+            </div>
+
+            <div class="field">
+                <label for="skills">Skills it attests to</label>
+                <InputText id="skills" @bind-Value="editing.Skills" />
+                <p class="field-help">
+                    Comma separated, and each must already exist on the Skills page.
+                    AZ-204 might name both "Azure" and "C#".
+                </p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button-primary" disabled="@saving">
+                    @(saving ? "Saving…" : "Save")
+                </button>
+                <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+            </div>
+        </fieldset>
+    </EditForm>
+}
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">No certifications yet.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Issuer</th>
+                <th scope="col">Issued</th>
+                <th scope="col">Attests to</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        @row.Name
+                        @if (row.CredentialUrl is { } url)
+                        {
+                            <a class="row-sub" href="@url" target="_blank" rel="noreferrer">Verify</a>
+                        }
+                    </th>
+                    <td class="row-sub">@row.Issuer</td>
+                    <td class="row-sub">@row.IssueDate.ToString("MMM yyyy")</td>
+                    <td class="row-sub">@(row.Skills.Count == 0 ? "—" : string.Join(", ", row.Skills))</td>
+                    <td class="row-actions">
+                        <button type="button" class="button-quiet" @onclick="() => StartEdit(row)">Edit</button>
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminCertificationRow>? rows;
+    private Form? editing;
+    private Guid? confirming;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+
+    private sealed class Form
+    {
+        public Guid? Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Issuer { get; set; } = string.Empty;
+        public DateTime IssueDate { get; set; } = DateTime.Today;
+        public string? CredentialUrl { get; set; }
+        public string? LogoUrl { get; set; }
+        public int SortOrder { get; set; }
+        public string Skills { get; set; } = string.Empty;
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => rows = await Sender.Send(new GetCertificationsForAdminQuery());
+
+    private void StartNew()
+    {
+        Clear();
+        editing = new Form
+        {
+            SortOrder = rows is { Count: > 0 } ? rows.Max(r => r.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEdit(AdminCertificationRow row)
+    {
+        Clear();
+        editing = new Form
+        {
+            Id = row.Id,
+            Name = row.Name,
+            Issuer = row.Issuer,
+            IssueDate = row.IssueDate.ToDateTime(TimeOnly.MinValue),
+            CredentialUrl = row.CredentialUrl,
+            LogoUrl = row.LogoUrl,
+            SortOrder = row.SortOrder,
+            Skills = string.Join(", ", row.Skills)
+        };
+    }
+
+    private void Clear()
+    {
+        editing = null;
+        confirming = null;
+        errors = null;
+        message = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editing is null) return;
+
+        saving = true;
+        errors = null;
+        message = null;
+
+        try
+        {
+            await Sender.Send(new SaveCertificationCommand(
+                editing.Id,
+                editing.Name,
+                editing.Issuer,
+                DateOnly.FromDateTime(editing.IssueDate),
+                editing.CredentialUrl,
+                editing.LogoUrl,
+                editing.SortOrder,
+                [.. editing.Skills.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)]));
+
+            message = "Saved.";
+            editing = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteCertificationCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

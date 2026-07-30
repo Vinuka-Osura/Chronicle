@@ -1,0 +1,222 @@
+@page "/admin/roadmap"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Roadmap.Commands.DeleteRoadmapItem
+@using Chronicle.Application.Features.Roadmap.Commands.SaveRoadmapItem
+@using Chronicle.Application.Features.Roadmap.Queries.GetRoadmapForAdmin
+@using Chronicle.Domain.Enums
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Roadmap - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Roadmap</h1>
+        <p class="lede">
+            Stated intentions, drawn below the timeline's today marker. The public page
+            presents them as goals rather than achievements — which is the only reason
+            they are worth stating.
+        </p>
+    </div>
+    <button type="button" class="button-primary" @onclick="StartNew">New goal</button>
+</div>
+
+<SaveResult Errors="errors" Message="@message" />
+
+@if (editing is not null)
+{
+    <EditForm Model="editing" OnValidSubmit="SaveAsync" FormName="roadmap-editor">
+        <fieldset class="field-group">
+            <legend>@(editing.Id is null ? "New goal" : "Edit goal")</legend>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="title">Goal</label>
+                    <InputText id="title" @bind-Value="editing.Title" />
+                </div>
+
+                <div class="field">
+                    <label for="target">Target date</label>
+                    <InputDate id="target" @bind-Value="editing.TargetDate" />
+                </div>
+
+                <div class="field">
+                    <label for="status">Status</label>
+                    <InputSelect id="status" @bind-Value="editing.Status">
+                        @foreach (var status in Enum.GetValues<RoadmapStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="field">
+                    <label for="order">Order</label>
+                    <InputNumber id="order" @bind-Value="editing.SortOrder" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="description">Why it matters</label>
+                <InputTextArea id="description" rows="2" @bind-Value="editing.Description" />
+                <p class="field-help">One line. A goal with no reason behind it reads as filler.</p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button-primary" disabled="@saving">
+                    @(saving ? "Saving…" : "Save")
+                </button>
+                <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+            </div>
+        </fieldset>
+    </EditForm>
+}
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">Nothing on the roadmap yet.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Goal</th>
+                <th scope="col">Target</th>
+                <th scope="col">Status</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        @row.Title
+                        @if (!string.IsNullOrWhiteSpace(row.Description))
+                        {
+                            <span class="row-sub">@row.Description</span>
+                        }
+                    </th>
+                    <td class="row-sub">@row.TargetDate.ToString("MMM yyyy")</td>
+                    <td class="row-sub">@row.Status</td>
+                    <td class="row-actions">
+                        <button type="button" class="button-quiet" @onclick="() => StartEdit(row)">Edit</button>
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminRoadmapRow>? rows;
+    private Form? editing;
+    private Guid? confirming;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+
+    private sealed class Form
+    {
+        public Guid? Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime TargetDate { get; set; } = DateTime.Today.AddMonths(6);
+        public RoadmapStatus Status { get; set; } = RoadmapStatus.Planned;
+        public int SortOrder { get; set; }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => rows = await Sender.Send(new GetRoadmapForAdminQuery());
+
+    private void StartNew()
+    {
+        Clear();
+        editing = new Form
+        {
+            SortOrder = rows is { Count: > 0 } ? rows.Max(r => r.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEdit(AdminRoadmapRow row)
+    {
+        Clear();
+        editing = new Form
+        {
+            Id = row.Id,
+            Title = row.Title,
+            Description = row.Description,
+            TargetDate = row.TargetDate.ToDateTime(TimeOnly.MinValue),
+            Status = row.Status,
+            SortOrder = row.SortOrder
+        };
+    }
+
+    private void Clear()
+    {
+        editing = null;
+        confirming = null;
+        errors = null;
+        message = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editing is null) return;
+
+        saving = true;
+        errors = null;
+        message = null;
+
+        try
+        {
+            await Sender.Send(new SaveRoadmapItemCommand(
+                editing.Id,
+                editing.Title,
+                editing.Description,
+                DateOnly.FromDateTime(editing.TargetDate),
+                editing.Status,
+                editing.SortOrder));
+
+            message = "Saved.";
+            editing = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteRoadmapItemCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

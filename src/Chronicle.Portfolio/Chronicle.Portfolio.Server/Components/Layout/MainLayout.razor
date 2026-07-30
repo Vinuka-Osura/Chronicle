@@ -7,11 +7,31 @@
             <span class="admin-brand-sub">content admin</span>
         </a>
 
+        @*
+            Grouped by what the operator is doing rather than by entity: the work,
+            then the person, then the timeline. Ten flat links would be a wall.
+        *@
         <nav class="admin-nav">
             <NavLink href="/admin" Match="NavLinkMatch.All">Dashboard</NavLink>
-            <NavLink href="/admin/projects">Projects</NavLink>
-            <NavLink href="/admin/posts">Articles</NavLink>
-            <NavLink href="/admin/status">Status</NavLink>
+
+            <span class="admin-nav-group">
+                <NavLink href="/admin/projects">Projects</NavLink>
+                <NavLink href="/admin/posts">Articles</NavLink>
+            </span>
+
+            <span class="admin-nav-group">
+                <NavLink href="/admin/experience">Experience</NavLink>
+                <NavLink href="/admin/skills">Skills</NavLink>
+                <NavLink href="/admin/certifications">Certifications</NavLink>
+            </span>
+
+            <span class="admin-nav-group">
+                <NavLink href="/admin/chronology">Timeline</NavLink>
+                <NavLink href="/admin/learning">Learning</NavLink>
+                <NavLink href="/admin/roadmap">Roadmap</NavLink>
+                <NavLink href="/admin/status">Status</NavLink>
+            </span>
+
             <a href="/scalar/v1" target="_blank" rel="noreferrer">API</a>
         </nav>
 

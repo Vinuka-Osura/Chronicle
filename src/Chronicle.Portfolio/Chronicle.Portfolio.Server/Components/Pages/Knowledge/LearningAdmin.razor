@@ -1,0 +1,230 @@
+@page "/admin/learning"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Learning.Commands.DeleteLearningItem
+@using Chronicle.Application.Features.Learning.Commands.SaveLearningItem
+@using Chronicle.Application.Features.Learning.Queries.GetLearningForAdmin
+@using Chronicle.Domain.Enums
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Learning - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Currently learning</h1>
+        <p class="lede">
+            What you are working through now. Shown on the Knowledge page, where it says
+            more about how you work than a finished list would.
+        </p>
+    </div>
+    <button type="button" class="button-primary" @onclick="StartNew">New item</button>
+</div>
+
+<SaveResult Errors="errors" Message="@message" />
+
+@if (editing is not null)
+{
+    <EditForm Model="editing" OnValidSubmit="SaveAsync" FormName="learning-editor">
+        <fieldset class="field-group">
+            <legend>@(editing.Id is null ? "New item" : "Edit item")</legend>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="topic">Topic</label>
+                    <InputText id="topic" @bind-Value="editing.Topic" />
+                </div>
+
+                <div class="field">
+                    <label for="status">Status</label>
+                    <InputSelect id="status" @bind-Value="editing.Status">
+                        @foreach (var status in Enum.GetValues<LearningStatus>())
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="field">
+                    <label for="progress">Progress % <span class="optional">optional</span></label>
+                    <InputNumber id="progress" @bind-Value="editing.ProgressPercent" />
+                    <p class="field-help">Leave empty rather than guessing a number.</p>
+                </div>
+
+                <div class="field">
+                    <label for="order">Order</label>
+                    <InputNumber id="order" @bind-Value="editing.SortOrder" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="note">Note</label>
+                <InputTextArea id="note" rows="2" @bind-Value="editing.Note" />
+                <p class="field-help">One line on why, or what you have found so far.</p>
+            </div>
+
+            <div class="field">
+                <label for="link">Link <span class="optional">optional</span></label>
+                <InputText id="link" @bind-Value="editing.Link" />
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button-primary" disabled="@saving">
+                    @(saving ? "Saving…" : "Save")
+                </button>
+                <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+            </div>
+        </fieldset>
+    </EditForm>
+}
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">Nothing listed yet.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Topic</th>
+                <th scope="col">Status</th>
+                <th scope="col">Progress</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        @row.Topic
+                        @if (!string.IsNullOrWhiteSpace(row.Note))
+                        {
+                            <span class="row-sub">@row.Note</span>
+                        }
+                    </th>
+                    <td class="row-sub">@row.Status</td>
+                    <td class="row-sub">@(row.ProgressPercent is { } p ? $"{p}%" : "—")</td>
+                    <td class="row-actions">
+                        <button type="button" class="button-quiet" @onclick="() => StartEdit(row)">Edit</button>
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminLearningRow>? rows;
+    private Form? editing;
+    private Guid? confirming;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+
+    private sealed class Form
+    {
+        public Guid? Id { get; set; }
+        public string Topic { get; set; } = string.Empty;
+        public string Note { get; set; } = string.Empty;
+        public LearningStatus Status { get; set; } = LearningStatus.Exploring;
+        public int? ProgressPercent { get; set; }
+        public string? Link { get; set; }
+        public int SortOrder { get; set; }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => rows = await Sender.Send(new GetLearningForAdminQuery());
+
+    private void StartNew()
+    {
+        Clear();
+        editing = new Form
+        {
+            SortOrder = rows is { Count: > 0 } ? rows.Max(r => r.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEdit(AdminLearningRow row)
+    {
+        Clear();
+        editing = new Form
+        {
+            Id = row.Id,
+            Topic = row.Topic,
+            Note = row.Note,
+            Status = row.Status,
+            ProgressPercent = row.ProgressPercent,
+            Link = row.Link,
+            SortOrder = row.SortOrder
+        };
+    }
+
+    private void Clear()
+    {
+        editing = null;
+        confirming = null;
+        errors = null;
+        message = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editing is null) return;
+
+        saving = true;
+        errors = null;
+        message = null;
+
+        try
+        {
+            await Sender.Send(new SaveLearningItemCommand(
+                editing.Id,
+                editing.Topic,
+                editing.Note,
+                editing.Status,
+                editing.ProgressPercent,
+                editing.Link,
+                editing.SortOrder));
+
+            message = "Saved.";
+            editing = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteLearningItemCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

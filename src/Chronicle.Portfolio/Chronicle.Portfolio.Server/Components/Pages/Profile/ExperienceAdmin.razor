@@ -1,0 +1,252 @@
+@page "/admin/experience"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Experience.Commands.DeleteExperience
+@using Chronicle.Application.Features.Experience.Commands.SaveExperience
+@using Chronicle.Application.Features.Experience.Queries.GetExperienceForAdmin
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+
+<PageTitle>Experience - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Experience</h1>
+        <p class="lede">
+            Roles held. These appear on the timeline, the résumé, and as the source of
+            the "used in" lists on the skills page.
+        </p>
+    </div>
+    <button type="button" class="button-primary" @onclick="StartNew">New role</button>
+</div>
+
+<SaveResult Errors="errors" Message="@message" />
+
+@if (editing is not null)
+{
+    <EditForm Model="editing" OnValidSubmit="SaveAsync" FormName="experience-editor">
+        <fieldset class="field-group">
+            <legend>@(editing.Id is null ? "New role" : "Edit role")</legend>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="role">Role</label>
+                    <InputText id="role" @bind-Value="editing.Role" />
+                </div>
+
+                <div class="field">
+                    <label for="company">Company</label>
+                    <InputText id="company" @bind-Value="editing.Company" />
+                </div>
+
+                <div class="field">
+                    <label for="start">Started</label>
+                    <InputDate id="start" @bind-Value="editing.StartDate" />
+                </div>
+
+                <div class="field">
+                    <label for="end">Ended <span class="optional">optional</span></label>
+                    <InputDate id="end" @bind-Value="editing.EndDate" />
+                    <p class="field-help">Leave empty if this is current.</p>
+                </div>
+
+                <div class="field">
+                    <label for="order">Order</label>
+                    <InputNumber id="order" @bind-Value="editing.SortOrder" />
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="summary">Summary</label>
+                <InputTextArea id="summary" rows="3" @bind-Value="editing.Summary" />
+                <p class="field-help">Two or three sentences on what the role was.</p>
+            </div>
+
+            <div class="field">
+                <label for="highlights">Highlights</label>
+                <InputTextArea id="highlights" rows="6" @bind-Value="editing.Highlights" />
+                <p class="field-help">
+                    <strong>One per line.</strong> Three to five is right. Write what you did
+                    and what changed because of it — numbers where you have them, and
+                    nothing invented where you do not.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="stack">Tech stack</label>
+                <InputText id="stack" @bind-Value="editing.TechStack" />
+                <p class="field-help">Comma separated. Each must already exist on the Skills page.</p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="button-primary" disabled="@saving">
+                    @(saving ? "Saving…" : "Save")
+                </button>
+                <button type="button" class="button-quiet" @onclick="Clear">Cancel</button>
+            </div>
+        </fieldset>
+    </EditForm>
+}
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">No roles yet.</p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Role</th>
+                <th scope="col">Dates</th>
+                <th scope="col">Highlights</th>
+                <th scope="col">Stack</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        @row.Role
+                        <span class="row-sub">@row.Company</span>
+                    </th>
+                    <td class="row-sub">
+                        @row.StartDate.ToString("MMM yyyy") –
+                        @(row.EndDate?.ToString("MMM yyyy") ?? "present")
+                    </td>
+                    <td class="row-sub">@row.Highlights.Count</td>
+                    <td class="row-sub">@(row.TechStack.Count == 0 ? "—" : string.Join(", ", row.TechStack))</td>
+                    <td class="row-actions">
+                        <button type="button" class="button-quiet" @onclick="() => StartEdit(row)">Edit</button>
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">Delete</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminExperienceRow>? rows;
+    private Form? editing;
+    private Guid? confirming;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+
+    private sealed class Form
+    {
+        public Guid? Id { get; set; }
+        public string Role { get; set; } = string.Empty;
+        public string Company { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public DateTime? EndDate { get; set; }
+        public string Summary { get; set; } = string.Empty;
+
+        /// <summary>Edited as text, one per line — the way a person writes a list.</summary>
+        public string Highlights { get; set; } = string.Empty;
+
+        public string TechStack { get; set; } = string.Empty;
+        public int SortOrder { get; set; }
+    }
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => rows = await Sender.Send(new GetExperienceForAdminQuery());
+
+    private void StartNew()
+    {
+        Clear();
+        editing = new Form
+        {
+            SortOrder = rows is { Count: > 0 } ? rows.Max(r => r.SortOrder) + 1 : 0
+        };
+    }
+
+    private void StartEdit(AdminExperienceRow row)
+    {
+        Clear();
+        editing = new Form
+        {
+            Id = row.Id,
+            Role = row.Role,
+            Company = row.Company,
+            StartDate = row.StartDate.ToDateTime(TimeOnly.MinValue),
+            EndDate = row.EndDate?.ToDateTime(TimeOnly.MinValue),
+            Summary = row.Summary,
+            Highlights = string.Join(Environment.NewLine, row.Highlights),
+            TechStack = string.Join(", ", row.TechStack),
+            SortOrder = row.SortOrder
+        };
+    }
+
+    private void Clear()
+    {
+        editing = null;
+        confirming = null;
+        errors = null;
+        message = null;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editing is null) return;
+
+        saving = true;
+        errors = null;
+        message = null;
+
+        try
+        {
+            await Sender.Send(new SaveExperienceCommand(
+                editing.Id,
+                editing.Role,
+                editing.Company,
+                DateOnly.FromDateTime(editing.StartDate),
+                editing.EndDate is { } end ? DateOnly.FromDateTime(end) : null,
+                editing.Summary,
+                // Split on any line ending, so text pasted from another editor behaves.
+                [.. editing.Highlights.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
+                [.. editing.TechStack.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
+                editing.SortOrder));
+
+            message = "Saved.";
+            editing = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteExperienceCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}
