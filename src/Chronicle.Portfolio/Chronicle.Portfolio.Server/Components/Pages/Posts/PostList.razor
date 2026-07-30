@@ -1,0 +1,113 @@
+@page "/admin/posts"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Features.Posts.Commands.DeletePost
+@using Chronicle.Application.Features.Posts.Queries.GetPostsForAdmin
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>Articles - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Articles</h1>
+        <p class="lede">
+            Drafts are listed first and are invisible on the public site - the API filters
+            them out rather than trusting each page to remember.
+        </p>
+    </div>
+    <a class="button-primary" href="/admin/posts/new">New article</a>
+</div>
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">No articles yet. <a href="/admin/posts/new">Write the first one.</a></p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">State</th>
+                <th scope="col">Tags</th>
+                <th scope="col">Read</th>
+                <th scope="col">Updated</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        <a href="@($"/admin/posts/{row.Id}")">@row.Title</a>
+                        <span class="row-sub">/@row.Slug</span>
+                    </th>
+                    <td>
+                        @if (row.IsPublished)
+                        {
+                            <span class="pill pill-live">Published</span>
+                        }
+                        else
+                        {
+                            <span class="pill pill-draft">Draft</span>
+                        }
+                    </td>
+                    <td class="row-sub">@(row.Tags.Count == 0 ? "—" : string.Join(", ", row.Tags))</td>
+                    <td class="row-sub">@row.ReadingTimeMinutes min</td>
+                    <td class="row-sub">@row.UpdatedAt.ToLocalTime().ToString("d MMM yyyy HH:mm")</td>
+                    <td class="row-actions">
+                        @if (row.IsPublished && PublicSite.Article(row.Slug) is { } url)
+                        {
+                            <a href="@url" target="_blank" rel="noreferrer">View</a>
+                        }
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">
+                                Cancel
+                            </button>
+                        }
+                        else
+                        {
+                            @* Two clicks, because deleting is final - there is no
+                               soft-delete flag in this schema, and unpublishing is the
+                               reversible action. *@
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">
+                                Delete
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminPostRow>? rows;
+    private Guid? confirming;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        rows = await Sender.Send(new GetPostsForAdminQuery());
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeletePostCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,105 @@
+@page "/admin/projects"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Features.Projects.Commands.DeleteProject
+@using Chronicle.Application.Features.Projects.Queries.GetProjectsForAdmin
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>Projects - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Projects</h1>
+        <p class="lede">
+            Listed in the order the public page uses - featured first, then sort order -
+            so what you arrange here is what a visitor sees.
+        </p>
+    </div>
+    <a class="button-primary" href="/admin/projects/new">New project</a>
+</div>
+
+@if (rows is null)
+{
+    <p class="muted">Loading...</p>
+}
+else if (rows.Count == 0)
+{
+    <p class="muted">No projects yet. <a href="/admin/projects/new">Add the first one.</a></p>
+}
+else
+{
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Dates</th>
+                <th scope="col">Order</th>
+                <th scope="col">Linked</th>
+                <th scope="col">Updated</th>
+                <th scope="col"><span class="visually-hidden">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in rows)
+            {
+                <tr>
+                    <th scope="row">
+                        <a href="@($"/admin/projects/{row.Id}")">@row.Title</a>
+                        @if (row.Featured)
+                        {
+                            <span class="pill pill-live">Featured</span>
+                        }
+                        <span class="row-sub">/@row.Slug</span>
+                    </th>
+                    <td class="row-sub">
+                        @row.StartDate.ToString("MMM yyyy") –
+                        @(row.EndDate?.ToString("MMM yyyy") ?? "ongoing")
+                    </td>
+                    <td class="row-sub">@row.SortOrder</td>
+                    <td class="row-sub">@row.TagCount tags · @row.SkillCount skills</td>
+                    <td class="row-sub">@row.UpdatedAt.ToLocalTime().ToString("d MMM yyyy HH:mm")</td>
+                    <td class="row-actions">
+                        @if (PublicSite.Project(row.Slug) is { } url)
+                        {
+                            <a href="@url" target="_blank" rel="noreferrer">View</a>
+                        }
+                        @if (confirming == row.Id)
+                        {
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(row.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">
+                                Cancel
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="button-quiet" @onclick="() => confirming = row.Id">
+                                Delete
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private IReadOnlyList<AdminProjectRow>? rows;
+    private Guid? confirming;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync() => rows = await Sender.Send(new GetProjectsForAdminQuery());
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteProjectCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,119 @@
+@page "/admin/status"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.SiteStatus.Commands.UpdateSiteStatus
+@using Chronicle.Application.Features.SiteStatus.Queries.GetSiteStatus
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>Status strip - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Status strip</h1>
+        <p class="lede">
+            The first thing on the home page. This is the half you write; the last-commit
+            half comes from GitHub and cannot be edited here.
+        </p>
+    </div>
+    <a class="button-quiet" href="/admin">Back to dashboard</a>
+</div>
+
+@if (loading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <SaveResult Errors="errors" Message="@message" PublicUrl="@savedUrl" />
+
+    <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="status-editor">
+        <div class="field">
+            <label for="focus">Now</label>
+            <InputText id="focus" @bind-Value="form.CurrentFocus" />
+            <p class="field-help">
+                What you are working on, in one line. It is dated on the public page, so
+                something six months stale reads worse than something plain.
+            </p>
+        </div>
+
+        <div class="field">
+            <label for="mood">Mood <span class="optional">optional</span></label>
+            <InputText id="mood" @bind-Value="form.Mood" />
+            <p class="field-help">Hidden in Recruiter Mode, along with everything else that is atmosphere.</p>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="button-primary" disabled="@saving">
+                @(saving ? "Saving…" : "Save")
+            </button>
+        </div>
+    </EditForm>
+
+    @if (lastCommit is not null)
+    {
+        <section class="next-up">
+            <h2>The other half</h2>
+            <p class="muted">
+                Last commit seen: <strong>@lastCommit.Message</strong> in @lastCommit.Repo,
+                @lastCommit.When.ToLocalTime().ToString("d MMM yyyy HH:mm"). Refreshed from
+                GitHub by the server, not editable.
+            </p>
+        </section>
+    }
+}
+
+@code {
+    private readonly Form form = new();
+    private bool loading = true;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+    private string? savedUrl;
+    private Chronicle.Application.Features.SiteStatus.LastCommitDto? lastCommit;
+
+    private sealed class Form
+    {
+        public string CurrentFocus { get; set; } = string.Empty;
+        public string? Mood { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var status = await Sender.Send(new GetSiteStatusQuery());
+
+        form.CurrentFocus = status.CurrentFocus;
+        form.Mood = status.Mood;
+        lastCommit = status.LastCommit;
+        loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        errors = null;
+        message = null;
+        savedUrl = null;
+
+        try
+        {
+            await Sender.Send(new UpdateSiteStatusCommand(form.CurrentFocus, form.Mood));
+            message = "Saved.";
+            savedUrl = PublicSite.Home;
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

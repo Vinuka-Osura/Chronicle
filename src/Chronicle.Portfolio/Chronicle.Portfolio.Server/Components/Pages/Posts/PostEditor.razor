@@ -1,0 +1,230 @@
+@page "/admin/posts/new"
+@page "/admin/posts/{Id:guid}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Posts.Commands.SavePost
+@using Chronicle.Application.Features.Posts.Queries.GetPostForEdit
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>@(Id is null ? "New article" : "Edit article") - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>@(Id is null ? "New article" : "Edit article")</h1>
+        <p class="lede">
+            Saving a published article evicts its cache tag, so the change is on the
+            public site on the next request rather than up to a minute later.
+        </p>
+    </div>
+    <a class="button-quiet" href="/admin/posts">Back to articles</a>
+</div>
+
+@if (loading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <SaveResult Errors="errors" Message="@message" PublicUrl="@savedUrl" />
+
+    <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="post-editor">
+        <div class="field">
+            <label for="title">Title</label>
+            <InputText id="title" @bind-Value="form.Title" @oninput="OnTitleInput" />
+        </div>
+
+        <div class="field">
+            <label for="slug">Slug</label>
+            <InputText id="slug" @bind-Value="form.Slug" />
+            <p class="field-help">
+                The article's address: <code>/knowledge/@(string.IsNullOrWhiteSpace(form.Slug) ? "…" : form.Slug)</code>.
+                Suggested from the title until you edit it yourself - changing it later
+                breaks any link anyone has already shared.
+            </p>
+        </div>
+
+        <div class="field">
+            <label for="excerpt">Excerpt</label>
+            <InputTextArea id="excerpt" rows="2" @bind-Value="form.Excerpt" />
+            <p class="field-help">Shown on the article card and used as the page description in search results.</p>
+        </div>
+
+        <div class="field">
+            <label for="tags">Tags</label>
+            <InputText id="tags" @bind-Value="form.Tags" />
+            <p class="field-help">
+                Comma separated. Unknown tags are created; matching is case-insensitive,
+                so "EF Core" and "ef core" stay one tag.
+            </p>
+        </div>
+
+        <div class="field">
+            <div class="field-head">
+                <label for="body">Body</label>
+                <button type="button" class="button-quiet" @onclick="() => preview = !preview">
+                    @(preview ? "Edit" : "Preview")
+                </button>
+            </div>
+
+            @if (preview)
+            {
+                <MarkdownPreview Markdown="@form.BodyMarkdown" />
+            }
+            else
+            {
+                <InputTextArea id="body" rows="24" class="mono" @bind-Value="form.BodyMarkdown" />
+            }
+
+            <p class="field-help">
+                Markdown. Raw HTML is stripped here and on the public site, so the preview
+                cannot show you something the live page will not.
+                @if (form.BodyMarkdown is { Length: > 0 })
+                {
+                    <span> About @ReadingMinutes() min to read.</span>
+                }
+            </p>
+        </div>
+
+        <div class="field field-inline">
+            <InputCheckbox id="published" @bind-Value="form.IsPublished" />
+            <label for="published">Published</label>
+            <p class="field-help">
+                Unpublishing hides it from the public site immediately. It is the
+                reversible action - deleting is not.
+            </p>
+        </div>
+
+        @if (publishedAt is { } first)
+        {
+            <p class="muted">
+                First published @first.ToLocalTime().ToString("d MMMM yyyy"). That date is
+                kept as it is, so fixing a typo does not reorder the archive.
+            </p>
+        }
+
+        <div class="form-actions">
+            <button type="submit" class="button-primary" disabled="@saving">
+                @(saving ? "Saving…" : "Save")
+            </button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private readonly Form form = new();
+    private bool loading = true;
+    private bool saving;
+    private bool preview;
+    private bool slugEdited;
+    private DateTimeOffset? publishedAt;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+    private string? savedUrl;
+
+    private sealed class Form
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Excerpt { get; set; } = string.Empty;
+        public string BodyMarkdown { get; set; } = string.Empty;
+        public bool IsPublished { get; set; }
+        public string Tags { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+
+        if (Id is { } id)
+        {
+            var post = await Sender.Send(new GetPostForEditQuery(id));
+
+            form.Title = post.Title;
+            form.Slug = post.Slug;
+            form.Excerpt = post.Excerpt;
+            form.BodyMarkdown = post.BodyMarkdown;
+            form.IsPublished = post.IsPublished;
+            form.Tags = string.Join(", ", post.Tags);
+            publishedAt = post.PublishedAt;
+
+            // An existing slug is deliberate and already shared; never re-derive it.
+            slugEdited = true;
+        }
+
+        loading = false;
+    }
+
+    /// <summary>
+    /// Suggests a slug while the title is being typed, and stops the moment the operator
+    /// touches the slug themselves - guessing over a deliberate choice is worse than not
+    /// guessing at all.
+    /// </summary>
+    private void OnTitleInput(ChangeEventArgs args)
+    {
+        form.Title = args.Value?.ToString() ?? string.Empty;
+
+        if (!slugEdited)
+        {
+            form.Slug = Slugify(form.Title);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        errors = null;
+        message = null;
+        savedUrl = null;
+
+        try
+        {
+            var id = await Sender.Send(new SavePostCommand(
+                Id,
+                form.Title.Trim(),
+                form.Slug.Trim(),
+                form.Excerpt.Trim(),
+                form.BodyMarkdown,
+                form.IsPublished,
+                SplitTags(form.Tags)));
+
+            Id = id;
+            slugEdited = true;
+            message = form.IsPublished ? "Saved and published." : "Saved as a draft.";
+            savedUrl = form.IsPublished ? PublicSite.Article(form.Slug.Trim()) : null;
+
+            var saved = await Sender.Send(new GetPostForEditQuery(id));
+            publishedAt = saved.PublishedAt;
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private int ReadingMinutes() => Math.Max(
+        1,
+        (int)Math.Ceiling(
+            form.BodyMarkdown.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length / 220d));
+
+    private static List<string> SplitTags(string value) =>
+        [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    private static string Slugify(string value)
+    {
+        var flattened = new string([.. value.ToLowerInvariant()
+            .Select(c => char.IsLetterOrDigit(c) ? c : '-')]);
+
+        return string.Join('-', flattened.Split('-', StringSplitOptions.RemoveEmptyEntries));
+    }
+}

@@ -1,0 +1,358 @@
+@page "/admin/projects/new"
+@page "/admin/projects/{Id:guid}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Projects.Commands.SaveProject
+@using Chronicle.Application.Features.Projects.Queries.GetProjectForEdit
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>@(Id is null ? "New project" : "Edit project") - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>@(Id is null ? "New project" : "Edit project")</h1>
+        <p class="lede">
+            The case study template. Problem and Solution are required; the rest are
+            optional and a section left empty is hidden on the public page rather than
+            rendered as an empty heading.
+        </p>
+    </div>
+    <a class="button-quiet" href="/admin/projects">Back to projects</a>
+</div>
+
+@if (loading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <SaveResult Errors="errors" Message="@message" PublicUrl="@savedUrl" />
+
+    <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="project-editor">
+        <fieldset class="field-group">
+            <legend>Identity</legend>
+
+            <div class="field">
+                <label for="title">Title</label>
+                <InputText id="title" @bind-Value="form.Title" @oninput="OnTitleInput" />
+            </div>
+
+            <div class="field">
+                <label for="slug">Slug</label>
+                <InputText id="slug" @bind-Value="form.Slug" />
+                <p class="field-help">
+                    <code>/projects/@(string.IsNullOrWhiteSpace(form.Slug) ? "…" : form.Slug)</code>.
+                    Changing it later breaks any link already shared.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="pitch">Pitch</label>
+                <InputTextArea id="pitch" rows="2" @bind-Value="form.Pitch" />
+                <p class="field-help">One line. Used on the card and in the timeline node.</p>
+            </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+            <legend>Case study</legend>
+
+            <div class="field">
+                <label for="problem">Problem</label>
+                <InputTextArea id="problem" rows="6" class="mono" @bind-Value="form.Problem" />
+            </div>
+
+            <div class="field">
+                <label for="solution">Solution</label>
+                <InputTextArea id="solution" rows="8" class="mono" @bind-Value="form.Solution" />
+            </div>
+
+            <div class="field">
+                <label for="decisions">Key decisions <span class="optional">optional</span></label>
+                <InputTextArea id="decisions" rows="6" class="mono" @bind-Value="form.KeyDecisions" />
+                <p class="field-help">What you chose, what you rejected, and why. Usually the most-read section.</p>
+            </div>
+
+            <div class="field">
+                <label for="architecture">Architecture notes <span class="optional">optional</span></label>
+                <InputTextArea id="architecture" rows="6" class="mono" @bind-Value="form.ArchitectureNotes" />
+            </div>
+
+            <div class="field">
+                <label for="results">Results <span class="optional">optional</span></label>
+                <InputTextArea id="results" rows="5" class="mono" @bind-Value="form.Results" />
+            </div>
+
+            <div class="field">
+                <label for="lessons">Lessons learned <span class="optional">optional</span></label>
+                <InputTextArea id="lessons" rows="5" class="mono" @bind-Value="form.LessonsLearned" />
+            </div>
+
+            <div class="field">
+                <div class="field-head">
+                    <span class="label-like">Preview</span>
+                    <button type="button" class="button-quiet" @onclick="() => preview = !preview">
+                        @(preview ? "Hide" : "Show")
+                    </button>
+                </div>
+                @if (preview)
+                {
+                    <div class="md-preview-frame">
+                        <MarkdownPreview Markdown="@Assembled()" />
+                    </div>
+                }
+            </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+            <legend>Links</legend>
+
+            <div class="field">
+                <label for="github">GitHub URL <span class="optional">optional</span></label>
+                <InputText id="github" @bind-Value="form.GithubUrl" />
+            </div>
+
+            <div class="field">
+                <label for="demo">Demo URL <span class="optional">optional</span></label>
+                <InputText id="demo" @bind-Value="form.DemoUrl" />
+            </div>
+
+            <div class="field">
+                <label for="docs">Docs URL <span class="optional">optional</span></label>
+                <InputText id="docs" @bind-Value="form.DocsUrl" />
+            </div>
+
+            <div class="field">
+                <label for="video">Video URL <span class="optional">optional</span></label>
+                <InputText id="video" @bind-Value="form.VideoUrl" />
+            </div>
+
+            <div class="field">
+                <label for="diagram">Architecture diagram URL <span class="optional">optional</span></label>
+                <InputText id="diagram" @bind-Value="form.ArchitectureDiagramUrl" />
+                <p class="field-help">Full http(s) address. Relative paths and other schemes are rejected.</p>
+            </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+            <legend>Placement</legend>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="start">Started</label>
+                    <InputDate id="start" @bind-Value="form.StartDate" />
+                </div>
+
+                <div class="field">
+                    <label for="end">Finished <span class="optional">optional</span></label>
+                    <InputDate id="end" @bind-Value="form.EndDate" />
+                    <p class="field-help">Leave empty for ongoing.</p>
+                </div>
+
+                <div class="field">
+                    <label for="order">Sort order</label>
+                    <InputNumber id="order" @bind-Value="form.SortOrder" />
+                    <p class="field-help">Lower comes first within its group.</p>
+                </div>
+            </div>
+
+            <div class="field field-inline">
+                <InputCheckbox id="featured" @bind-Value="form.Featured" />
+                <label for="featured">Featured</label>
+                <p class="field-help">Featured projects lead the projects page and the home page.</p>
+            </div>
+
+            <div class="field">
+                <label for="tags">Tags</label>
+                <InputText id="tags" @bind-Value="form.Tags" />
+                <p class="field-help">Comma separated. Created if they do not exist yet.</p>
+            </div>
+
+            <div class="field">
+                <label for="stack">Tech stack</label>
+                <InputText id="stack" @bind-Value="form.TechStack" />
+                <p class="field-help">
+                    Comma separated, and these must already exist as skills - a skill
+                    carries years and a proficiency level that only you can set, so a typo
+                    is rejected rather than quietly creating one with zero years against it.
+                </p>
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <button type="submit" class="button-primary" disabled="@saving">
+                @(saving ? "Saving…" : "Save")
+            </button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private readonly Form form = new();
+    private bool loading = true;
+    private bool saving;
+    private bool preview;
+    private bool slugEdited;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+    private string? savedUrl;
+
+    private sealed class Form
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Pitch { get; set; } = string.Empty;
+        public string Problem { get; set; } = string.Empty;
+        public string Solution { get; set; } = string.Empty;
+        public string? KeyDecisions { get; set; }
+        public string? ArchitectureNotes { get; set; }
+        public string? ArchitectureDiagramUrl { get; set; }
+        public string? Results { get; set; }
+        public string? LessonsLearned { get; set; }
+        public string? VideoUrl { get; set; }
+        public string? GithubUrl { get; set; }
+        public string? DemoUrl { get; set; }
+        public string? DocsUrl { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.Today;
+        public DateTime? EndDate { get; set; }
+        public bool Featured { get; set; }
+        public int SortOrder { get; set; }
+        public string Tags { get; set; } = string.Empty;
+        public string TechStack { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+
+        if (Id is { } id)
+        {
+            var project = await Sender.Send(new GetProjectForEditQuery(id));
+
+            form.Title = project.Title;
+            form.Slug = project.Slug;
+            form.Pitch = project.Pitch;
+            form.Problem = project.Problem;
+            form.Solution = project.Solution;
+            form.KeyDecisions = project.KeyDecisions;
+            form.ArchitectureNotes = project.ArchitectureNotes;
+            form.ArchitectureDiagramUrl = project.ArchitectureDiagramUrl;
+            form.Results = project.Results;
+            form.LessonsLearned = project.LessonsLearned;
+            form.VideoUrl = project.VideoUrl;
+            form.GithubUrl = project.GithubUrl;
+            form.DemoUrl = project.DemoUrl;
+            form.DocsUrl = project.DocsUrl;
+            form.StartDate = project.StartDate.ToDateTime(TimeOnly.MinValue);
+            form.EndDate = project.EndDate?.ToDateTime(TimeOnly.MinValue);
+            form.Featured = project.Featured;
+            form.SortOrder = project.SortOrder;
+            form.Tags = string.Join(", ", project.Tags);
+            form.TechStack = string.Join(", ", project.TechStack);
+
+            slugEdited = true;
+        }
+
+        loading = false;
+    }
+
+    private void OnTitleInput(ChangeEventArgs args)
+    {
+        form.Title = args.Value?.ToString() ?? string.Empty;
+
+        if (!slugEdited)
+        {
+            form.Slug = Slugify(form.Title);
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        errors = null;
+        message = null;
+        savedUrl = null;
+
+        try
+        {
+            var id = await Sender.Send(new SaveProjectCommand(
+                Id,
+                form.Title.Trim(),
+                form.Slug.Trim(),
+                form.Pitch.Trim(),
+                form.Problem,
+                form.Solution,
+                form.KeyDecisions,
+                form.ArchitectureNotes,
+                form.ArchitectureDiagramUrl?.Trim(),
+                form.Results,
+                form.LessonsLearned,
+                form.VideoUrl?.Trim(),
+                form.GithubUrl?.Trim(),
+                form.DemoUrl?.Trim(),
+                form.DocsUrl?.Trim(),
+                DateOnly.FromDateTime(form.StartDate),
+                form.EndDate is { } end ? DateOnly.FromDateTime(end) : null,
+                form.Featured,
+                form.SortOrder,
+                Split(form.Tags),
+                Split(form.TechStack)));
+
+            Id = id;
+            slugEdited = true;
+            message = "Saved.";
+            savedUrl = PublicSite.Project(form.Slug.Trim());
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    /// <summary>
+    /// The sections in the order the public page renders them, so the preview shows the
+    /// shape of the finished case study rather than six disconnected boxes.
+    /// </summary>
+    private string Assembled()
+    {
+        var parts = new List<string>();
+
+        void Section(string heading, string? body)
+        {
+            if (!string.IsNullOrWhiteSpace(body))
+            {
+                parts.Add($"## {heading}\n\n{body}");
+            }
+        }
+
+        Section("Problem", form.Problem);
+        Section("Solution", form.Solution);
+        Section("Key decisions", form.KeyDecisions);
+        Section("Architecture", form.ArchitectureNotes);
+        Section("Results", form.Results);
+        Section("Lessons learned", form.LessonsLearned);
+
+        return string.Join("\n\n", parts);
+    }
+
+    private static List<string> Split(string value) =>
+        [.. value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)];
+
+    private static string Slugify(string value)
+    {
+        var flattened = new string([.. value.ToLowerInvariant()
+            .Select(c => char.IsLetterOrDigit(c) ? c : '-')]);
+
+        return string.Join('-', flattened.Split('-', StringSplitOptions.RemoveEmptyEntries));
+    }
+}

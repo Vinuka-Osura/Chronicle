@@ -1,0 +1,33 @@
+@using Markdig
+
+@*
+    A rendered view of what is in the textarea.
+
+    HTML is disabled in the pipeline rather than sanitised afterwards. The author is the
+    authenticated owner, so this is not a defence against them - it is a defence against
+    the preview behaving differently from the public page, which renders through
+    rehype-sanitize and will drop raw HTML too. A preview that shows something the live
+    page will not is worse than no preview.
+*@
+
+@if (string.IsNullOrWhiteSpace(Markdown))
+{
+    <p class="muted">Nothing to preview yet.</p>
+}
+else
+{
+    <div class="md-preview">@((MarkupString)Render(Markdown))</div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string? Markdown { get; set; }
+
+    private static readonly MarkdownPipeline Pipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .DisableHtml()
+        .Build();
+
+    private static string Render(string markdown) =>
+        Markdig.Markdown.ToHtml(markdown, Pipeline);
+}

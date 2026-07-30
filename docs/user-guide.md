@@ -289,8 +289,53 @@ Counts for every content type, so you can see at a glance what exists.
 
 ### Editing content
 
-*Not built yet.* CRUD screens for projects, articles and site status are next, followed
-by the rest. Until they exist, content comes from the seed data.
+Three things are editable here: **Projects**, **Articles** and the **Status strip**.
+
+Everything else — experience, skills, eras, milestones, certifications, learning items
+and roadmap goals — still comes from the seed data. Those change once or twice a year,
+and a screen for each would be a lot of scaffolding to maintain for that.
+
+#### Articles
+
+Title, slug, excerpt, tags, body, and a published switch.
+
+- **The slug is suggested from the title, and stops the moment you edit it yourself.**
+  It is the article's address, so changing it later breaks any link anyone has shared.
+- **Preview** renders the Markdown. Raw HTML is stripped in the preview *and* on the
+  public site, so the preview cannot show you something the live page will not.
+- **Reading time is calculated for you** from the body. There is no field for it.
+- **The first-published date is set once and then left alone.** Fixing a typo three
+  months later does not move the article to the top of the archive.
+- **Unpublishing is the reversible action; deleting is not.** An unpublished article
+  disappears from the public site immediately and its address returns "not found" —
+  not "forbidden", which would confirm that something exists there. Deleting asks twice
+  and cannot be undone.
+
+#### Projects
+
+The eight-part case study template. Only **Problem** and **Solution** are required —
+leaving the rest empty is a real editorial choice, and the public page *hides* those
+sections rather than printing an empty heading. **Preview** shows the assembled case
+study in the order a visitor reads it.
+
+Two rules that will stop you if you break them:
+
+- **Links must be full `http(s)` addresses.** A relative one would resolve against
+  whatever page the visitor is on, and other schemes are a way to smuggle scripts into
+  a link.
+- **Tech stack entries must already exist as skills.** Tags are created as you type
+  them, because inventing a tag while writing is normal. Skills are not: a skill carries
+  years of experience and a proficiency level only you can set, so a typo is rejected
+  rather than quietly creating a "Kubernets" with zero years next to it on the Skills
+  page.
+
+Tag and skill names match **regardless of case**, so "EF Core" and "ef core" stay one
+tag rather than two that each filter to half your articles.
+
+#### Status strip
+
+The one-line "Now" on the home page, plus an optional mood. The last-commit half of the
+strip comes from GitHub and is shown here read-only — there is nothing to edit.
 
 ### Why saving feels instant
 

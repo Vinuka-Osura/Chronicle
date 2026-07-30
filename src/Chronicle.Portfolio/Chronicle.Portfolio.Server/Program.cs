@@ -105,6 +105,13 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
 
+// The admin links out to the public site, which is a different origin. It is already
+// known here as the first allowed CORS origin - set by the AppHost from the port it
+// assigned the client - so nothing has to be configured twice.
+builder.Services.Configure<PublicSiteOptions>(options =>
+    options.Origin = allowedOrigins.FirstOrDefault());
+builder.Services.AddScoped<PublicSite>();
+
 var app = builder.Build();
 
 // ---------------------------------------------------------------------------

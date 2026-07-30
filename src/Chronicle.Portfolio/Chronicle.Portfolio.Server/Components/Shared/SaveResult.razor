@@ -1,0 +1,58 @@
+@*
+    The outcome of a save, in one place.
+
+    Validation errors come back from the command's FluentValidation validator through the
+    MediatR pipeline rather than being restated as data annotations on the form model.
+    Two copies of a rule is one copy too many: the API and the CMS would eventually
+    disagree about what a valid slug is, and only one of them would be enforced.
+*@
+
+@if (Errors is { Count: > 0 })
+{
+    <div class="save-panel save-panel-error" role="alert">
+        <p class="save-panel-title">That did not save.</p>
+        <ul>
+            @foreach (var (field, messages) in Errors)
+            {
+                @foreach (var message in messages)
+                {
+                    <li><span class="save-field">@Humanise(field)</span> @message</li>
+                }
+            }
+        </ul>
+    </div>
+}
+else if (!string.IsNullOrEmpty(Message))
+{
+    <div class="save-panel save-panel-ok" role="status">
+        <p class="save-panel-title">@Message</p>
+        @if (PublicUrl is not null)
+        {
+            <p>
+                Live now on the public site -
+                <a href="@PublicUrl" target="_blank" rel="noreferrer">open it</a>.
+                No deploy, no waiting for a cache to expire.
+            </p>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IDictionary<string, string[]>? Errors { get; set; }
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string? PublicUrl { get; set; }
+
+    /// <summary>"BodyMarkdown" reads as "Body markdown" to someone who did not write the record.</summary>
+    private static string Humanise(string field)
+    {
+        if (string.IsNullOrEmpty(field))
+        {
+            return string.Empty;
+        }
+
+        var spaced = System.Text.RegularExpressions.Regex.Replace(
+            field, "(?<=[a-z0-9])(?=[A-Z])", " ");
+
+        return string.Concat(spaced[0].ToString().ToUpperInvariant(), spaced.AsSpan(1).ToString().ToLowerInvariant());
+    }
+}
