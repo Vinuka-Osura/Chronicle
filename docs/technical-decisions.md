@@ -5,7 +5,81 @@ than reconstructed later.
 
 ---
 
-## 1. Media storage — Cloudflare R2
+## 0. Standing constraint: the bill must be £0.00
+
+Every choice in this document is subject to it. Not "cheap", not "free tier with
+headroom" — **nothing may charge, ever**. When a free tier and a hard guarantee
+disagree, the hard guarantee wins.
+
+Two practical rules follow:
+
+- **Prefer no account and no card over a generous allowance.** A service that cannot
+  bill you is safer than one that merely probably will not.
+- **Size for reality.** This is a portfolio: a few dozen screenshots, a handful of short
+  videos, tens of database rows. Storage measured in megabytes, not gigabytes. Choosing
+  infrastructure for imagined scale is how free projects start costing money.
+
+---
+
+## 1. Media storage — local disk now, R2 only if hosting forces it
+
+**Decision: `LocalMediaStorage` writing to the server's own disk.** The implementation
+spec allows for this explicitly, and at this data volume it is not a compromise.
+
+Why not R2 straight away, despite it being the best paid-tier-free option:
+
+| | Local disk | Cloudflare R2 |
+|---|---|---|
+| Card required | **no** | **yes, even on the free tier** |
+| Spend cap available | **n/a, cannot bill** | **no — Cloudflare does not offer one** |
+| Free allowance | the disk you already pay for | 10 GB, 10M reads/month, permanent |
+| Guarantee | **hard** | soft |
+
+R2's free tier is permanent and genuinely generous, and realistically this site would
+need to grow a hundredfold to leave it. But it requires a card on file with no cap
+behind it, which is a different kind of promise from one that cannot charge at all.
+
+**When to revisit.** Only if the deployment target has no persistent disk. Azure App
+Service and any VM or VPS with a volume do; ephemeral container platforms do not. If
+that is where this lands, swap the implementation — `IMediaStorage` already exists for
+exactly this, so it is a config change, not a rewrite.
+
+**Then the order of preference is:** R2 (10 GB, zero egress, S3-compatible) → Cloudinary
+for images only (no card, but cannot transform video on the free plan) → never a
+consumer sync product like Dropbox or Drive, which rate-limit hot-linking and rewrite
+share URLs.
+
+### Consequence for hosting
+
+Local media storage means **the server needs a persistent disk**, which narrows the
+free hosting options. Worth deciding together, not separately — see below.
+
+---
+
+## 1b. Hosting, at £0.00
+
+Not yet decided; due before the Day 6 deploy. The hard part is a .NET backend that is
+always on, because "free" and "always on" rarely coexist.
+
+| Option | Free? | Catch |
+|---|---|---|
+| **Oracle Cloud Always Free** VM | permanently free, generous | card for identity check, never charged. Run the app, Postgres and media on one box |
+| **Azure App Service F1** | permanently free | 60 CPU-minutes/day, no SSL on custom domains, shared and slow |
+| **Render / Railway free** | free tier | **spins down when idle; ~50s cold start** — a recruiter would see a hanging page |
+| **Neon** (database) | free, no card | scales to zero but wakes automatically |
+| **Vercel Hobby** (frontend) | free, no card | fine as-is |
+
+Leading candidate: **Vercel for the client, Oracle Always Free for the server, Postgres
+and media on that same VM.** One box, persistent disk, no card charged, nothing that
+sleeps.
+
+**Ruled out: anything that spins down on idle**, for the same reason Supabase's pausing
+was ruled out — a portfolio's whole job is to be up when someone finally clicks the
+link.
+
+---
+
+## 1c. Reference — Cloudflare R2, if it is ever needed
 
 Screenshots, architecture diagrams and video need somewhere to live that is not the
 database and not the repository.
