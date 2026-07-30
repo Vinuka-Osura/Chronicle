@@ -252,3 +252,68 @@ Where something has states or a process, show the process.
 
 The final UI/UX phase, after every surface exists. Polishing a page that later gains a
 filter, a chart or an empty state is an hour spent twice — see `roadmap.md`.
+
+---
+
+## 4. Charts, and why the colours are computed rather than chosen
+
+The Analytics page is the only surface with data visualisation, and the colour on it is
+load-bearing: a heatmap cell's shade *is* its value. Picking those shades by eye is how
+a chart ends up unreadable for the ~8% of men with a colour vision deficiency, or
+illegible in one of the two themes.
+
+So the ramp is derived and then checked by a script, not chosen.
+
+### Three visualisations, three deliberately different forms
+
+| Data | Form | Colour job |
+|---|---|---|
+| Four headline figures | stat tiles | none — the number is the chart |
+| A year of daily contributions | 53×7 heatmap grid | **sequential**: one hue, light→dark |
+| Language mix | horizontal bars | **one hue for every bar** |
+
+The last one is the least obvious and the most important. Languages are *nominal* —
+reordering them changes nothing — so giving each its own colour would spend the identity
+channel restating what the bar length already says, and claim a distinction between C#
+and SQL that no reader has a use for. The name beside the bar is the identity channel.
+The same reasoning rules out a value ramp: colouring each bar darker-where-bigger
+double-encodes the length.
+
+Bars are also scaled against the **largest share, not against 100**, and therefore have
+no track behind them. A full-width track would read as a 100% reference, which would be
+quietly false.
+
+### The heatmap ramp
+
+Five steps — four live levels plus "no contributions" — derived in OKLCH at even
+lightness intervals on the accent's own hue (64°), then validated:
+
+- lightness strictly monotone, adjacent ΔL ≥ 0.06, so the steps are tellable apart;
+- a single hue, because a rainbow would invent categories the data does not have;
+- the **lightest live step still clears 2:1 on the surface**, so the quietest real day
+  is never mistaken for an empty one.
+
+The first attempt failed that last check — the pale end sat at 1.14:1 — and the whole
+ramp had to shift darker. That is exactly the failure eyeballing would have shipped.
+
+**Dark mode is a separate ramp, not an inversion.** Its direction reverses (lighter means
+more, because light is what reads as "more" on a dark surface) and each step was
+re-derived against `#0b0f16`. `--color-heat-0` is deliberately *off* the ramp: an absence
+is chrome, not the lowest value, so it wears the rule colour.
+
+Level thresholds are **quartiles of the account's own non-zero days**, not fixed numbers.
+Fixed thresholds flatter a busy account and render a quiet one as a single uniform
+shade; quartiles give both a readable spread of the year they actually had.
+
+### Non-negotiables carried into the components
+
+- **A table view is a requirement, not a nicety.** The heatmap's per-day values are
+  otherwise only reachable by hovering, and a value only a mouse can reach is a value
+  some readers cannot reach at all. The monthly-totals table is the accessible twin.
+- **Text never wears the data colour.** Axis and month labels use `ink-soft`, not
+  `ink-faint`: at 10px they are small text, and the faint token clears 3:1 but not the
+  4.5:1 text bar on the light surface.
+- **The tooltip is `aria-hidden`.** Announcing on every cell the pointer crosses is a
+  stream of noise; the table carries the same values.
+- **No dual axes, ever** — two y-scales on one plot invent a correlation that is not in
+  the data. Two measures of different scale get two charts.

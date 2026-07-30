@@ -1,4 +1,6 @@
 using Chronicle.Application.Common.Interfaces;
+using Chronicle.Application.Features.Analytics;
+using Chronicle.Application.Features.Analytics.Queries.GetGitHubStats;
 using Chronicle.Application.Features.Certifications;
 using Chronicle.Application.Features.Certifications.Queries.GetCertifications;
 using Chronicle.Application.Features.Experience;
@@ -68,10 +70,25 @@ public static class ContentEndpoints
             .WithTags("Status")
             .WithName("GetSiteStatus")
             .WithSummary("Mission Control status strip")
-            .WithDescription("Editorial half comes from the CMS; the last-commit half arrives with the GitHub integration.")
+            .WithDescription("Editorial half comes from the CMS; the last-commit half from the cached GitHub payload.")
             .Produces<SiteStatusDto>()
             // Shorter TTL than the rest: this is the one surface that claims to be live.
             .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(30)).Tag(CacheTags.Status))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/github/stats", (ISender sender, CancellationToken ct) =>
+                sender.Send(new GetGitHubStatsQuery(), ct))
+            .WithTags("Analytics")
+            .WithName("GetGitHubStats")
+            .WithSummary("Contribution calendar, language mix and streaks")
+            .WithDescription(
+                "Served from a server-side cache refreshed at most every few hours, never from a " +
+                "per-visitor call to GitHub. Returns IsLive=false rather than an error when GitHub " +
+                "has never been reached.")
+            .Produces<GitHubStatsDto>()
+            // Long TTL on purpose: the payload behind it only changes a few times a day,
+            // and the numbers do not claim to be to-the-minute.
+            .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(10)).Tag(CacheTags.GitHubStats))
             .RequireRateLimiting("api");
 
         return app;

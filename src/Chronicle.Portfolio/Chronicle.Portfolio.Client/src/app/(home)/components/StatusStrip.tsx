@@ -20,9 +20,11 @@ function relativeTime(iso: string): string {
  *
  * Every field degrades independently. If the API is unreachable the strip renders
  * nothing at all rather than an error, and the page above it is unaffected - a portfolio
- * should not break because a status line could not load. The last-commit half stays
- * absent until the GitHub integration lands, rather than showing a plausible-looking
- * placeholder, because a status strip that invents data is worse than one that omits it.
+ * should not break because a status line could not load.
+ *
+ * The last-commit half comes from the server's cached GitHub payload, so it costs a row
+ * read rather than a network call. When GitHub is unreachable it is simply absent: a
+ * status strip that invents data is worse than one that omits it.
  */
 export async function StatusStrip() {
   const status = await getSiteStatus();

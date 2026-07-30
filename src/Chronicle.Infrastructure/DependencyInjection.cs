@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Infrastructure.Data;
 using Chronicle.Infrastructure.Data.Interceptors;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Chronicle.Infrastructure;
 
@@ -27,10 +29,35 @@ public static class DependencyInjection
     {
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
+        services.Configure<GitHubOptions>(configuration.GetSection(GitHubOptions.SectionName));
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<AuditableEntityInterceptor>();
+
+        // A typed client rather than a bare HttpClient: the base address, the required
+        // User-Agent and the token are configured once here instead of at every call
+        // site, and it inherits the resilience handler from ServiceDefaults.
+        services.AddHttpClient<IGitHubService, GitHubService>((serviceProvider, client) =>
+        {
+            var github = serviceProvider.GetRequiredService<IOptions<GitHubOptions>>().Value;
+
+            client.BaseAddress = new Uri("https://api.github.com/");
+            // GitHub rejects requests without one, with a 403 that does not explain why.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Chronicle-Portfolio/1.0");
+            client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+
+            if (!string.IsNullOrWhiteSpace(github.Pat))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", github.Pat);
+            }
+
+            // A slow third party must not become a slow page. The cache is what the
+            // reader actually sees, so giving up early costs nothing.
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
 
         // Handlers depend on the interface; both resolve to the same scoped instance,
         // so a handler and the initialiser share one change tracker per request.

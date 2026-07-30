@@ -29,6 +29,13 @@ public static class CacheTags
     public const string CareerGraph = "career-graph";
 
     /// <summary>
+    /// Never evicted by a command - nothing in the CMS can change what GitHub reports.
+    /// It exists so the tag vocabulary stays complete and the endpoint reads like the
+    /// others.
+    /// </summary>
+    public const string GitHubStats = "github-stats";
+
+    /// <summary>
     /// Tags invalidated by a change to any dated content, because the Timeline and the
     /// career graph are merged projections over several entities at once.
     /// </summary>

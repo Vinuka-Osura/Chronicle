@@ -161,14 +161,38 @@ Drafts never appear. An article is invisible to the public site until you publis
 
 ### Engineering Analytics
 
-Real activity pulled from GitHub: commits, repositories, a contribution calendar, most
-used languages, current streak.
+Real activity from GitHub rather than claims about it: contributions over the last year,
+public repositories, current and longest streak, a day-by-day contribution grid, and the
+language mix by volume of code.
 
-The numbers are fetched by the server and cached, never fetched by your browser. That
-keeps the page fast, keeps it working when GitHub is slow, and means your GitHub token
-never leaves the server.
+**Your browser never talks to GitHub.** The server fetches these every few hours and
+keeps the result in one row of the database; every visitor reads that row. Three things
+follow from that:
 
-*Not built yet.*
+- The page stays fast, and stays up, when GitHub is slow or down.
+- The rate limit is spent once for the whole site rather than once per visitor.
+- The access token never leaves the server, so it cannot be read out of the page.
+
+If a refresh fails, the previous figures stay on screen rather than being replaced by an
+error — figures from this morning are worth more to a reader than a apology. The page
+states when it last refreshed, so nothing pretends to be live that isn't.
+
+**The colours mean something.** Darker cells are busier days. The four shades are steps
+of one colour rather than four different colours, because the grid measures *how much*,
+not *which* — and the thresholds come from your own quietest and busiest days, so a
+steady year and a frantic one both read clearly instead of one coming out uniformly
+pale. "Show monthly totals" gives the same information as a table, for anyone who
+cannot use a hover.
+
+The **Now** strip on the home page shares this data: its "last commit" line is the most
+recent push the server saw when it last looked.
+
+> **For the owner:** with no `GitHub:Pat` configured, the repository, language and
+> last-commit figures still work — those come from GitHub's public API. The contribution
+> grid does not: GitHub only exposes it to authenticated requests. If the page shows
+> everything except the grid, that is the missing token, not a bug. With no username
+> configured at all, the page says "not connected" rather than showing zeroes, because
+> "no contributions" and "no data" are different claims and only one of them is true.
 
 ### Résumé
 

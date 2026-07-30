@@ -199,7 +199,7 @@ export interface SiteStatus {
   currentFocus: string;
   mood: string | null;
   updatedAt: IsoDateTime;
-  /** Null until the GitHub integration lands, or when GitHub is unreachable. */
+  /** Null when GitHub is unreachable or no token is configured. */
   lastCommit: LastCommit | null;
 }
 
@@ -209,12 +209,34 @@ export interface LastCommit {
   when: IsoDateTime;
 }
 
+export interface ContributionDay {
+  date: IsoDate;
+  count: number;
+}
+
+export interface LanguageShare {
+  name: string;
+  percent: number;
+}
+
+/** `GET /api/github/stats`. */
 export interface GitHubStats {
-  totalCommits: number;
+  /**
+   * False when GitHub has never been reached — no token, no username, or a first
+   * request that failed. The page says "not connected" rather than presenting
+   * zeroes as if they were measurements.
+   */
+  isLive: boolean;
+  fetchedAt: IsoDateTime;
+  contributionsLastYear: number;
   publicRepos: number;
   currentStreakDays: number;
-  contributionCalendar: { date: IsoDate; count: number }[];
-  topLanguages: { name: string; percent: number }[];
+  longestStreakDays: number;
+  busiestDayCount: number;
+  busiestDay: IsoDate | null;
+  calendarFrom: IsoDate | null;
+  calendarTo: IsoDate | null;
+  calendar: ContributionDay[];
+  languages: LanguageShare[];
   lastCommit: LastCommit | null;
-  fetchedAt: IsoDateTime;
 }

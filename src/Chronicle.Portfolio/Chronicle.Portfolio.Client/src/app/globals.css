@@ -35,6 +35,23 @@
   --color-alert: #a3231b;
   --color-alert-soft: #fbeceb;
 
+  /*
+    Sequential ramp for the contribution heatmap: one hue - the accent's own, at
+    OKLCH hue 64deg - stepping light to dark, because the cells encode magnitude
+    rather than identity. A rainbow here would invent categories that do not exist.
+
+    Derived in OKLCH at even lightness steps and validated, not eyeballed:
+    monotone lightness, adjacent dL >= 0.06, single hue, and a light end that
+    still clears 2:1 on the surface so the quietest live cell is not mistaken for
+    an empty one. --heat-0 is deliberately NOT on the ramp; "no contributions" is
+    an absence, and it wears the rule colour like any other piece of chrome.
+  */
+  --color-heat-0: #e6e3dc;
+  --color-heat-1: #df9c5b;
+  --color-heat-2: #c77b23;
+  --color-heat-3: #a65f00;
+  --color-heat-4: #804600;
+
   /* Two stops for the page wash. Very close together on purpose - a gradient you
      can point at is a gradient that will date badly. */
   --color-wash-top: #fbfaf7;
@@ -68,6 +85,18 @@
 
   --color-alert: #f08a80;
   --color-alert-soft: #2c1614;
+
+  /*
+    Chosen for the dark surface, not flipped from the light ramp. The direction
+    reverses - more contributions means lighter, because on a dark surface it is
+    light that reads as "more" - and each step was re-derived against #0b0f16 so
+    the quietest live cell still clears 2:1 against it.
+  */
+  --color-heat-0: #1c242f;
+  --color-heat-1: #704415;
+  --color-heat-2: #9e5f16;
+  --color-heat-3: #cd7d1e;
+  --color-heat-4: #f6a046;
 
   --color-wash-top: #101720;
   --color-wash-bottom: #080b11;
