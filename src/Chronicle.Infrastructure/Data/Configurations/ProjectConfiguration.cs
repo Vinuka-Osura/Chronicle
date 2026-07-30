@@ -23,6 +23,10 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         // Enough for a couple of dozen edges. Past that the picture stops being a
         // diagram and becomes a map nobody reads, which is prose's job.
         builder.Property(p => p.ArchitectureDiagram).HasMaxLength(2000);
+
+        // jsonb, for the same reason as portfolio_media.Metadata: an open shape that
+        // varies per row and is only ever read alongside its owner.
+        builder.OwnsMany(p => p.Metrics, metrics => metrics.ToJson());
         builder.Property(p => p.VideoUrl).HasMaxLength(500);
         builder.Property(p => p.GithubUrl).HasMaxLength(500);
         builder.Property(p => p.DemoUrl).HasMaxLength(500);

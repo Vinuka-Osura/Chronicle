@@ -208,20 +208,11 @@ public class CareerGraphContractTests(ChronicleTestHost host) : IAsyncLifetime
         await SendAsync(new SaveSkillCommand(
             null, "C#", SkillCategory.Backend, 5m, ProficiencyLevel.Expert, 0));
 
-        await SendAsync(new SaveProjectCommand(
-            null,
-            "Core Banking Ledger",
-            "core-banking-ledger",
-            "A double-entry ledger.",
-            "The problem.",
-            "The solution.",
-            null, null, null, null, null, null, null, null, null, null,
-            new DateOnly(2024, 1, 1),
-            new DateOnly(2024, 12, 31),
-            Featured: true,
-            SortOrder: 0,
-            Tags: [],
-            TechStack: ["PostgreSQL", "C#"]));
+        await SendAsync(TestContent.Project(
+            techStack: ["PostgreSQL", "C#"],
+            startDate: new DateOnly(2024, 1, 1),
+            endDate: new DateOnly(2024, 12, 31),
+            featured: true));
     }
 
     private Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request) =>

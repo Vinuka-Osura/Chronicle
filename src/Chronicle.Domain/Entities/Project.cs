@@ -1,4 +1,5 @@
 using Chronicle.Domain.Common;
+using Chronicle.Domain.ValueObjects;
 
 namespace Chronicle.Domain.Entities;
 
@@ -32,6 +33,15 @@ public class Project : AuditableEntity
     /// <see cref="ArchitectureDiagramUrl"/> remains for diagrams this cannot express.
     /// </remarks>
     public string? ArchitectureDiagram { get; set; }
+
+    /// <summary>
+    /// Headline numbers from the results, rendered as tiles rather than buried in prose.
+    /// </summary>
+    /// <remarks>
+    /// jsonb. Every project's numbers are different, so a column per metric would be a
+    /// migration per project - see docs/technical-decisions.md section 2.
+    /// </remarks>
+    public List<ProjectMetric> Metrics { get; set; } = [];
     public string? Results { get; set; }
     public string? LessonsLearned { get; set; }
 

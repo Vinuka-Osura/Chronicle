@@ -30,6 +30,7 @@ public sealed record ProjectDetailDto(
     string? ArchitectureNotes,
     string? ArchitectureDiagramUrl,
     string? ArchitectureDiagram,
+    IReadOnlyList<ProjectMetricDto> Metrics,
     string? Results,
     string? LessonsLearned,
     string? VideoUrl,
@@ -44,3 +45,6 @@ public sealed record ProjectDetailDto(
     IReadOnlyList<ScreenshotDto> Screenshots);
 
 public sealed record ScreenshotDto(string Url, string? Caption);
+
+/// <summary>One headline number from a project's results.</summary>
+public sealed record ProjectMetricDto(string Label, string Value, string? Note);

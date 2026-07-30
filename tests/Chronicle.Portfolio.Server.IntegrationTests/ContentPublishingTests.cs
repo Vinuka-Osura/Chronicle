@@ -242,20 +242,8 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
 
     // -----------------------------------------------------------------------
 
-    private static SaveProjectCommand NewProject(string title, string slug) => new(
-        null,
-        title,
-        slug,
-        "A one-line pitch.",
-        "The problem it solved.",
-        "How it solved it.",
-        null, null, null, null, null, null, null, null, null, null,
-        new DateOnly(2025, 1, 1),
-        null,
-        Featured: false,
-        SortOrder: 0,
-        Tags: [],
-        TechStack: []);
+    private static SaveProjectCommand NewProject(string title, string slug) =>
+        TestContent.Project(title: title, slug: slug);
 
     private Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request) =>
         host.ScopedAsync(services => services.GetRequiredService<ISender>().Send(request));

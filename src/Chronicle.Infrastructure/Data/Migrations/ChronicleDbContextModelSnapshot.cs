@@ -930,6 +930,38 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("Chronicle.Domain.Entities.Project", b =>
+                {
+                    b.OwnsMany("Chronicle.Domain.ValueObjects.ProjectMetric", "Metrics", b1 =>
+                        {
+                            b1.Property<Guid>("ProjectId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("Label")
+                                .IsRequired();
+
+                            b1.Property<string>("Note");
+
+                            b1.Property<string>("Value")
+                                .IsRequired();
+
+                            b1.HasKey("ProjectId", "__synthesizedOrdinal");
+
+                            b1.ToTable("portfolio_projects");
+
+                            b1
+                                .ToJson("Metrics")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProjectId");
+                        });
+
+                    b.Navigation("Metrics");
+                });
+
             modelBuilder.Entity("ExperienceSkill", b =>
                 {
                     b.HasOne("Chronicle.Domain.Entities.Experience", null)

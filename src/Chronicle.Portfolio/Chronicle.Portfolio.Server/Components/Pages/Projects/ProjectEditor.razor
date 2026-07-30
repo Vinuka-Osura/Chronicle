@@ -99,6 +99,18 @@ else
             </div>
 
             <div class="field">
+                <label for="metrics">Headline numbers <span class="optional">optional</span></label>
+                <InputTextArea id="metrics" rows="4" class="mono" @bind-Value="form.Metrics" />
+                <p class="field-help">
+                    One per line, pipes between the parts:
+                    <code>Statement p95 | 2.4s to 40ms | at the 95th percentile</code>.
+                    The third part is an optional caveat and is usually the honest bit.
+                    Up to four - past that it is a table, and a table belongs in the prose
+                    above. Leave this empty rather than reaching for a number you do not have.
+                </p>
+            </div>
+
+            <div class="field">
                 <label for="lessons">Lessons learned <span class="optional">optional</span></label>
                 <InputTextArea id="lessons" rows="5" class="mono" @bind-Value="form.LessonsLearned" />
             </div>
@@ -243,6 +255,7 @@ else
         public string? KeyDecisions { get; set; }
         public string? ArchitectureNotes { get; set; }
         public string? ArchitectureDiagram { get; set; }
+        public string? Metrics { get; set; }
         public string? ArchitectureDiagramUrl { get; set; }
         public string? Results { get; set; }
         public string? LessonsLearned { get; set; }
@@ -274,6 +287,7 @@ else
             form.KeyDecisions = project.KeyDecisions;
             form.ArchitectureNotes = project.ArchitectureNotes;
             form.ArchitectureDiagram = project.ArchitectureDiagram;
+            form.Metrics = project.Metrics;
             form.ArchitectureDiagramUrl = project.ArchitectureDiagramUrl;
             form.Results = project.Results;
             form.LessonsLearned = project.LessonsLearned;
@@ -324,6 +338,7 @@ else
                 form.ArchitectureNotes,
                 form.ArchitectureDiagramUrl?.Trim(),
                 form.ArchitectureDiagram,
+                form.Metrics,
                 form.Results,
                 form.LessonsLearned,
                 form.VideoUrl?.Trim(),

@@ -71,6 +71,8 @@ public sealed class SaveProjectCommandHandler(
         project.ArchitectureNotes = Blank(request.ArchitectureNotes);
         project.ArchitectureDiagramUrl = Blank(request.ArchitectureDiagramUrl);
         project.ArchitectureDiagram = Blank(request.ArchitectureDiagram);
+        // Replaced wholesale: metrics are rewritten as a block, never edited one at a time.
+        project.Metrics = MetricParsing.Parse(request.Metrics);
         project.Results = Blank(request.Results);
         project.LessonsLearned = Blank(request.LessonsLearned);
         project.VideoUrl = Blank(request.VideoUrl);

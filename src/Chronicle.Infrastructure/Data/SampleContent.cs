@@ -128,6 +128,29 @@ internal static partial class SampleContent
                 Snapshot worker -> Snapshots : scheduled
                 API -> Snapshots : statement reads
                 """,
+            // Rendered as stat tiles beside the Results prose. The notes are the honest
+            // half: a number with no caveat is a number nobody can check.
+            Metrics =
+            [
+                new ProjectMetric
+                {
+                    Label = "Statement p95",
+                    Value = "2.4s to 40ms",
+                    Note = "after the snapshot cutover"
+                },
+                new ProjectMetric
+                {
+                    Label = "Balance discrepancies",
+                    Value = "0",
+                    Note = "in the 18 months since"
+                },
+                new ProjectMetric
+                {
+                    Label = "Posting throughput",
+                    Value = "~4,000/sec",
+                    Note = "held, not improved"
+                }
+            ],
             StartDate = new DateOnly(2023, 8, 1),
             EndDate = new DateOnly(2024, 10, 31),
             Featured = true,

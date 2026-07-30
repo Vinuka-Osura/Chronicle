@@ -22,6 +22,13 @@ export interface ProjectCard {
   thumbnailUrl: string | null;
 }
 
+/** One headline number from a project's results. */
+export interface ProjectMetric {
+  label: string;
+  value: string;
+  note: string | null;
+}
+
 export interface Screenshot {
   url: string;
   caption: string | null;
@@ -38,6 +45,7 @@ export interface ProjectDetail {
   architectureDiagramUrl: string | null;
   /** The architecture as text, one edge per line. Rendered as an animated SVG. */
   architectureDiagram: string | null;
+  metrics: ProjectMetric[];
   results: string | null;
   lessonsLearned: string | null;
   videoUrl: string | null;

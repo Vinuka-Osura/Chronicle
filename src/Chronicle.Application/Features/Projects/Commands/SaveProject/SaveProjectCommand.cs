@@ -23,6 +23,7 @@ public sealed record SaveProjectCommand(
     string? ArchitectureNotes,
     string? ArchitectureDiagramUrl,
     string? ArchitectureDiagram,
+    string? Metrics,
     string? Results,
     string? LessonsLearned,
     string? VideoUrl,

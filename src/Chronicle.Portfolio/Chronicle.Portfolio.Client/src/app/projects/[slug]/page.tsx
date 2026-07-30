@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getProject } from "../api";
 import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
+import { MetricCards } from "../components/MetricCards";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
 import { breadcrumbSchema, projectSchema } from "@/lib/structuredData";
@@ -177,7 +178,13 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
           ) : undefined
         }
       />
-      <Section heading="Results" body={project.results} />
+      {/* Numbers beside the prose, not instead of it: the figure is what a reader
+          scans for, and the prose is what stops it being misread. */}
+      <Section
+        heading="Results"
+        body={project.results}
+        extra={project.metrics.length > 0 ? <MetricCards metrics={project.metrics} /> : undefined}
+      />
       <Section heading="What I learned" body={project.lessonsLearned} />
 
       {/* 8. Artifacts */}

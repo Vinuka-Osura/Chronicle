@@ -192,20 +192,7 @@ public class MediaPipelineTests(ChronicleTestHost host) : IAsyncLifetime
             projectId, stream, fileName, stream.Length, caption));
     }
 
-    private Task<Guid> NewProjectAsync() => SendAsync(new SaveProjectCommand(
-        null,
-        "Core Banking Ledger",
-        "core-banking-ledger",
-        "A one-line pitch.",
-        "The problem.",
-        "The solution.",
-        null, null, null, null, null, null, null, null, null, null,
-        new DateOnly(2025, 1, 1),
-        null,
-        Featured: false,
-        SortOrder: 0,
-        Tags: [],
-        TechStack: []));
+    private Task<Guid> NewProjectAsync() => SendAsync(TestContent.Project());
 
     private Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request) =>
         host.ScopedAsync(services => services.GetRequiredService<ISender>().Send(request));

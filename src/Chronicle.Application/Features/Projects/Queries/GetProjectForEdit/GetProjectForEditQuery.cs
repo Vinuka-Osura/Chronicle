@@ -1,3 +1,4 @@
+using Chronicle.Application.Common.Content;
 using Chronicle.Application.Common.Exceptions;
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Domain.Entities;
@@ -20,6 +21,7 @@ public sealed record ProjectEditModel(
     string? ArchitectureNotes,
     string? ArchitectureDiagramUrl,
     string? ArchitectureDiagram,
+    string? Metrics,
     string? Results,
     string? LessonsLearned,
     string? VideoUrl,
@@ -54,6 +56,7 @@ public sealed class GetProjectForEditQueryHandler(IChronicleDbContext db)
                 p.ArchitectureNotes,
                 p.ArchitectureDiagramUrl,
                 p.ArchitectureDiagram,
+                MetricParsing.Format(p.Metrics),
                 p.Results,
                 p.LessonsLearned,
                 p.VideoUrl,

@@ -25,6 +25,7 @@ public sealed class GetProjectBySlugQueryHandler(IChronicleDbContext db)
                 p.ArchitectureNotes,
                 p.ArchitectureDiagramUrl,
                 p.ArchitectureDiagram,
+                p.Metrics.Select(m => new ProjectMetricDto(m.Label, m.Value, m.Note)).ToList(),
                 p.Results,
                 p.LessonsLearned,
                 p.VideoUrl,
