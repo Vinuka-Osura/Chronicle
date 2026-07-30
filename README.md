@@ -161,22 +161,34 @@ Aspire then manages PostgreSQL itself and the connection string secret is unnece
 
 ## Status
 
-**API — complete for Phase 1.** `projects` (list + detail), `experience`, `skills`,
-`posts` (list + detail), `learning`, `roadmap`, `certifications`, `status`. All cached,
-tagged and rate-limited; browse them at `/scalar/v1`.
+**API — complete for Phase 1.** `projects`, `experience`, `skills`, `posts`,
+`learning`, `roadmap`, `certifications`, `status`, `timeline`, `github/stats` and
+`contact`. All cached, tagged and rate-limited; browse them at `/scalar/v1`.
 
-**Public site** — home, projects list and case study render live content. Light/dark
-theming, Recruiter Mode and responsive navigation work across every route.
+**Public site — every route is real.** Mission Control, About, Skills, Timeline,
+Projects and case studies, Knowledge Core and articles, Engineering Analytics, the
+printable résumé, and a working contact form. Light/dark theming, Recruiter Mode and
+responsive navigation apply throughout. Link previews are generated, and pages carry
+JSON-LD.
 
-**Admin CMS** — Identity sign-in and a dashboard. CRUD screens are next.
+**Admin CMS** — Identity sign-in, plus editing for projects, articles and the status
+strip. Saving evicts the matching cache tag, so a change is live on the next request
+rather than after a TTL — there is an integration test that asserts exactly that.
 
-Still to come, in order: the content pages for the slices above, the Timeline
-(`/api/timeline`), GitHub-backed Analytics, the interactive résumé, contact, and the
-CMS editors. Routes that are not built yet say so instead of showing placeholder
-content. A final pass refines the UI and UX once every surface is real.
+**Still to come:** media storage and the admin storage gauge, deeper use of `jsonb`,
+full-text article search, and a final pass over UI, UX and animation now that every
+surface is real. Then deployment. Software City stays a separate repository.
 
-[`docs/user-guide.md`](docs/user-guide.md) explains the application in plain language;
-[`docs/roadmap.md`](docs/roadmap.md) has the day-by-day plan.
+| Document | What it covers |
+|---|---|
+| [`docs/user-guide.md`](docs/user-guide.md) | The application in plain language, for the people who use it |
+| [`docs/content-template.md`](docs/content-template.md) | Fill this in to replace the demo persona with real content |
+| [`docs/deployment.md`](docs/deployment.md) | Hosting, domains, storage, email — what it costs and what to buy |
+| [`docs/technical-decisions.md`](docs/technical-decisions.md) | The decisions that were expensive to make, and why |
+| [`docs/roadmap.md`](docs/roadmap.md) | The day-by-day plan |
+
+> The content is currently a fictional engineer, **Sam Iversen**, so the application is
+> coherent end to end before real content exists. See `docs/content-template.md`.
 
 ## Contributing
 
