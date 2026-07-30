@@ -28,37 +28,49 @@ export function TagFilter({ projects }: { projects: ProjectCardData[] }) {
 
   const shown = active ? projects.filter((p) => p.tags.includes(active)) : projects;
 
-  if (tags.length === 0) {
-    return (
-      <div className="rm-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="rm-hide mb-6 flex flex-wrap items-center gap-1.5">
-        <FilterChip label="All" count={projects.length} active={active === null} onClick={() => setActive(null)} />
-        {tags.map(([tag, count]) => (
-          <FilterChip
-            key={tag}
-            label={tag}
-            count={count}
-            active={active === tag}
-            onClick={() => setActive(active === tag ? null : tag)}
-          />
-        ))}
-      </div>
+      {tags.length > 0 && (
+        <>
+          {/* A group rather than a bare row of buttons: without the label, a screen
+              reader announces eleven unrelated toggles and no reason for them. */}
+          <div
+            role="group"
+            aria-label="Filter projects by tag"
+            className="rm-hide mb-6 flex flex-wrap items-center gap-1.5"
+          >
+            <FilterChip
+              label="All"
+              count={projects.length}
+              active={active === null}
+              onClick={() => setActive(null)}
+            />
+            {tags.map(([tag, count]) => (
+              <FilterChip
+                key={tag}
+                label={tag}
+                count={count}
+                active={active === tag}
+                onClick={() => setActive(active === tag ? null : tag)}
+              />
+            ))}
+          </div>
 
-      {/* Announced politely so a screen-reader user hears the list change without the
-          filter stealing focus mid-click. */}
-      <p aria-live="polite" className="sr-only">
-        Showing {shown.length} of {projects.length} projects
-        {active ? ` tagged ${active}` : ""}.
-      </p>
+          {/* Announced politely so a screen-reader user hears the list change without the
+              filter stealing focus mid-click. */}
+          <p aria-live="polite" className="sr-only">
+            Showing {shown.length} of {projects.length} projects
+            {active ? ` tagged ${active}` : ""}.
+          </p>
+        </>
+      )}
+
+      {/*
+        The cards are h3, so without this the page jumps h1 to h3 and anyone navigating
+        by heading loses the structure. Not visible, because the h1 directly above
+        already says "Projects" and repeating it on screen would be noise.
+      */}
+      <h2 className="sr-only">All projects</h2>
 
       <div className="rm-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((project) => (

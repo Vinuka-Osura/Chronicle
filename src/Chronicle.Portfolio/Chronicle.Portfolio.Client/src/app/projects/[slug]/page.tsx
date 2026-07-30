@@ -1,9 +1,11 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getProject } from "../api";
+import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
+import { breadcrumbSchema, projectSchema } from "@/lib/structuredData";
 
 type Params = { slug: string };
 
@@ -102,6 +104,24 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
 
   return (
     <article className="max-w-3xl">
+      <JsonLd
+        data={projectSchema({
+          title: project.title,
+          pitch: project.pitch,
+          slug,
+          startDate: project.startDate,
+          endDate: project.endDate,
+          techStack: project.techStack,
+          githubUrl: project.githubUrl,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path: `/projects/${slug}` },
+        ])}
+      />
+
       <nav className="mb-8">
         <Link href="/projects" className="text-sm text-signal hover:underline">
           â† All projects

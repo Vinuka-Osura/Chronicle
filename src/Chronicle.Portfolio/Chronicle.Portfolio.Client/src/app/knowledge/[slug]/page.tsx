@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
+import { articleSchema, breadcrumbSchema } from "@/lib/structuredData";
 import { getPost } from "../api";
 
 type Params = { slug: string };
@@ -81,6 +83,23 @@ async function Article({ params }: { params: Promise<Params> }) {
 
   return (
     <article className="max-w-2xl">
+      {/* Inside the Suspense boundary, because it needs the fetched article. Search
+          crawlers execute the streamed response, so it is read where it lands. */}
+      <JsonLd
+        data={articleSchema({
+          title: post.title,
+          excerpt: post.excerpt,
+          slug,
+          publishedAt: post.publishedAt,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Knowledge Core", path: "/knowledge" },
+          { name: post.title, path: `/knowledge/${slug}` },
+        ])}
+      />
+
       <nav className="mb-8">
         <Link href="/knowledge" className="text-sm text-signal hover:underline">
           ← All articles
@@ -111,8 +130,12 @@ async function Article({ params }: { params: Promise<Params> }) {
       </header>
 
       {/* Markdown arrives raw from the API and is sanitised here — the content comes from
-          a database a CMS writes to, so it is never treated as trusted. */}
-      <Markdown>{post.bodyMarkdown}</Markdown>
+          a database a CMS writes to, so it is never treated as trusted.
+          rm-compact tightens the type in Recruiter Mode: someone scanning for evidence
+          reads at a different density from someone reading for interest. */}
+      <div className="rm-compact">
+        <Markdown>{post.bodyMarkdown}</Markdown>
+      </div>
     </article>
   );
 }

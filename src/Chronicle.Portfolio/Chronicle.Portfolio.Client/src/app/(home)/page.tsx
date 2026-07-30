@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { getProjects } from "@/app/projects/api";
 import { ProjectCard } from "@/app/projects/components/ProjectCard";
+import { JsonLd } from "@/components/JsonLd";
+import { personSchema, websiteSchema } from "@/lib/structuredData";
 import { StatusStrip, StatusStripSkeleton } from "./components/StatusStrip";
 
 export default async function MissionControl() {
@@ -9,6 +11,11 @@ export default async function MissionControl() {
 
   return (
     <>
+      {/* Site-level identity, declared once on the page every crawler reaches first.
+          Other pages point at the same @id rather than describing the person again. */}
+      <JsonLd data={personSchema()} />
+      <JsonLd data={websiteSchema()} />
+
       {/*
         Streamed separately from the hero. The strip has the shortest cache life on the
         site, so letting it block the page would make the freshest data gate the fastest
