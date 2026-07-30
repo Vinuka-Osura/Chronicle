@@ -68,10 +68,103 @@ export interface TimelineItem {
   tags?: string[];
 }
 
+export interface Experience {
+  id: string;
+  role: string;
+  company: string;
+  startDate: IsoDate;
+  /** Null means current. */
+  endDate: IsoDate | null;
+  summary: string;
+  highlights: string[];
+  techStack: string[];
+}
+
+export type SkillCategory =
+  | "Backend"
+  | "Frontend"
+  | "Database"
+  | "DevOps"
+  | "Cloud"
+  | "AI"
+  | "Other";
+
+export type ProficiencyLevel =
+  | "Novice"
+  | "Working"
+  | "Proficient"
+  | "Advanced"
+  | "Expert";
+
+/** Where a skill was actually used. Derived server-side from the join tables. */
+export interface SkillUsage {
+  kind: "project" | "experience";
+  title: string;
+  /** Set for projects so the chip can link to the case study; null for roles. */
+  slug: string | null;
+}
+
+export interface Skill {
+  name: string;
+  category: SkillCategory;
+  yearsExperience: number;
+  proficiency: ProficiencyLevel;
+  /** 1-5, for the meter. */
+  proficiencyRank: number;
+  usedIn: SkillUsage[];
+}
+
+export interface SkillGroup {
+  category: SkillCategory;
+  skills: Skill[];
+}
+
+export interface Certification {
+  name: string;
+  issuer: string;
+  issueDate: IsoDate;
+  credentialUrl: string | null;
+  logoUrl: string | null;
+}
+
+export type LearningStatus = "Exploring" | "Learning" | "Comfortable";
+
+export interface LearningItem {
+  topic: string;
+  note: string;
+  status: LearningStatus;
+  progressPercent: number | null;
+  link: string | null;
+}
+
+export type RoadmapStatus = "Planned" | "InProgress" | "Done";
+
+export interface RoadmapItem {
+  title: string;
+  description: string;
+  targetDate: IsoDate;
+  status: RoadmapStatus;
+}
+
+export interface PostCard {
+  slug: string;
+  title: string;
+  excerpt: string;
+  readingTimeMinutes: number;
+  publishedAt: IsoDateTime | null;
+  tags: string[];
+}
+
+export interface PostDetail extends PostCard {
+  bodyMarkdown: string;
+}
+
 export interface SiteStatus {
   currentFocus: string;
   mood: string | null;
   updatedAt: IsoDateTime;
+  /** Null until the GitHub integration lands, or when GitHub is unreachable. */
+  lastCommit: LastCommit | null;
 }
 
 export interface LastCommit {

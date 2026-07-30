@@ -42,14 +42,21 @@ The status strip has two halves. The editorial half — current focus and an opt
 mood — you write in the admin. The live half, your most recent commit, arrives with the
 Analytics work; until then that part is simply absent rather than faked.
 
+The strip loads separately from the rest of the page, so a slow or unavailable status
+never delays the content behind it, and its space is reserved so nothing jumps when it
+appears.
+
+**Working now**, apart from the last-commit half.
+
 ### About
 
 The narrative: who you are, how you got here, what you care about building. A
 **certifications strip** sits inline beneath it, each credential linking out to its
 verifiable record, so recognitions live alongside the story rather than on a page nobody
-visits.
+visits. Credentials without a verifiable link render plainly rather than as a dead link.
 
-*Not built yet — the API behind it is ready.*
+**Working now.** The prose still lives in the code and moves into the CMS with the
+About editor.
 
 ### Skills
 
@@ -60,9 +67,10 @@ shows years of experience, a proficiency level from 1 to 5, and — the part tha
 Those "used in" links are not typed in by hand. They are worked out from the projects
 and roles that reference the skill, every time the page loads. A claim of two and a half
 years of PostgreSQL is just a number; two case studies and a job that used it is
-evidence. Because it is derived, the two can never drift apart.
+evidence. Because it is derived, the two can never drift apart. A skill with no work
+behind it says so plainly rather than hiding.
 
-*Not built yet — the API behind it is ready.*
+**Working now.**
 
 ### Timeline
 
