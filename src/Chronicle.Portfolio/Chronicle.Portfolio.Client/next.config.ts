@@ -20,6 +20,22 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  /*
+   * The floating badge in the corner during `next dev`. It is Next's own dev tools -
+   * route render mode, compile errors, preferences - and it is stripped from production
+   * builds entirely, so visitors never see it.
+   *
+   * Left ON deliberately: it tells you at a glance whether a route is static or dynamic,
+   * which is the thing most worth watching while Cache Components is enabled.
+   *
+   * Set `devIndicators: false` to hide it. Note that hiding it from the badge's own
+   * panel writes a preference to localStorage, which this setting cannot override -
+   * clear the site's local storage in devtools to bring it back.
+   */
+  devIndicators: {
+    position: "bottom-right",
+  },
+
   // The API owns its own error contract; never leak framework internals to visitors.
   poweredByHeader: false,
 };
