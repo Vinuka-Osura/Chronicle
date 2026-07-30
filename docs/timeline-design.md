@@ -1,293 +1,371 @@
-# Timeline — design proposal
+# Timeline — design, revision 2
 
-**Status: awaiting approval. Nothing here is built yet.**
+**Status: awaiting approval. Nothing built yet.**
 
-Signature #1, and the thing meant to separate this from a portfolio that is a list of
-jobs. It gets a whole day and a design review first.
+Signature #1. The page that decides whether this reads as a product or as a CV with
+scrolling. Revised after a round of ideas — several of which are better than what I
+proposed first.
 
-Constraint held throughout: this extends the existing domain, it does not invent a
-parallel one.
-
----
-
-## The idea
-
-Most portfolio timelines are a single column of job cards. That reads as a CV with extra
-scrolling — and the CV already exists on `/resume`.
-
-The proposal is a **dual-track chronicle**: one spine of time, with what you *did* on one
-side and what *shaped you* on the other, and a **lens** control so the viewer decides
-which of those they care about. A recruiter filters to roles in one click. An engineer
-leaves everything on and reads the whole arc.
-
-Three things carry the personality:
-
-1. **Two tracks, one spine** — career and life run in parallel, visibly. A certification
-   sitting beside the role it was earned during says something a list cannot.
-2. **A hard "today" boundary** — everything above it happened; everything below is
-   drawn as blueprint. Ambition without pretending.
-3. **The viewer is in control** — lenses, not a fixed narrative.
+Constraint held throughout: extend the existing domain, do not invent a parallel one.
 
 ---
 
-## Domain: one new entity
+## Weighing the ideas
 
-Career already exists — `Experience`, `Project`, `RoadmapItem`. **Life does not**, and
-that is the gap for the "life and career both" requirement.
+| Idea | Verdict | Why |
+|---|---|---|
+| **Named eras** | **Adopt — headline feature** | The single strongest idea here. Turns dates into narrative |
+| **Density / "9 events"** | **Adopt, merged into the scrubber** | Real signal, and it makes navigation earn its space twice |
+| **Connect everything** | **Adopt, derived from real joins** | The data already supports most of it. Needs one new join |
+| **Horizontal navigator** | **Adopt as a bottom scrubber** | Better than my vertical rail. This is what carries "time travel" |
+| **On this day** | **Adopt — small, cheap, charming** | Costs almost nothing, lands only when true |
+| **Journey statistics** | **Defer to home, as you said** | Right instinct. A static summary here, animated counters nowhere |
+| **Semantic zoom (collapse years)** | **Stretch** | Real work; the scrubber already delivers the "how busy was he" read |
+| **Explorer Mode (horizontal layout)** | **Recommend against — see below** | Two layouts, double the bugs, and the scrubber already gets you most of it |
 
-### Proposed: `Milestone`
+### The one I want to talk you out of
+
+**Story Mode / Explorer Mode as two full layouts.** It is a genuinely appealing idea and
+I think it is a trap here:
+
+- It is **two complete implementations** of the signature page — every node type, every
+  responsive breakpoint, Recruiter Mode, and the accessibility work, twice. On a page
+  where correctness matters most.
+- **Horizontal scrolling is hostile** on mobile, with a trackpad, and to screen readers
+  and keyboard users. The spec already rules out scroll-hijacking for the same reason.
+- A mode most visitors never switch into absorbs the polish budget of the one they all
+  see. The vertical page has to be perfect first.
+
+**The bottom scrubber gives you most of the feeling for a tenth of the cost** — a
+horizontal band of eras and density you can drag through, with the page travelling to
+meet you. If after launch it still feels missing, it is a clean addition rather than a
+rewrite. Say the word and I will build it, but I would rather spend that day making the
+vertical page excellent.
+
+---
+
+## What the page is now
+
+Four things carry it:
+
+1. **Eras** — the timeline is chapters, not years. You remember "the Banking Systems
+   chapter", not "there were lots of dates".
+2. **Two tracks, one spine** — career and life in parallel, visibly.
+3. **A hard today line** — above it happened, below is blueprint.
+4. **Connections** — nodes reference each other, so one thing opens into an ecosystem.
+
+Plus the viewer stays in control: lenses decide what is shown, the scrubber decides
+where you are.
+
+---
+
+## Domain: two new entities, one new join
+
+### `Era` — the headline addition
 
 ```
-Milestone : AuditableEntity
-  Title        string(150)   required
-  Description  string(500)   required
-  Date         DateOnly      required
-  EndDate      DateOnly?     null for a point in time rather than a span
-  Category     enum          Education | Recognition | Community | Personal | Career
-  Link         string(500)?  optional link out
+Era : AuditableEntity
+  Name         string(80)    "Learning", "First Steps", "Banking Systems"
+  Tagline      string(160)?  one line: what this chapter was about
+  StartDate    DateOnly
+  EndDate      DateOnly?     null = the current era
   SortOrder    int
 ```
 
-Table `profile_milestones` — the `profile_` domain, alongside skills and certifications,
-because it describes the person rather than the work.
+Table `profile_eras`. Editorial by nature — only a human can decide where one chapter
+ends and the next begins, which is exactly why it is data rather than something derived
+from dates.
 
-**Why a new entity rather than reusing something.** Nothing existing carries a life
-event. Bending `Experience` to hold "graduated" would corrupt the résumé and the skills
-join. One small entity keeps both honest.
+Items fall into an era by date. An item outside every era still renders, under its year
+alone, so a gap in the era list never loses content.
 
-**It also pays for itself later.** The Software City concept has a "bedrock" layer of
-education and fundamentals; this is the data that feeds it, so the career-graph contract
-does not need inventing from nothing.
+### `Milestone` — the life track
 
-### Alternative, if you would rather not touch the schema this week
+```
+Milestone : AuditableEntity
+  Title        string(150)
+  Description  string(500)
+  Date         DateOnly
+  EndDate      DateOnly?     null = a point rather than a span
+  Category     enum          Education | Recognition | Community | Personal
+  Link         string(500)?
+  SortOrder    int
+```
 
-`Certification` already has `IssueDate` and can populate a life track on its own. The
-timeline works, just thinner — no education, no personal milestones. Say the word and
-I will build the certifications-only version and add `Milestone` after launch.
+Table `profile_milestones`. Nothing existing carries a life event, and bending
+`Experience` to hold "graduated" would corrupt both the résumé and the skills join.
 
-**My recommendation: build `Milestone`.** It is one entity, one configuration, one
-seeder and one slice — roughly an hour — and without it the "life" half of the page is
-one node type.
+It also feeds the "bedrock" layer the Software City concept describes, so the
+career-graph contract later has real data rather than something invented.
+
+### `Certification ↔ Skill` — makes your AZ-204 example real
+
+One join table, `profile_certification_skills`. Without it a certification is a dead end
+on the timeline. With it:
+
+```
+AZ-204  ──(certifies)──▶  Azure  ──(used in)──▶  Chronicle
+                                 └─(used in)──▶  Statement Delivery Pipeline
+```
+
+That is your example working off real data rather than hand-authored links.
 
 ---
 
-## API: `GET /api/timeline`
+## Connections, and what is honestly derivable
 
-One request. Server merges, tags each item with `type` and `track`, sorts ascending.
-The client groups by year and computes the today boundary from the current date.
+Everything below comes from joins that already exist or the one above. **Nothing is
+hand-maintained**, so it cannot go stale.
 
-```jsonc
-[
-  { "type": "milestone", "track": "life", "date": "2022-06-01",
-    "title": "BSc Computer Science", "subtitle": "University",
-    "category": "Education", "description": "…" },
+| From | To | Via |
+|---|---|---|
+| Certification | Skills | `profile_certification_skills` *(new)* |
+| Skill | Projects, Experience | existing join tables |
+| Project | Articles | shared tags |
+| Project | Skills | existing join |
+| Experience | Projects | shared skills, overlapping dates |
+| Project | source, demo, docs, video | its own link fields |
 
-  { "type": "experience", "track": "career", "date": "2023-01-01", "endDate": "2024-12-31",
-    "title": "Associate Software Engineer", "subtitle": "Banking Systems",
-    "summary": "…", "highlights": ["…"], "techStack": ["C#", ".NET"] },
+**Not derivable, and not proposed:** LinkedIn posts and GitHub releases. Those are
+external and would need either manual entry or another integration. A project's own
+links already cover the useful half of that chain.
 
-  { "type": "project", "track": "career", "date": "2024-03-01", "endDate": null,
-    "title": "Core Banking Ledger", "slug": "core-banking-ledger",
-    "pitch": "…", "tags": ["backend"] },
-
-  { "type": "certification", "track": "life", "date": "2025-11-03",
-    "title": "Azure Developer Associate", "subtitle": "Microsoft",
-    "link": "https://…" },
-
-  { "type": "roadmap", "track": "career", "date": "2028-01-01",
-    "status": "Planned", "title": "Senior Software Engineer", "description": "…" }
-]
-```
-
-Cached and tagged `timeline`; evicted by any command touching experience, projects,
-milestones, certifications or roadmap — because all five feed it.
+Each connection carries **why**, so the page can say `Azure — also used in Chronicle`
+rather than leaving the reader to guess.
 
 ---
 
 ## Skeleton — desktop
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│  Timeline                                                                 │
-│  Career and life on one axis. Choose what you want to see.                │
-│                                                                           │
-│  ● Roles   ● Projects   ● Life   ● Certifications   ● Goals    ↺ Reset    │
-│  └── lens chips: click to toggle, choice persists and is in the URL ──┘   │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                     ▕ ▏   │
-│   2028  ◂ sticky year, updates as you scroll                        ▕ ▏   │
-│   "Where this is going"  ◂ era label                                ▕ ▏   │
-│                                                                     ▕ ▏   │
-│      CAREER                    │                    LIFE           ▕ ▏   │
-│                                │                                    ▕ ▏   │
-│   ┌ ─ ─ ─ ─ ─ ─ ─ ─ ┐          ╎                                    ▕ ▏   │
-│   ╎ Senior Engineer  ╎──────────○                                   ▕ ▏   │
-│   ╎ target 2028      ╎          ╎     blueprint: dotted border,     ▕ ▏   │
-│   └ ─ ─ ─ ─ ─ ─ ─ ─ ┘          ╎     hollow node, muted            ▕ ▏   │
-│                                 ╎                                    ▕ ▏   │
-│  ═══════════════════ ▼ YOU ARE HERE ═══════════════════             ▕█▏   │
-│                                 │                          viewport ▕ ▏   │
-│   2026                          │                                    ▕ ▏   │
-│   "Building in the open"        │                                    ▕ ▏   │
-│                                 │                                    ▕ ▏   │
-│   ┌──────────────────┐          ●                                    ▕ ▏   │
-│   │ ▸ Chronicle      │──────────│                                    ▕ ▏   │
-│   │   Portfolio…     │          │                                    ▕ ▏   │
-│   └──────────────────┘          │                                    ▕ ▏   │
-│                                 ●──────────┌──────────────────┐      ▕ ▏   │
-│                                 │          │ ◆ AZ-204         │      ▕ ▏   │
-│   2025                          │          │   Microsoft      │      ▕ ▏   │
-│                                 │          └──────────────────┘      ▕ ▏   │
-│   ┌──────────────────┐          ●                                    ▕ ▏   │
-│   │ Software Engineer│──────────│                                    ▕ ▏   │
-│   │ Banking Systems  │          │                              scrub ▕ ▏   │
-│   │ 2025 – now       │          │                               rail ▕ ▏   │
-│   │ ▾ 3 highlights   │◂ expands │                                    ▕ ▏   │
-│   └──────────────────┘  in place│                                    ▕ ▏   │
-└──────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────┐
+│  Timeline                                                                   │
+│  Six years, two tracks. Choose what you want to see.                        │
+│                                                                             │
+│  ● Roles   ● Projects   ● Life   ● Certifications   ● Goals      ↺ Reset    │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   │
+│   BANKING SYSTEMS                                          2023 — present   │
+│   Learning to build things that must not be wrong                           │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ era band, sticky ━━━━━   │
+│                                                                             │
+│        CAREER                    │                    LIFE                  │
+│   2025 ──────────────────────────┼─────────────────────────────────         │
+│                                  │                                          │
+│   ┌────────────────────┐         ●                                          │
+│   │ Software Engineer  │─────────│                                          │
+│   │ Banking Systems    │         │                                          │
+│   │ 2025 — now         │         │                                          │
+│   │ ▾ 3 highlights     │         │                                          │
+│   └────────────────────┘         │                                          │
+│                                  ●─────────┌────────────────────┐           │
+│                                  │         │ ◆ AZ-204           │           │
+│                                  │         │   Microsoft        │           │
+│                                  │         │ ↳ certifies Azure  │           │
+│                                  │         │   used in Chronicle│◂ connection
+│                                  │         └────────────────────┘           │
+│   2024 ──────────────────────────┼─────────────────────────────────         │
+│   ┌────────────────────┐         ●                                          │
+│   │ ▸ Core Banking     │─────────│                                          │
+│   │   Ledger           │         │                                          │
+│   │ ↳ 1 related article│         │                                          │
+│   └────────────────────┘         │                                          │
+│                                                                             │
+│  ═══════════════ ▼ YOU ARE HERE · 30 July 2026 ═══════════════              │
+│     ⤷ one year ago today: earned AZ-204        ◂ only shown when true       │
+│                                                                             │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   │
+│   THE NEXT CHAPTER                                              2027 →      │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━   │
+│   ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─┐          ╎                                           │
+│   ╎ Senior Engineer   ╎──────────○     blueprint: dotted, hollow, muted     │
+│   ╎ target 2028       ╎          ╎                                          │
+│   └ ─ ─ ─ ─ ─ ─ ─ ─ ─┘          ╎                                           │
+├────────────────────────────────────────────────────────────────────────────┤
+│  LEARNING    │ FIRST STEPS │ BANKING SYSTEMS        │ NEXT      ◂ eras      │
+│  ▁▁ ▃▁ ▁▁    │ ▃▅ ▂▁      │ ▅█ ▇▅ █▆ ▃            │ ░░ ░░     ◂ density   │
+│  2020  2021  │ 2022  2023  │ 2024 2025 2026        │ 2027 2028             │
+│                                  ▲ you are here                             │
+│              ◂ drag or click to travel · scrubber pinned to the bottom ▸    │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Node shapes carry meaning without relying on colour: **●** happened, **○** planned,
-**◆** a credential, dotted border = future.
+**The scrubber is where three of your ideas land at once**: eras as named segments,
+density bars answering "how busy was he", and the horizontal time-travel affordance —
+one component, one set of bugs.
+
+Node shapes carry meaning without colour: **●** happened · **○** planned · **◆**
+credential · dotted = future.
 
 ## Skeleton — mobile
-
-Single column, spine on the left, track shown by icon rather than side.
 
 ```
 ┌────────────────────────┐
 │ Timeline               │
-│ ●Roles ●Projects ●Li…▸ │ ◂ chips scroll sideways
+│ ●Roles ●Projects ●Li▸ │ ◂ chips scroll sideways
 ├────────────────────────┤
-│ 2026                   │ ◂ sticky
+│ ━━━━━━━━━━━━━━━━━━━━━ │
+│  BANKING SYSTEMS       │ ◂ era band, sticky
+│  2023 — present        │
+│ ━━━━━━━━━━━━━━━━━━━━━ │
+│ 2025                   │
 │ │                      │
 │ ●─┌──────────────────┐ │
-│ │ │ ▸ Chronicle      │ │
-│ │ │   Portfolio…     │ │
+│ │ │ Software Engineer│ │
+│ │ │ Banking Systems  │ │
 │ │ └──────────────────┘ │
 │ │                      │
 │ ●─┌──────────────────┐ │
-│ │ │ ◆ AZ-204         │ │ ◂ ◆ = life track
-│ │ │   Microsoft      │ │
+│ │ │ ◆ AZ-204         │ │ ◂ ◆ marks the life track
+│ │ │ ↳ Azure          │ │
 │ │ └──────────────────┘ │
-│ │                      │
 │ ═══ ▼ YOU ARE HERE ═══ │
 │ ╎                      │
-│ ○─┌ ─ ─ ─ ─ ─ ─ ─ ─ ┐ │
-│ ╎ ╎ Senior Engineer  ╎ │
-│ ╎ ╎ target 2028      ╎ │
-│ ╎ └ ─ ─ ─ ─ ─ ─ ─ ─ ┘ │
+│ ○─┌ ─ ─ ─ ─ ─ ─ ─ ─┐  │
+│ ╎ ╎ Senior Engineer ╎  │
+│ ╎ └ ─ ─ ─ ─ ─ ─ ─ ─┘  │
+├────────────────────────┤
+│ ▁▃▅█▇▅█▆░░  ◂ scrubber │
 └────────────────────────┘
 ```
 
 ## Skeleton — Recruiter Mode and reduced motion
 
-Same data, no motion, no grading, no rail. A dense reverse-chronological list, because
-someone in a hurry reads newest-first.
+Same data, grouped by era, newest first, no motion, no scrubber, no density.
 
 ```
-Timeline                          ● Roles  ● Projects  ● Life  ● Goals
+Timeline                       ● Roles  ● Projects  ● Life  ● Goals
 
-── planned ──────────────────────────────────────────────────────────
-2028   Senior Software Engineer                              goal
-2027   Lead a system design end to end                in progress
-── today ────────────────────────────────────────────────────────────
-2026   Chronicle — portfolio platform                     project
-2025   Azure Developer Associate (AZ-204)                     cert
-2025   Software Engineer · Banking Systems                    role
-2024   Core Banking Ledger                                 project
-2023   Associate Software Engineer · Banking Systems          role
-2022   BSc Computer Science                                education
+THE NEXT CHAPTER · 2027 →
+  2028   Senior Software Engineer                              goal
+  2027   Lead a system design end to end                in progress
+
+──────────────────────── today ────────────────────────
+
+BANKING SYSTEMS · 2023 – present
+  2026   Chronicle — portfolio platform                     project
+  2025   Azure Developer Associate (AZ-204)                     cert
+  2025   Software Engineer · Banking Systems                    role
+  2024   Core Banking Ledger                                 project
+  2023   Associate Software Engineer · Banking Systems          role
+
+FIRST STEPS · 2022 – 2023
+  2022   BSc Computer Science                               education
 ```
+
+Eras survive into Recruiter Mode, because the narrative is the point and it costs
+nothing to keep.
 
 ---
 
 ## Interaction
 
-**Scroll.** Native, never hijacked — hijacking breaks mobile and accessibility, and the
-spec rules it out. Nodes reveal on entry, ~300ms, fade plus a small translate.
+**Scroll** is native and never hijacked. Nodes reveal on entry, ~300ms, fade plus a
+small translate.
 
-**Entry point.** The page loads positioned at the today boundary, so the first thing
-seen is the present, not 2022. A "jump to now" control returns there.
+**Entry** is at the today line, so the first thing seen is the present.
 
-**Lenses.** Toggle chips filter node types. The choice persists in a cookie *and* is
-reflected in the URL (`?lens=roles,projects`), so a filtered view can be shared or
-linked — a recruiter can be sent straight to the roles-only view.
+**Era bands** stick to the top of the viewport while you are inside that chapter, so you
+always know which one you are reading.
 
-**Era grading.** Background washes very slightly per chapter. Atmosphere, not spectacle,
-and never the only thing distinguishing two states.
+**Lenses** filter node types. Persisted in a cookie *and* in the URL
+(`?lens=roles,projects`), so a roles-only view is a link you can send someone.
 
-**Scrub rail.** A thin rail showing the whole span with the viewport marked. Click a year
-to jump. This is what makes a long timeline navigable rather than a scroll marathon.
+**Connections** are listed inside the node. Hovering or focusing a node gives its
+related nodes a subtle ring elsewhere on the page — the "one node is an ecosystem" read,
+without drawing lines across a scrolling document.
 
-**Expansion.** Role nodes expand in place to show highlights. Nothing navigates away.
+**Scrubber** shows eras, density and position. Click or drag to travel; the page scrolls
+smoothly to meet you.
+
+**On this day** appears at the today line only when an event genuinely shares today's
+date. Silent otherwise — a feature that fabricates a coincidence is worse than one that
+waits for a real one.
 
 ---
 
-## Accessibility, which the spec makes non-negotiable
+## Accessibility, non-negotiable per the spec
 
-- Each node is a semantic `<article>` with a heading; the timeline is an ordered list.
+- Nodes are semantic `<article>` elements inside an ordered list; eras are `<section>`
+  with a heading, so the page has a real document outline.
 - Project nodes are real `<a>` links — keyboard reachable, openable in a new tab.
-- Lens chips are real toggle buttons with `aria-pressed`.
-- Shape and label carry meaning, never colour alone.
-- `prefers-reduced-motion` drops every transition and the grading, independently of
-  Recruiter Mode.
-- The scrub rail is decorative and `aria-hidden`; year headings already provide the
-  same navigation to a screen reader.
+- Lens chips are toggle buttons with `aria-pressed`. The scrubber is a real slider with
+  `role="slider"` and arrow-key support, or `aria-hidden` if that proves fragile — year
+  headings already give screen readers the same navigation.
+- Shape and text carry meaning; colour never carries it alone.
+- `prefers-reduced-motion` drops every transition, the reveal and the smooth scroll,
+  independently of Recruiter Mode.
 
 ---
 
-## Scope for one day
+## Build order
 
-**Core — the page is not shippable without these**
+**Phase A — core. The page is not shippable without these.**
 
-- [ ] `Milestone` entity, configuration, seeder, migration
-- [ ] `GET /api/timeline` merging five sources, tagged and cached
-- [ ] Spine, year markers, the four node types
-- [ ] Today boundary; future rendered as blueprint
-- [ ] Lens chips with persistence and URL state
+- [ ] `Era` and `Milestone` entities, configurations, seeders, migration
+- [ ] `Certification ↔ Skill` join
+- [ ] `GET /api/timeline` — merged, era-grouped, with derived connections
+- [ ] Era bands, dual track, year markers, four node types
+- [ ] Today line, blueprint future
+- [ ] Lens chips: persistence and URL state
 - [ ] Scroll reveal
-- [ ] Recruiter Mode / reduced-motion static list
+- [ ] Recruiter Mode / reduced-motion static list, grouped by era
 - [ ] Mobile single column
 - [ ] `docs/user-guide.md` section
 
-**Stretch — in this order, only if core lands early**
+**Phase B — same day if Phase A lands early. In this order.**
 
-- [ ] Scrub rail
-- [ ] Era colour grading
+- [ ] Bottom scrubber: eras, density, position, click to travel
+- [ ] Connection highlighting on hover and focus
+- [ ] On this day
 - [ ] In-place expansion of role highlights
-- [ ] Ambient industry markers (spec calls these optional)
 
-**Explicitly not now.** No 3D, no canvas, no scroll-scrubbed image sequence. Those
-belong to the final UI phase, and to Software City.
+**Phase C — after launch**
+
+- [ ] Semantic zoom: collapse an era to a density band, expand on click
+- [ ] Journey statistics on the home page, per your note
+- [ ] Ambient industry markers
+
+**Not proposed:** Explorer Mode, 3D, canvas, scroll-scrubbed image sequences. Those
+belong to the final UI phase or to Software City.
 
 ---
 
-## Acceptance, from spec §16
+## Acceptance
 
-1. Every experience, project and roadmap item in correct chronological order, with the
-   today boundary in the right place.
-2. Smooth reveal at 60fps on a mid-range phone.
+From spec §16:
+
+1. Every experience, project and roadmap item in correct chronological order, today line
+   correctly placed.
+2. Reveal is smooth at 60fps on a mid-range phone.
 3. Future items visually distinct and labelled as goals.
 4. A project node opens its case study.
 5. Reduced motion / Recruiter Mode gives a clean static list, no layout breakage.
-6. Adding an item in the CMS makes it appear here immediately, with no code change.
+6. Adding an item in the CMS appears here immediately, no code change.
 
-Plus two from this proposal:
+From this revision:
 
-7. Turning off a lens removes exactly that node type and nothing else; the choice
-   survives a reload and can be shared as a URL.
-8. Life and career are distinguishable without relying on colour.
+7. Turning off a lens removes exactly that node type; the choice survives reload and is
+   shareable as a URL.
+8. Career and life are distinguishable without relying on colour.
+9. Every item belongs to an era, or renders correctly under its year when no era covers
+   it.
+10. Every connection shown is derived from a real relationship — none hand-maintained.
 
 ---
 
-## Open questions for review
+## What I need from you
 
-1. **`Milestone` entity — yes, or certifications-only for now?** My recommendation is
-   yes; it is about an hour and the life track is thin without it.
-2. **Which categories?** Proposed: Education, Recognition, Community, Personal, Career.
-3. **Default lens state** — everything on, or roles and projects on with life and goals
-   off? Everything-on shows the full arc; the quieter default respects a first-time
-   visitor. I lean everything-on, since the whole point is the parallel tracks.
-4. **How far back does the timeline start?** The earliest milestone sets it. Worth
-   deciding whether school-age entries belong or whether it starts at university.
+Content, not decisions — the structure above is settled unless you disagree.
+
+I will seed **placeholder eras and milestones** so the page is real from the first run,
+and you replace them in the CMS. To make the placeholders close to true, I need:
+
+1. **Your eras** — names, taglines and rough boundaries. My guess, to be corrected:
+   *Learning* (—2022) · *First Steps* (2023–2024) · *Banking Systems* (2025–present) ·
+   *The Next Chapter* (2027→)
+2. **Life milestones** — education especially: what, where, and when.
+
+If you would rather just approve the structure and fill the content in yourself later,
+say so and I will seed obvious placeholders clearly marked as such.
