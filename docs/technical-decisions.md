@@ -69,8 +69,13 @@ hot-linking, rewrite share URLs, and offer no cache headers.
 
 ## 1b. Hosting, at £0.00
 
-Not yet decided; due before the Day 6 deploy. The hard part is a .NET backend that is
-always on, because "free" and "always on" rarely coexist.
+**Deferred, deliberately.** Deployment now happens after the application is complete and
+tested rather than on Day 6, and a domain has to be bought first. The options below stay
+on the table; nothing about the codebase depends on which one wins, because Aspire is
+dev-time orchestration and the server is an ordinary ASP.NET Core app underneath.
+
+The hard part is a .NET backend that is always on, because "free" and "always on" rarely
+coexist.
 
 | Option | Free? | Catch |
 |---|---|---|
