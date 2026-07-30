@@ -161,14 +161,35 @@ Aspire then manages PostgreSQL itself and the connection string secret is unnece
 
 ## Status
 
-Phase 1 is partly built. Working today: the domain model and schema, the projects API
-slice end to end, the admin shell with Identity sign-in, and the public site's home,
-projects and case-study pages.
+**API — complete for Phase 1.** `projects` (list + detail), `experience`, `skills`,
+`posts` (list + detail), `learning`, `roadmap`, `certifications`, `status`. All cached,
+tagged and rate-limited; browse them at `/scalar/v1`.
 
-Still to come, in order: the remaining content slices and their CMS screens, then the
-Timeline (`/api/timeline`), Knowledge Core, GitHub-backed Analytics, the interactive
-résumé, and the Copilot. Routes that are not built yet say so instead of showing
-placeholder content.
+**Public site** — home, projects list and case study render live content. Light/dark
+theming, Recruiter Mode and responsive navigation work across every route.
+
+**Admin CMS** — Identity sign-in and a dashboard. CRUD screens are next.
+
+Still to come, in order: the content pages for the slices above, the Timeline
+(`/api/timeline`), GitHub-backed Analytics, the interactive résumé, contact, and the
+CMS editors. Routes that are not built yet say so instead of showing placeholder
+content. A final pass refines the UI and UX once every surface is real.
+
+[`docs/user-guide.md`](docs/user-guide.md) explains the application in plain language;
+[`docs/roadmap.md`](docs/roadmap.md) has the day-by-day plan.
+
+## Contributing
+
+Work happens on `development` and reaches `main` by pull request. Before pushing:
+
+```bash
+dotnet build Chronicle.slnx && dotnet test Chronicle.slnx
+cd src/Chronicle.Portfolio/Chronicle.Portfolio.Client
+npm run lint && npm run typecheck && npm run build
+```
+
+Run all three npm scripts — `next build` uses Turbopack and does not invoke ESLint, so a
+green build says nothing about lint.
 
 **Software City** ships from its own repository. This one owes it a versioned
 `career-graph` contract — see [`docs/software-city-concept.md`](docs/software-city-concept.md).

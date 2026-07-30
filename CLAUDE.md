@@ -114,6 +114,19 @@ src/components/      used by three or more features (SiteHeader, Footer, Markdow
 Promote a component out of a feature folder only once a third feature needs it. Two
 users is a coincidence; three is a pattern.
 
+### User documentation
+
+`docs/user-guide.md` explains the application to the people who use it — visitors and
+the content editor — in plain language, not implementation detail. **A feature is not
+finished until its section exists there.** Written alongside the feature rather than in
+a documentation sprint at the end, because that is the only time anyone remembers why a
+thing behaves the way it does.
+
+### Branching
+
+Work happens on `development`; `main` takes it by pull request. Never commit directly
+to `main`.
+
 ### Navigation
 
 Every route is reachable from the header, every link uses `next/link` (never a bare

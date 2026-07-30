@@ -127,6 +127,9 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 
 app.MapProjectEndpoints();
+app.MapPostEndpoints();
+app.MapSkillEndpoints();
+app.MapContentEndpoints();
 app.MapAccountEndpoints();
 
 // This host serves the API and the CMS; the public site is the Next.js client.

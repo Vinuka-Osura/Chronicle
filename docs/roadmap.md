@@ -41,7 +41,27 @@ Two ordering consequences worth knowing before planning around them:
 
 ---
 
-## The one-week plan · Wed 29 Jul – Mon 3 Aug
+## Schedule note — revised 30 Jul
+
+Day 1 slipped by a day. **Monday 3 August still holds** because the weekend carries the
+recovery: Sunday absorbs what was Day 4 and Day 5. Day numbers below keep their original
+meaning; only the dates moved.
+
+| Day | Was | Now |
+|---|---|---|
+| 1 — APIs | Wed 29 | **Thu 30** |
+| 2 — Mission Control, About, Skills | Thu 30 | **Fri 31** |
+| 3 — Timeline | Fri 31 | **Sat 1** |
+| 4 + 5 — Projects, Knowledge, Analytics, Résumé, Contact | Sat 1 + Sun 2 | **Sun 2** (double day) |
+| 6 — Recruiter Mode, CMS, polish, deploy | Mon 3 | **Mon 3** |
+
+If Sunday does not deliver a double day, the honest call is to slip launch to Tue 4
+rather than cut Recruiter Mode or the accessibility pass.
+
+**Documentation is not a phase.** Every feature adds its section to
+`docs/user-guide.md` as it is built.
+
+## The one-week plan · Thu 30 Jul – Mon 3 Aug
 
 Ordered as requested, adjusted only where a dependency forces it.
 
@@ -169,6 +189,34 @@ decided at 1am on Sunday.
 | Fifty hours does not materialise | Switch to the realistic track early and deliberately, not by drifting |
 
 ---
+
+## Final phase — UI and UX refinement
+
+**Deliberately last, and it has to be.** Polishing an interface before the content and
+interactions exist means polishing something that will change; every hour spent on a
+page that later gains a filter, a chart or an empty state is an hour spent twice. Once
+every surface is real, the whole thing can be judged as one product instead of nine
+pages.
+
+Scope, once launch is out of the way:
+
+- **Type and rhythm** — a proper modular scale rather than ad-hoc sizes, consistent
+  vertical rhythm, measure capped for readability
+- **Motion with intent** — entrance and transition choreography that guides attention,
+  built on the existing `--ease-out-quiet` and `--duration-node` tokens rather than
+  scattered one-off durations
+- **The Timeline as showpiece** — it carries the site's personality, so it gets the
+  most attention: era grading, node treatment, the "you are here" boundary
+- **Depth and materiality** — considered elevation, borders and shadow in both themes,
+  which is where a dark theme usually falls down
+- **Empty, loading and error states** — designed rather than defaulted; these are what
+  a visitor actually sees when something is slow
+- **Micro-interactions** — hover, focus and active states that feel deliberate
+- **A11y re-audit after all of it**, because visual polish is where contrast and focus
+  order most often get broken
+
+Two things stay fixed through all of it: **one accent colour**, and **Recruiter Mode
+must survive every change** — it is a first-class rendering mode, not a degraded one.
 
 ## After launch
 
