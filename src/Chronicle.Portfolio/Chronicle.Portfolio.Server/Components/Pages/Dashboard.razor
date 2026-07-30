@@ -2,9 +2,14 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 
+@using Chronicle.Application.Common.Content
 @using Chronicle.Application.Common.Interfaces
+@using Chronicle.Application.Features.Media
+@using Chronicle.Application.Features.Media.Queries.GetStorageUsage
+@using MediatR
 @using Microsoft.EntityFrameworkCore
 @inject IChronicleDbContext Db
+@inject ISender Sender
 
 <PageTitle>Dashboard - Chronicle admin</PageTitle>
 
@@ -31,6 +36,48 @@ else
     </ul>
 }
 
+@*
+    The storage gauge.
+
+    This is the mitigation that made object storage acceptable under the zero-cost rule:
+    the margin between what is used and what is free has to be visible here, not two
+    clicks into someone else's dashboard. A safeguard nobody looks at is not a safeguard.
+
+    The number is summed from the database rather than read from the bucket, because
+    listing a bucket is a billable operation and we already recorded every size at upload.
+*@
+@if (storage is not null)
+{
+    <section class="storage">
+        <div class="storage-head">
+            <h2>Media storage</h2>
+            <p class="row-sub">@storage.Provider · @storage.Location</p>
+        </div>
+
+        @if (storage.PercentUsed is { } percent)
+        {
+            <div class="storage-meter">
+                @* Floored at a visible sliver: 0.01% of a 10 GB tier is zero pixels wide,
+                   and a bar that renders as nothing looks broken rather than empty. *@
+                <div class="storage-fill" style="width: @(Math.Max(percent, 0.4).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%"></div>
+            </div>
+            <p class="storage-label">
+                <strong>@ImageValidation.Describe(storage.UsedBytes)</strong>
+                of @ImageValidation.Describe(storage.QuotaBytes!.Value)
+                (@percent.ToString("0.##")%) across @storage.FileCount
+                file@(storage.FileCount == 1 ? "" : "s").
+            </p>
+        }
+        else
+        {
+            <p class="storage-label">
+                <strong>@ImageValidation.Describe(storage.UsedBytes)</strong>
+                across @storage.FileCount file@(storage.FileCount == 1 ? "" : "s").
+            </p>
+        }
+    </section>
+}
+
 <section class="next-up">
     <h2>What can be edited here</h2>
     <p>
@@ -44,9 +91,12 @@ else
 
 @code {
     private List<(string Label, int Count)>? counts;
+    private StorageUsageDto? storage;
 
     protected override async Task OnInitializedAsync()
     {
+        storage = await Sender.Send(new GetStorageUsageQuery());
+
         counts =
         [
             ("Projects", await Db.Projects.CountAsync()),

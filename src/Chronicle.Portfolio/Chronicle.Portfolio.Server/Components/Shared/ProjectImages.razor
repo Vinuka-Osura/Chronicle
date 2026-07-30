@@ -1,0 +1,168 @@
+@using Chronicle.Application.Common.Content
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Media
+@using Chronicle.Application.Features.Media.Commands.DeleteProjectImage
+@using Chronicle.Application.Features.Media.Commands.UploadProjectImage
+@using Chronicle.Application.Features.Media.Queries.GetProjectImages
+@using MediatR
+@inject ISender Sender
+
+@*
+    Screenshots for one project. Only rendered once the project has been saved, because
+    an image needs something to belong to - uploading against an unsaved project would
+    mean either orphaned objects or a staging area, and neither earns its complexity for
+    a handful of pictures.
+*@
+
+<fieldset class="field-group">
+    <legend>Screenshots</legend>
+
+    @if (error is not null)
+    {
+        <div class="save-panel save-panel-error" role="alert">
+            <p>@error</p>
+        </div>
+    }
+
+    @if (images is { Count: > 0 })
+    {
+        <ul class="media-list">
+            @foreach (var image in images)
+            {
+                <li class="media-item">
+                    @* Uploads are validated by their bytes, so the type here is the real
+                       one rather than whatever the browser claimed. *@
+                    <img src="@image.Url" alt="@(image.Caption ?? "Project screenshot")" loading="lazy" />
+
+                    <div class="media-meta">
+                        <p class="media-caption">@(image.Caption ?? "No caption")</p>
+                        <p class="row-sub">
+                            @ImageValidation.Describe(image.SizeBytes) · @image.ContentType
+                            @if (image is { Width: not null, Height: not null })
+                            {
+                                <text> · @image.Width×@image.Height</text>
+                            }
+                        </p>
+                    </div>
+
+                    @if (confirming == image.Id)
+                    {
+                        <div class="media-actions">
+                            <button type="button" class="button-danger" @onclick="() => DeleteAsync(image.Id)">
+                                Really delete
+                            </button>
+                            <button type="button" class="button-quiet" @onclick="() => confirming = null">
+                                Cancel
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="media-actions">
+                            <button type="button" class="button-quiet" @onclick="() => confirming = image.Id">
+                                Delete
+                            </button>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p class="muted">No screenshots yet.</p>
+    }
+
+    <div class="field">
+        <label for="upload">Add an image</label>
+        <InputFile id="upload" OnChange="UploadAsync" accept="image/png,image/jpeg,image/webp,image/avif,image/gif" disabled="@uploading" />
+        <p class="field-help">
+            PNG, JPEG, WebP, AVIF or GIF, up to @ImageValidation.Describe(ImageValidation.MaxBytes).
+            <strong>SVG is not accepted</strong> — an SVG can carry scripts, so serving one
+            would be a security hole. Export diagrams as PNG.
+            The format is read from the file itself, so renaming an extension will not get
+            anything past it.
+        </p>
+    </div>
+
+    <div class="field">
+        <label for="caption">Caption for the next upload <span class="optional">optional</span></label>
+        <input id="caption" type="text" @bind="caption" disabled="@uploading" />
+    </div>
+
+    @if (uploading)
+    {
+        <p class="muted">Uploading…</p>
+    }
+</fieldset>
+
+@code {
+    [Parameter, EditorRequired] public Guid ProjectId { get; set; }
+
+    private IReadOnlyList<ProjectImageDto>? images;
+    private Guid? confirming;
+    private string? caption;
+    private string? error;
+    private bool uploading;
+
+    protected override Task OnParametersSetAsync() => LoadAsync();
+
+    private async Task LoadAsync() =>
+        images = await Sender.Send(new GetProjectImagesQuery(ProjectId));
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        error = null;
+        uploading = true;
+
+        try
+        {
+            /*
+              Buffered into memory rather than streamed straight through, because the
+              validator has to read the first bytes and then rewind - and a browser
+              upload stream is forward-only. MaxAllowedSize caps this well below anything
+              that could exhaust memory, and it is the same limit the validator enforces,
+              so a too-large file fails here with the same message either way.
+            */
+            using var buffer = new MemoryStream();
+            await using (var source = file.OpenReadStream(ImageValidation.MaxBytes))
+            {
+                await source.CopyToAsync(buffer);
+            }
+
+            buffer.Position = 0;
+
+            await Sender.Send(new UploadProjectImageCommand(
+                ProjectId,
+                buffer,
+                file.Name,
+                buffer.Length,
+                caption));
+
+            caption = null;
+            await LoadAsync();
+        }
+        catch (ValidationException ex)
+        {
+            error = string.Join(" ", ex.Errors.SelectMany(e => e.Value));
+        }
+        catch (IOException)
+        {
+            // Blazor throws this when the file exceeds MaxAllowedSize, before a single
+            // byte reaches the validator.
+            error = $"That file is larger than the {ImageValidation.Describe(ImageValidation.MaxBytes)} limit.";
+        }
+        finally
+        {
+            uploading = false;
+        }
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        await Sender.Send(new DeleteProjectImageCommand(id));
+        confirming = null;
+        await LoadAsync();
+    }
+}

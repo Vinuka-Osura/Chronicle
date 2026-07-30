@@ -1,5 +1,6 @@
 using Chronicle.Domain.Entities;
 using Chronicle.Domain.Enums;
+using Chronicle.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -121,12 +122,20 @@ internal static partial class SampleContent
             Tags = [backend, database, architecture, payments],
             TechStack = [csharp, dotnet, postgres, efcore, redis]
         };
-        ledger.Screenshots.Add(new Media
+        var ledgerShot = new Media
         {
             Url = "https://placehold.co/1200x720/0E1420/F2F4F6?text=Posting+path+and+snapshot+worker",
             Caption = "The posting path and the snapshot worker",
-            SortOrder = 0
-        });
+            ContentType = "image/png",
+            // Hotlinked demo art, not an object this application uploaded, so there is
+            // nothing in storage behind it and nothing for a delete to remove. The
+            // prefix says so; see DeleteProjectImageCommandHandler.ExternalKeyPrefix.
+            SizeBytes = 0,
+            SortOrder = 0,
+            Metadata = new MediaMetadata { Width = 1200, Height = 720 }
+        };
+        ledgerShot.StorageKey = $"external:{ledgerShot.Id}";
+        ledger.Screenshots.Add(ledgerShot);
 
         var reconciliation = new Project
         {

@@ -244,14 +244,27 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -262,6 +275,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
 
                     b.HasIndex("ProjectId", "SortOrder");
 
@@ -880,6 +896,31 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .WithMany("Screenshots")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Chronicle.Domain.ValueObjects.MediaMetadata", "Metadata", b1 =>
+                        {
+                            b1.Property<Guid>("MediaId");
+
+                            b1.Property<int?>("Height");
+
+                            b1.Property<string>("OriginalFileName");
+
+                            b1.Property<int?>("Width");
+
+                            b1.HasKey("MediaId");
+
+                            b1.ToTable("portfolio_media");
+
+                            b1
+                                .ToJson("Metadata")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MediaId");
+                        });
+
+                    b.Navigation("Metadata")
                         .IsRequired();
 
                     b.Navigation("Project");

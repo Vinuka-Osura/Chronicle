@@ -439,6 +439,59 @@ a:hover { text-decoration: underline; }
 .md-preview table { display: block; overflow-x: auto; width: 100%; }
 .md-preview img { height: auto; max-width: 100%; }
 
+/* ---------- media + storage gauge ---------- */
+
+.storage {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin: 2rem 0;
+  padding: 1.25rem;
+}
+.storage-head { align-items: baseline; display: flex; gap: 0.75rem; justify-content: space-between; flex-wrap: wrap; }
+.storage-head h2 { margin: 0; font-size: 1.05rem; }
+.storage-head .row-sub { display: block; }
+
+.storage-meter {
+  background: #eceff3;
+  border-radius: 999px;
+  height: 8px;
+  margin: 0.9rem 0 0.6rem;
+  overflow: hidden;
+}
+.storage-fill {
+  background: var(--accent);
+  border-radius: 999px;
+  height: 100%;
+}
+.storage-label { color: var(--ink-soft); font-size: 0.85rem; margin: 0; }
+.storage-label strong { color: var(--ink); }
+
+.media-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+.media-item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.media-item img {
+  aspect-ratio: 16 / 10;
+  background: #eceff3;
+  display: block;
+  height: auto;
+  object-fit: cover;
+  width: 100%;
+}
+.media-meta { padding: 0.6rem 0.75rem 0; }
+.media-caption { font-size: 0.85rem; margin: 0 0 0.15rem; }
+.media-actions { padding: 0.5rem 0.75rem 0.75rem; text-align: right; }
+.media-actions > * + * { margin-left: 0.4rem; }
+
 /* ---------- blazor circuit error ---------- */
 
 #blazor-error-ui {

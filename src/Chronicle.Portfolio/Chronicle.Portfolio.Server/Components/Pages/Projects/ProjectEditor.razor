@@ -189,6 +189,21 @@ else
             </button>
         </div>
     </EditForm>
+
+    @* Outside the form, and only once the project exists: an image has to belong to
+       something, and uploading against an unsaved project would mean either orphaned
+       objects or a staging area. Neither earns its complexity for a few pictures. *@
+    @if (Id is { } saved)
+    {
+        <ProjectImages ProjectId="saved" />
+    }
+    else
+    {
+        <fieldset class="field-group">
+            <legend>Screenshots</legend>
+            <p class="muted">Save the project first, then you can add images to it.</p>
+        </fieldset>
+    }
 }
 
 @code {

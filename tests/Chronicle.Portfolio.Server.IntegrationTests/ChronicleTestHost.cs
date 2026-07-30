@@ -68,9 +68,18 @@ public sealed class ChronicleTestHost : WebApplicationFactory<Program>, IAsyncLi
             // Never let a test reach the real GitHub API. Unconfigured is a supported
             // state, so the service serves an empty payload without a network call.
             new KeyValuePair<string, string?>("GitHub:Username", string.Empty),
-            new KeyValuePair<string, string?>("GitHub:Pat", string.Empty)
+            new KeyValuePair<string, string?>("GitHub:Pat", string.Empty),
+            // Uploads go to a throwaway folder, not into the application's own. A test
+            // run must not leave files in the directory a developer is working in, and
+            // must not read files a previous run left behind.
+            new KeyValuePair<string, string?>("Media:Provider", "LocalDisk"),
+            new KeyValuePair<string, string?>("Media:LocalDisk:Root", MediaRoot)
         ]));
     }
+
+    /// <summary>Where uploads land during a test run.</summary>
+    public static string MediaRoot { get; } =
+        Path.Combine(Path.GetTempPath(), "chronicle-tests", "media");
 
     // Implemented explicitly: xUnit's IAsyncLifetime.DisposeAsync returns Task, while the
     // IAsyncDisposable one inherited from WebApplicationFactory returns ValueTask. Same

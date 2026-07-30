@@ -143,6 +143,7 @@ app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapLocalMedia();
 
 app.MapProjectEndpoints();
 app.MapPostEndpoints();

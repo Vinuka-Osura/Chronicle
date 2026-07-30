@@ -45,6 +45,11 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
     <PackageVersion Include="Markdig" Version="1.3.2" />
+    <!--
+      R2 speaks the S3 API, so the AWS SDK is used unmodified rather than hand-rolling a
+      client. Two config values point it at Cloudflare instead of Amazon.
+    -->
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.101.5" />
   </ItemGroup>
 
   <ItemGroup Label="Web host">

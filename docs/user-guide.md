@@ -332,10 +332,40 @@ Two rules that will stop you if you break them:
 Tag and skill names match **regardless of case**, so "EF Core" and "ef core" stay one
 tag rather than two that each filter to half your articles.
 
+#### Screenshots
+
+Each project has an image list under its editor, available once the project has been
+saved — an image has to belong to something.
+
+- **PNG, JPEG, WebP, AVIF or GIF, up to 5 MB.**
+- **SVG is not accepted.** An SVG is a document rather than a picture: it can carry
+  scripts, and serving one from this site would be a security hole with your login
+  behind it. Export the diagram as PNG — one click, and the problem disappears.
+- **The format is read from the file itself, not from its name.** Renaming
+  `something.exe` to `screenshot.png` will not get it past the check, because the first
+  few bytes of a real image cannot lie about what they are. This also means a JPEG named
+  `.png` is stored correctly as a JPEG rather than being served with the wrong type.
+- **Deleting removes the file as well as the entry**, and asks twice. The file goes
+  first: a stored file with no entry is invisible and costs a few kilobytes, whereas an
+  entry with no file is a broken image on a public page.
+
 #### Status strip
 
 The one-line "Now" on the home page, plus an optional mood. The last-commit half of the
 strip comes from GitHub and is shown here read-only — there is nothing to edit.
+
+### The storage gauge
+
+The dashboard shows how much image storage is in use, against the free allowance.
+
+This exists so the margin is visible **here**, rather than two clicks into someone
+else's billing dashboard. The whole condition for using hosted storage at all was that
+it must never be able to cost anything, and a safeguard nobody looks at is not a
+safeguard. A portfolio's images realistically use well under 1% of the allowance, and
+the gauge is how you stay certain of that.
+
+The number is counted from the site's own records rather than by asking the storage
+provider — asking is a billable operation, and the answer is already known.
 
 ### Why saving feels instant
 

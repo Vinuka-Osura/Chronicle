@@ -133,3 +133,8 @@ $RECYCLE.BIN/
 *.tmp
 *.swp
 *~
+
+# ---------- Local media uploads ----------
+# The local-disk media adapter writes here. Uploaded images are content, not source,
+# and on a public repository they would also be published to the internet.
+media-uploads/

@@ -4,11 +4,13 @@ using Chronicle.Infrastructure.Data;
 using Chronicle.Infrastructure.Data.Interceptors;
 using Chronicle.Infrastructure.Identity;
 using Chronicle.Infrastructure.Services;
+using Chronicle.Infrastructure.Services.Media;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Chronicle.Infrastructure;
@@ -30,6 +32,9 @@ public static class DependencyInjection
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.Configure<GitHubOptions>(configuration.GetSection(GitHubOptions.SectionName));
+        services.Configure<MediaStorageOptions>(configuration.GetSection(MediaStorageOptions.SectionName));
+
+        AddMediaStorage(services, configuration);
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
         services.AddScoped<IEmailService, SmtpEmailService>();
@@ -109,5 +114,39 @@ public static class DependencyInjection
             .AddDefaultTokenProviders();
 
         return services;
+    }
+
+    /// <summary>
+    /// Picks the media adapter, and refuses to pretend R2 is working when it is not.
+    /// </summary>
+    /// <remarks>
+    /// Asking for R2 without credentials falls back to local disk with a warning rather
+    /// than throwing. Throwing would take the whole site down over a feature only the
+    /// operator uses; silently doing nothing would let uploads appear to succeed and
+    /// vanish. A working fallback plus a log line is the honest middle.
+    /// </remarks>
+    private static void AddMediaStorage(IServiceCollection services, IConfiguration configuration)
+    {
+        var options = configuration
+            .GetSection(MediaStorageOptions.SectionName)
+            .Get<MediaStorageOptions>() ?? new MediaStorageOptions();
+
+        if (options.Provider == MediaProvider.R2 && options.R2.IsConfigured)
+        {
+            services.AddSingleton<IMediaStorage, R2MediaStorage>();
+            return;
+        }
+
+        if (options.Provider == MediaProvider.R2)
+        {
+            services.AddSingleton<IMediaStorage>(sp =>
+            {
+                MediaLog.R2NotConfigured(sp.GetRequiredService<ILogger<R2MediaStorage>>());
+                return ActivatorUtilities.CreateInstance<LocalDiskMediaStorage>(sp);
+            });
+            return;
+        }
+
+        services.AddSingleton<IMediaStorage, LocalDiskMediaStorage>();
     }
 }
