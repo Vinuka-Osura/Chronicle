@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { appearanceScript } from "@/lib/appearance";
+import { lensScript } from "@/app/timeline/lenses";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -72,7 +73,7 @@ export default function RootLayout({
           suppressHydrationWarning above is because this script mutates the very element
           React is about to hydrate - intended, not a bug.
         */}
-        <script dangerouslySetInnerHTML={{ __html: appearanceScript }} />
+        <script dangerouslySetInnerHTML={{ __html: appearanceScript + lensScript }} />
       </head>
       {/*
         No appearance provider: the <html> data attributes are the source of truth and

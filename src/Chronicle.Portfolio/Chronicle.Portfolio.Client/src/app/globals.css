@@ -237,6 +237,282 @@
   }
 }
 
+/*
+  ── Timeline ──────────────────────────────────────────────────────────────────
+  The signature page. Two tracks either side of one spine above lg; a single
+  column with the spine on the left below it, because two ~350px card columns
+  plus a spine is worse than one column at tablet width.
+*/
+@layer components {
+  .timeline-era {
+    position: relative;
+  }
+
+  /* The spine. Drawn with transform so the reveal animation stays on the compositor -
+     stroke-dashoffset would repaint every frame. */
+  .timeline-spine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0.4375rem;
+    width: 1px;
+    background: var(--color-rule);
+    transform-origin: top;
+    animation: timeline-spine-draw linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 60%;
+  }
+
+  @keyframes timeline-spine-draw {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  .timeline-era-band {
+    position: relative;
+    margin-block: 2.5rem 1.25rem;
+    padding-inline-start: 2rem;
+  }
+
+  .timeline-era-band::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0.5rem;
+    width: 0.875rem;
+    height: 2px;
+    background: var(--color-signal);
+  }
+
+  .timeline-year {
+    position: relative;
+  }
+
+  .timeline-year-marker {
+    padding-inline-start: 2rem;
+    margin-block: 1.5rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-faint);
+  }
+
+  .timeline-items {
+    display: grid;
+    gap: 0.75rem;
+    padding-inline-start: 2rem;
+    list-style: none;
+  }
+
+  .timeline-node {
+    position: relative;
+  }
+
+  /* The dot sits on the spine. Content-based so the glyph comes from the markup. */
+  .timeline-dot {
+    position: absolute;
+    inset-inline-start: -2rem;
+    top: 0.85rem;
+    display: grid;
+    place-items: center;
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.6rem;
+    line-height: 1;
+    color: var(--color-signal);
+    background: var(--color-paper);
+    border-radius: 999px;
+  }
+
+  .timeline-dot::before {
+    content: attr(data-glyph);
+  }
+
+  .timeline-dot.is-future {
+    color: var(--color-ink-faint);
+  }
+
+  .timeline-today {
+    position: relative;
+    margin-block: 2rem;
+    padding-inline-start: 0;
+  }
+
+  .timeline-today::before {
+    content: "";
+    position: absolute;
+    inset-inline: -0.5rem 0;
+    top: 1.1rem;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-signal),
+      color-mix(in oklab, var(--color-signal) 20%, transparent)
+    );
+  }
+
+  .timeline-today-dot {
+    position: absolute;
+    inset-inline-start: -2rem;
+    top: 0.7rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 999px;
+    background: var(--color-signal);
+    box-shadow: 0 0 0 3px var(--color-paper);
+  }
+
+  /* The only looping animation on this page. A second one would cost this its meaning. */
+  @media (prefers-reduced-motion: no-preference) {
+    .timeline-today-dot {
+      animation: timeline-now 2.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes timeline-now {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* Two tracks above lg. Career left, life right, sharing the centre spine. */
+  @media (width >= 64rem) {
+    .timeline-spine {
+      left: 50%;
+    }
+
+    .timeline-era-band,
+    .timeline-year-marker {
+      padding-inline-start: 0;
+      text-align: center;
+    }
+
+    .timeline-era-band::before {
+      inset-inline-start: 50%;
+      translate: -50% 0;
+      top: -0.75rem;
+      width: 2rem;
+    }
+
+    .timeline-items {
+      grid-template-columns: 1fr 1fr;
+      column-gap: 3.5rem;
+      padding-inline-start: 0;
+    }
+
+    .timeline-node[data-track="career"] .timeline-dot {
+      inset-inline-start: auto;
+      inset-inline-end: -2.1rem;
+    }
+
+    .timeline-node[data-track="life"] .timeline-dot {
+      inset-inline-start: -2.1rem;
+    }
+
+    .timeline-today {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+
+    .timeline-today::before {
+      inset-inline: 0;
+    }
+
+    .timeline-today-dot {
+      inset-inline-start: 50%;
+      translate: -50% 0;
+    }
+  }
+
+  /* Node reveal. Transform and opacity only. */
+  @media (prefers-reduced-motion: no-preference) {
+    .timeline-node > article {
+      animation: timeline-node-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+
+  @keyframes timeline-node-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/*
+  Lens filtering, applied by CSS from the data-lens attribute the pre-paint script sets.
+
+  Doing it here rather than in React means a returning visitor with a narrow lens never
+  sees the full timeline flash past, and the filter works with JavaScript disabled.
+*/
+@layer utilities {
+  html:not([data-lens~="experience"]) .timeline-node[data-node="experience"],
+  html:not([data-lens~="project"]) .timeline-node[data-node="project"],
+  html:not([data-lens~="milestone"]) .timeline-node[data-node="milestone"],
+  html:not([data-lens~="certification"]) .timeline-node[data-node="certification"],
+  html:not([data-lens~="roadmap"]) .timeline-node[data-node="roadmap"] {
+    display: none;
+  }
+
+  /*
+    A year whose items are all one type collapses with them, rather than leaving an
+    orphan year number floating over nothing.
+
+    Scoped to single-type years on purpose. Detecting "every item happens to be filtered"
+    in the general case would need a rule per lens combination - 31 of them - and a mixed
+    year almost always still has something visible. The residual case (a mixed year where
+    the lens excludes every type it contains) leaves one small mono year label behind,
+    which is untidy rather than broken.
+  */
+  html:not([data-lens~="experience"]) .timeline-year[data-only="experience"],
+  html:not([data-lens~="project"]) .timeline-year[data-only="project"],
+  html:not([data-lens~="milestone"]) .timeline-year[data-only="milestone"],
+  html:not([data-lens~="certification"]) .timeline-year[data-only="certification"],
+  html:not([data-lens~="roadmap"]) .timeline-year[data-only="roadmap"] {
+    display: none;
+  }
+}
+
+/* Recruiter Mode: one dense column, no spine, no motion, no decoration. */
+@layer utilities {
+  [data-recruiter="on"] .timeline-spine,
+  [data-recruiter="on"] .timeline-dot,
+  [data-recruiter="on"] .timeline-today-dot {
+    display: none;
+  }
+
+  [data-recruiter="on"] .timeline-items {
+    grid-template-columns: 1fr;
+    padding-inline-start: 0;
+    gap: 0.35rem;
+  }
+
+  [data-recruiter="on"] .timeline-era-band,
+  [data-recruiter="on"] .timeline-year-marker {
+    padding-inline-start: 0;
+    text-align: start;
+    margin-block: 1.25rem 0.5rem;
+  }
+
+  [data-recruiter="on"] .timeline-node > article {
+    padding: 0.6rem 0.75rem;
+  }
+}
+
 /* Honoured independently of Recruiter Mode, per WCAG. */
 @media (prefers-reduced-motion: reduce) {
   html {

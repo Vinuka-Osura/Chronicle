@@ -74,12 +74,51 @@ behind it says so plainly rather than hiding.
 
 ### Timeline
 
-Experience, projects and future goals on one scrollable axis through time. You land at
-today. Scrolling back moves through what has happened; scrolling forward crosses a
-clearly marked boundary into the **roadmap** — stated goals, drawn dotted and
-translucent so they cannot be mistaken for achievements.
+The signature page: your career and your life on one axis, rather than a list of jobs.
 
-*Not built yet.*
+**Chapters, not just dates.** The timeline is divided into named eras — "First Steps",
+"Banking Systems" — each with a date range and a line on what that period was about. It
+is the difference between remembering "the Banking Systems chapter" and remembering
+"there were a lot of dates".
+
+**Two tracks.** On a wide screen, work runs down one side of the spine and life down the
+other: roles and projects on one, education, certifications and personal milestones on
+the other. A certification sitting beside the role it was earned during says something a
+list cannot. On a narrow screen they merge into one column and the shape of each node
+tells you which track it came from.
+
+**A hard "you are here" line.** Everything above it happened. Everything below is drawn
+dotted and hollow, and labelled as a goal, so ambition never reads as achievement.
+
+**Five kinds of thing**, each with its own shape so you can tell them apart at a glance:
+
+| | | |
+|---|---|---|
+| ● | Role | a period of employment |
+| ■ | Project | opens its case study |
+| ▲ | Life | education, recognition, community |
+| ◆ | Certification | a credential |
+| ○ | Goal | stated intention, not yet done |
+
+**Lenses** let you decide what you see. Turn off everything but roles and the page
+becomes a career summary; leave it all on and you get the whole arc. Your choice is
+remembered, and it goes into the address bar — so a roles-only view is a link you can
+send someone. The chips carry the same shapes the nodes use, so the filter doubles as
+the key.
+
+**Connections.** Nodes reference each other, and every connection says *why*: a
+certification links to the skill it attests to, and on to the projects that used it; a
+project links to articles that share its tags; a role links to projects it overlapped
+with. None of it is typed in by hand — it is worked out from the underlying
+relationships, so it cannot drift out of date. Connections name the most *distinctive*
+shared skill rather than the most common one, because "shared Docker, SQL Server" tells
+you something and "shared C#" does not.
+
+**Getting around.** A bar under the site header always shows which chapter and year you
+are in, with three jumps: start, today, and what comes next.
+
+**Working now.** A scrubber along the bottom showing chapter density and letting you
+drag through time is the next addition.
 
 ### Projects
 

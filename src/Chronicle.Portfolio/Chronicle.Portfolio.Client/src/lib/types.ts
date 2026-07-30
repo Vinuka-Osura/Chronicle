@@ -50,24 +50,6 @@ export interface ProjectDetail {
   screenshots: Screenshot[];
 }
 
-export type TimelineItemType = "experience" | "project" | "roadmap";
-
-export interface TimelineItem {
-  type: TimelineItemType;
-  date: IsoDate;
-  endDate?: IsoDate | null;
-  title: string;
-  subtitle?: string;
-  summary?: string;
-  pitch?: string;
-  description?: string;
-  slug?: string;
-  status?: "Planned" | "InProgress" | "Done";
-  highlights?: string[];
-  techStack?: string[];
-  tags?: string[];
-}
-
 export interface Experience {
   id: string;
   role: string;
@@ -157,6 +139,60 @@ export interface PostCard {
 
 export interface PostDetail extends PostCard {
   bodyMarkdown: string;
+}
+
+/** The five node types. Also the lens keys, so no mapping layer is needed. */
+export type TimelineItemType =
+  | "experience"
+  | "project"
+  | "certification"
+  | "milestone"
+  | "roadmap";
+
+export type TimelineTrack = "career" | "life";
+
+export interface TimelineEra {
+  id: string;
+  name: string;
+  tagline: string | null;
+  startDate: IsoDate;
+  /** Null means still running, or the open-ended future era. */
+  endDate: IsoDate | null;
+}
+
+export interface TimelineConnection {
+  kind: "project" | "article" | "skill" | "experience";
+  title: string;
+  slug: string | null;
+  /** Why these are connected, so the reader is never left guessing. */
+  via: string;
+}
+
+export interface TimelineItem {
+  type: TimelineItemType;
+  track: TimelineTrack;
+  /** Null when no era covers this date; renders under its year alone. */
+  eraId: string | null;
+  date: IsoDate;
+  endDate: IsoDate | null;
+  title: string;
+  subtitle: string | null;
+  summary: string | null;
+  slug: string | null;
+  status: string | null;
+  category: string | null;
+  link: string | null;
+  highlights: string[];
+  techStack: string[];
+  tags: string[];
+  connections: TimelineConnection[];
+}
+
+export interface Timeline {
+  /** The server's date, so the today boundary cannot be misplaced by a wrong client clock. */
+  today: IsoDate;
+  eras: TimelineEra[];
+  items: TimelineItem[];
 }
 
 export interface SiteStatus {
