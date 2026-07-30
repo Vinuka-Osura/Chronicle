@@ -30,6 +30,11 @@
   --color-signal-soft: #f6ecdd;
   --color-rule: #e0ddd6;
 
+  /* The one colour allowed to compete with the accent, and only to say something
+     failed. Kept as a token so form errors theme like everything else. */
+  --color-alert: #a3231b;
+  --color-alert-soft: #fbeceb;
+
   /* Two stops for the page wash. Very close together on purpose - a gradient you
      can point at is a gradient that will date badly. */
   --color-wash-top: #fbfaf7;
@@ -60,6 +65,9 @@
   --color-signal: #e0973f;
   --color-signal-soft: #2b2015;
   --color-rule: #232c38;
+
+  --color-alert: #f08a80;
+  --color-alert-soft: #2c1614;
 
   --color-wash-top: #101720;
   --color-wash-bottom: #080b11;
@@ -253,6 +261,56 @@
     display: block;
     overflow-x: auto;
     width: 100%;
+  }
+}
+
+/*
+  ── Contact form ──────────────────────────────────────────────────────────────
+  The only form on the public site, so its inputs live here rather than in a
+  component: three fields do not justify an abstraction, and a class keeps the
+  focus ring and the themed border in one place.
+*/
+@layer components {
+  .contact-input {
+    width: 100%;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.375rem;
+    background: var(--color-paper-raised);
+    color: var(--color-ink);
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 0.55rem 0.7rem;
+    transition: border-color 150ms var(--ease-out-quiet);
+  }
+
+  .contact-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .contact-input:hover {
+    border-color: var(--color-ink-faint);
+  }
+
+  .contact-input:focus-visible {
+    border-color: var(--color-signal);
+  }
+
+  .contact-input[aria-invalid="true"] {
+    border-color: var(--color-alert);
+  }
+
+  /*
+    Honeypot. Hidden from people without `display: none` or `hidden`, both of
+    which a competent bot checks for and skips - it is moved off-screen and left
+    in the layout so a naive form-filler still sees a field worth filling.
+  */
+  .contact-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 }
 
@@ -594,6 +652,43 @@
   }
 }
 
+/* Résumé, on screen and on paper. */
+@layer components {
+  .resume-header {
+    border-bottom: 1px solid var(--color-rule);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .resume-contact {
+    margin-top: 0.35rem;
+  }
+
+  .resume-section {
+    margin-bottom: 1.75rem;
+  }
+
+  .resume-section > h2 {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+    border-bottom: 1px solid var(--color-rule);
+    padding-bottom: 0.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Title and dates on one line, dates pushed right — the shape a reader scans. */
+  .resume-entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+  }
+}
+
 @media print {
   nav,
   footer,
@@ -608,6 +703,40 @@
     --color-paper-raised: #ffffff;
     --color-ink: #000000;
     --color-ink-soft: #333333;
+    --color-ink-faint: #555555;
     --color-rule: #cccccc;
+    --color-signal: #000000;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    font-size: 10.5pt;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* Links print as plain text. A résumé full of blue underlines reads as a web page
+     someone forgot to style for paper. */
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  /* Never split an entry across a page break mid-sentence. */
+  .resume-section,
+  .resume-section li {
+    break-inside: avoid;
+  }
+
+  .resume-section > h2 {
+    break-after: avoid;
+  }
+
+  @page {
+    margin: 16mm;
   }
 }

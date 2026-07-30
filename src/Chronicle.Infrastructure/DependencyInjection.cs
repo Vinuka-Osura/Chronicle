@@ -26,8 +26,10 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.Configure<AdminSeedOptions>(configuration.GetSection(AdminSeedOptions.SectionName));
+        services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
 
         services.AddSingleton<IDateTimeProvider, SystemDateTimeProvider>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddScoped<AuditableEntityInterceptor>();
 
         // Handlers depend on the interface; both resolve to the same scoped instance,

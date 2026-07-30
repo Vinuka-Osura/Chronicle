@@ -172,16 +172,41 @@ never leaves the server.
 
 ### Résumé
 
-An interactive résumé built from the same experience, skills and projects as the rest of
-the site — so it cannot go stale — plus a clean printable version.
+A one-page résumé assembled from the same experience, skills, projects, education and
+certifications as the rest of the site. There is no separate résumé document to keep in
+step — edit a job in the CMS and the résumé changes with everything else.
 
-*Not built yet.*
+Use **Print / Save as PDF** for a copy to attach to an application. The printed version
+drops the site navigation, the theme toggle and the button itself, and comes out as
+selectable text rather than an image — which is what an applicant-tracking system needs
+in order to read it at all.
 
 ### Contact
 
-A short form that reaches you by email, with spam protection, plus direct links.
+A short form — name, email, message — that arrives in your inbox as an email.
 
-*Not built yet.*
+**Nothing is stored.** A contact message is a notification, not content, so it is sent
+and forgotten. There is no table of other people's personal data to secure, back up, or
+eventually have to delete.
+
+Three things protect it from spam and abuse:
+
+- A **hidden field** no person can see or tab into. Automated form-fillers fill in every
+  field they find, so anything that arrives with it filled is rejected.
+- A **rate limit** of five messages every five minutes per address. Sending more says so
+  plainly and suggests emailing directly instead.
+- The **visitor's address goes in Reply-To, never in From.** Sending mail that claims to
+  come from someone else's domain is how a message ends up in a spam folder — yours,
+  not theirs.
+
+If something goes wrong the form says which thing: a rate limit, a field that needs
+fixing, a connection that failed, or email not being configured on the server. "Something
+went wrong" is not useful to someone who has just written three paragraphs.
+
+> **For the owner:** with no `Smtp:*` settings configured, messages are written to the
+> server log in development rather than sent, so the form can be worked on without a mail
+> account. In production the same gap returns a clear "not accepting messages right now"
+> instead of silently swallowing them.
 
 ### Software City
 

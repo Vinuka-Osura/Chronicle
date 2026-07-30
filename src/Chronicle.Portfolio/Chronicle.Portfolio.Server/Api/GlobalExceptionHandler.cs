@@ -32,6 +32,14 @@ internal sealed class GlobalExceptionHandler(
                 Title = "Resource not found",
                 Detail = notFound.Message
             },
+            // The caller did nothing wrong and the request may succeed later, so the
+            // message is safe to show and says which capability is missing.
+            ServiceUnavailableException unavailable => new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Temporarily unavailable",
+                Detail = unavailable.Message
+            },
             _ => new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,

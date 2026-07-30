@@ -85,6 +85,17 @@ builder.Services.AddRateLimiter(options =>
             Window = TimeSpan.FromMinutes(1),
             QueueLimit = 0
         }));
+
+    // Far stricter, because this one sends email rather than serving a cached read.
+    // Nobody legitimately writes five messages in five minutes.
+    options.AddPolicy("contact", context => RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 5,
+            Window = TimeSpan.FromMinutes(5),
+            QueueLimit = 0
+        }));
 });
 
 // ---------------------------------------------------------------------------
@@ -131,6 +142,7 @@ app.MapPostEndpoints();
 app.MapSkillEndpoints();
 app.MapTimelineEndpoints();
 app.MapContentEndpoints();
+app.MapContactEndpoints();
 app.MapAccountEndpoints();
 
 // This host serves the API and the CMS; the public site is the Next.js client.
