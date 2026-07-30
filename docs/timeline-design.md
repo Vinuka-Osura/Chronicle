@@ -135,6 +135,72 @@ rather than leaving the reader to guess.
 
 ---
 
+## API: `GET /api/timeline`
+
+One request. **An object, not a bare array** — a deliberate change from spec §5, which
+predates eras. Repeating an era's name and range on every item belonging to it would be
+waste, and the client needs the era list on its own anyway to draw the scrubber.
+
+```jsonc
+{
+  // The server's date, so client and server never disagree about where "today" is.
+  // A visitor with a wrong system clock would otherwise see the boundary misplaced.
+  "today": "2026-07-30",
+
+  "eras": [
+    { "id": "…", "name": "First Steps",      "tagline": "…",
+      "startDate": "2022-01-01", "endDate": "2024-12-31" },
+    { "id": "…", "name": "Banking Systems",  "tagline": "…",
+      "startDate": "2025-01-01", "endDate": null },
+    { "id": "…", "name": "The Next Chapter", "tagline": "…",
+      "startDate": "2027-01-01", "endDate": null }
+  ],
+
+  "items": [
+    { "type": "milestone", "track": "life", "eraId": "…", "date": "2022-06-01",
+      "title": "BSc Computer Science", "subtitle": "University",
+      "category": "Education", "description": "…", "connections": [] },
+
+    { "type": "experience", "track": "career", "eraId": "…",
+      "date": "2023-01-01", "endDate": "2024-12-31",
+      "title": "Associate Software Engineer", "subtitle": "Banking Systems",
+      "summary": "…", "highlights": ["…"], "techStack": ["C#", ".NET"],
+      "connections": [ { "kind": "project", "title": "Core Banking Ledger",
+                         "slug": "core-banking-ledger", "via": "shared C#" } ] },
+
+    { "type": "project", "track": "career", "eraId": "…",
+      "date": "2024-03-01", "endDate": null,
+      "title": "Core Banking Ledger", "slug": "core-banking-ledger",
+      "pitch": "…", "tags": ["backend"], "connections": [] },
+
+    { "type": "certification", "track": "life", "eraId": "…", "date": "2025-11-03",
+      "title": "Azure Developer Associate", "subtitle": "Microsoft", "link": "https://…",
+      "connections": [ { "kind": "skill", "title": "Azure", "via": "certifies" } ] },
+
+    { "type": "roadmap", "track": "career", "eraId": "…", "date": "2028-01-01",
+      "status": "Planned", "title": "Senior Software Engineer",
+      "description": "…", "connections": [] }
+  ]
+}
+```
+
+`eraId` is nullable. An item outside every era renders under its year alone rather than
+vanishing, so a gap in the era list can never lose content.
+
+**Roadmap items take the career track** by default — every seeded goal is a career goal
+and `RoadmapItem` carries no track of its own. Worth revisiting only if a genuinely
+personal goal ever needs the life side.
+
+**`Milestone.Category` is a text label on the card, not a shape.** All milestones render
+as ▲; the category reads as "Education" beneath the title. Five shapes is the cap, and
+splitting milestones into four more would break it.
+
+Items sort ascending by date. Cached and tagged `timeline`, evicted by any command
+touching experience, projects, milestones, certifications, eras or roadmap — all six
+feed it.
+
+---
+
 ## Skeleton — desktop
 
 ```
@@ -255,7 +321,13 @@ FIRST STEPS · 2022 – 2023
 ```
 
 Eras survive into Recruiter Mode, because the narrative is the point and it costs
-nothing to keep.
+nothing to keep. **The context bar survives too** — it is information, not decoration.
+The scrubber does not: it is navigation for a page being explored, and Recruiter Mode is
+for a page being skimmed once.
+
+**The dual track collapses to one column below `lg` (1024px)**, not at the usual mobile
+breakpoint. Two columns of cards either side of a spine need roughly 350px each plus the
+spine; at tablet width that is cramped enough to be worse than a single column.
 
 ---
 
@@ -270,16 +342,21 @@ It is spent as:
 | Element | Height | Sticky? |
 |---|---|---|
 | Site header | 56px | yes, already exists |
-| Context bar — era + year + jump | 44px | yes |
+| Context bar — era + year + jump + lens | 44px | yes |
 | Scrubber | 40px | yes, hides on scroll down |
-| Lens chips | ~40px | **no** — they scroll away with the page header |
 
-Two consequences, and both are decisions rather than accidents:
+Everything persistent lives in **one** 44px row. Two consequences, both decisions:
 
-- **The era and the year share one bar.** Two stacked stickies would cost 88px for
+- **The era and the year share the bar.** Two stacked stickies would cost 88px for
   information that reads as a single fact: *where am I*.
-- **Lens chips are not sticky.** You choose a lens once and then read. Making a
-  set-and-forget control permanent would be paying rent for something used once.
+- **The lens control lives there too.** An earlier draft had the chips scroll away with
+  the page header, which was wrong: change your mind after scrolling and you would have
+  to scroll back to the top to do it. At desktop width the five chips fit beside the era
+  and jump controls; below `lg` they collapse to a single `Lens (3)` button opening a
+  sheet.
+
+There is room for this because the bar is wide, not because the budget grew — the total
+is still 140px.
 
 ---
 
@@ -290,28 +367,47 @@ small translate.
 
 **Entry** is at the today line, so the first thing seen is the present.
 
-**Context bar** sticks below the site header: the current era, the current year, and the
-jump controls, in one row.
+**Context bar** sticks below the site header (`top-14`, since the header is 56px) and
+carries everything persistent in one row.
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│  BANKING SYSTEMS · 2025          ⤒ Start   ◉ Today   ⤓ Next │
-└────────────────────────────────────────────────────────────┘
+desktop ┌──────────────────────────────────────────────────────────────────────┐
+        │ BANKING SYSTEMS · 2025   ●■▲◆○ lenses   ⤒ Start  ◉ Today  ⤓ Future  │
+        └──────────────────────────────────────────────────────────────────────┘
+
+mobile  ┌────────────────────────────────────┐
+        │ BANKING SYSTEMS · 2025   ☰ Lens(5) │
+        │                    ⤒   ◉   ⤓       │
+        └────────────────────────────────────┘
 ```
 
 Three anchors rather than one button, because they cost the same and answer the three
-questions anyone actually has: *where did this begin*, *where is now*, *what comes next*.
-Each scrolls smoothly, or jumps instantly under `prefers-reduced-motion`.
+questions anyone has: *where did this begin*, *where is now*, *what comes next*. Each
+scrolls smoothly, or jumps instantly under `prefers-reduced-motion`.
+
+When an item sits outside every era the bar shows the year alone. A gap in the era list
+never breaks the header.
 
 **Lenses** filter node types. Persisted in a cookie *and* in the URL
 (`?lens=roles,projects`), so a roles-only view is a link you can send someone.
 
-**The lens chips are the legend.** Each chip carries the same glyph its nodes use, so the
-filter control doubles as the key and the page needs no separate legend nobody reads.
+**The lens chips are the legend, and they map one-to-one onto the node shapes.** Five
+chips, five glyphs, no overlap — which is why *Life* and *Certifications* are separate
+lenses rather than one "life" lens covering two different shapes.
 
-**Connections** are listed inside the node. Hovering or focusing a node gives its
-related nodes a subtle ring elsewhere on the page — the "one node is an ecosystem" read,
-without drawing lines across a scrolling document.
+| Chip | Glyph | Shows |
+|---|---|---|
+| Roles | ● | employment periods |
+| Projects | ■ | case studies |
+| Life | ▲ | milestones — education, recognition, community |
+| Certifications | ◆ | credentials |
+| Goals | ○ | roadmap items |
+
+**Connections are listed inside the node, and each one is a link that scrolls to its
+target.** Hovering or focusing additionally rings the related node — but that is a bonus
+for when both happen to be on screen, not the mechanism. An earlier draft leaned on the
+ring alone, which would have felt dead whenever the related node was scrolled out of
+view.
 
 **Scrubber** shows eras, density and position. Click or drag to travel; the page scrolls
 smoothly to meet you. It hides on scroll-down and returns on scroll-up, so reading

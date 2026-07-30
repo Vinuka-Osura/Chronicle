@@ -129,6 +129,7 @@ app.MapStaticAssets();
 app.MapProjectEndpoints();
 app.MapPostEndpoints();
 app.MapSkillEndpoints();
+app.MapTimelineEndpoints();
 app.MapContentEndpoints();
 app.MapAccountEndpoints();
 

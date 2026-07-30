@@ -16,5 +16,11 @@ public sealed class CertificationConfiguration : IEntityTypeConfiguration<Certif
         builder.Property(c => c.LogoUrl).HasMaxLength(500);
 
         builder.HasIndex(c => c.IssueDate).IsDescending();
+
+        // What makes a certification a node with outgoing edges on the timeline rather
+        // than a dead end.
+        builder.HasMany(c => c.Skills)
+            .WithMany(s => s.Certifications)
+            .UsingEntity(j => j.ToTable("profile_certification_skills"));
     }
 }

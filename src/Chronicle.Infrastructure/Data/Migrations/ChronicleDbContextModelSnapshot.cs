@@ -22,6 +22,21 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CertificationSkill", b =>
+                {
+                    b.Property<Guid>("CertificationsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SkillsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CertificationsId", "SkillsId");
+
+                    b.HasIndex("SkillsId");
+
+                    b.ToTable("profile_certification_skills", (string)null);
+                });
+
             modelBuilder.Entity("Chronicle.Domain.Entities.Certification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -64,6 +79,46 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsDescending();
 
                     b.ToTable("profile_certifications", (string)null);
+                });
+
+            modelBuilder.Entity("Chronicle.Domain.Entities.Era", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Tagline")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartDate");
+
+                    b.ToTable("profile_eras", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_profile_eras_dates", "\"EndDate\" IS NULL OR \"EndDate\" >= \"StartDate\"");
+                        });
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Experience", b =>
@@ -211,6 +266,54 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("ProjectId", "SortOrder");
 
                     b.ToTable("portfolio_media", (string)null);
+                });
+
+            modelBuilder.Entity("Chronicle.Domain.Entities.Milestone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.ToTable("profile_milestones", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_profile_milestones_dates", "\"EndDate\" IS NULL OR \"EndDate\" >= \"Date\"");
+                        });
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Post", b =>
@@ -754,6 +857,21 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("TagsId");
 
                     b.ToTable("portfolio_project_tags", (string)null);
+                });
+
+            modelBuilder.Entity("CertificationSkill", b =>
+                {
+                    b.HasOne("Chronicle.Domain.Entities.Certification", null)
+                        .WithMany()
+                        .HasForeignKey("CertificationsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Chronicle.Domain.Entities.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.Media", b =>

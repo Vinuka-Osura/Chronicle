@@ -22,6 +22,8 @@ public class ChronicleDbContext(DbContextOptions<ChronicleDbContext> options)
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<RoadmapItem> RoadmapItems => Set<RoadmapItem>();
     public DbSet<Certification> Certifications => Set<Certification>();
+    public DbSet<Era> Eras => Set<Era>();
+    public DbSet<Milestone> Milestones => Set<Milestone>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<Media> Media => Set<Media>();
     public DbSet<SiteStatus> SiteStatuses => Set<SiteStatus>();

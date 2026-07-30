@@ -13,9 +13,11 @@ public static class FeatureSeeders
     public static IReadOnlyList<IFeatureSeeder> All { get; } =
     [
         new SharedSeeder(),
+        new ErasSeeder(),
+        new SkillsSeeder(),
         new ProjectsSeeder(),
         new ExperienceSeeder(),
-        new SkillsSeeder(),
+        new MilestonesSeeder(),
         new KnowledgeSeeder(),
         new RoadmapSeeder(),
         new CertificationsSeeder(),

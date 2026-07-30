@@ -24,6 +24,8 @@ public interface IChronicleDbContext
     DbSet<Skill> Skills { get; }
     DbSet<RoadmapItem> RoadmapItems { get; }
     DbSet<Certification> Certifications { get; }
+    DbSet<Era> Eras { get; }
+    DbSet<Milestone> Milestones { get; }
     DbSet<Tag> Tags { get; }
     DbSet<Media> Media { get; }
     DbSet<SiteStatus> SiteStatuses { get; }

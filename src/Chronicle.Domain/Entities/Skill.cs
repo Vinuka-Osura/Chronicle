@@ -23,4 +23,7 @@ public class Skill : AuditableEntity
 
     public ICollection<Project> Projects { get; set; } = new List<Project>();
     public ICollection<Experience> Experiences { get; set; } = new List<Experience>();
+
+    /// <summary>Credentials that attest to this skill.</summary>
+    public ICollection<Certification> Certifications { get; set; } = new List<Certification>();
 }

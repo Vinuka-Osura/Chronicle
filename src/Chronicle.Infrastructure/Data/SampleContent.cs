@@ -274,20 +274,91 @@ internal static partial class SampleContent
             });
 
         // ---- Certifications ----
+        // TechStack links are what make a certification a node with outgoing edges on
+        // the timeline: AZ-204 -> certifies Azure -> used in Chronicle.
         context.Certifications.AddRange(
             new Certification
             {
                 Name = "Microsoft Certified: Azure Fundamentals (AZ-900)",
                 Issuer = "Microsoft",
                 IssueDate = new DateOnly(2024, 8, 15),
-                SortOrder = 0
+                SortOrder = 0,
+                Skills = [azure]
             },
             new Certification
             {
                 Name = "Microsoft Certified: Azure Developer Associate (AZ-204)",
                 Issuer = "Microsoft",
                 IssueDate = new DateOnly(2025, 11, 3),
+                SortOrder = 1,
+                Skills = [azure, csharp]
+            });
+
+        // ---- Eras ----
+        // PLACEHOLDER NAMES AND DATES. Chapters are editorial - only the owner can say
+        // where one ends - so these are a shape to be replaced in the CMS, not a claim.
+        context.Eras.AddRange(
+            new Era
+            {
+                Name = "Learning",
+                Tagline = "PLACEHOLDER - university, and finding out what this job actually is.",
+                StartDate = new DateOnly(2020, 1, 1),
+                EndDate = new DateOnly(2022, 12, 31),
+                SortOrder = 0
+            },
+            new Era
+            {
+                Name = "First Steps",
+                Tagline = "PLACEHOLDER - first production code, and learning what breaks.",
+                StartDate = new DateOnly(2023, 1, 1),
+                EndDate = new DateOnly(2024, 12, 31),
                 SortOrder = 1
+            },
+            new Era
+            {
+                Name = "Banking Systems",
+                Tagline = "PLACEHOLDER - building things that are not allowed to be wrong.",
+                StartDate = new DateOnly(2025, 1, 1),
+                EndDate = null,
+                SortOrder = 2
+            },
+            new Era
+            {
+                Name = "The Next Chapter",
+                Tagline = "PLACEHOLDER - where this is going.",
+                StartDate = new DateOnly(2027, 1, 1),
+                EndDate = null,
+                SortOrder = 3
+            });
+
+        // ---- Milestones: the life track ----
+        // PLACEHOLDER CONTENT. Replace with real education and personal milestones.
+        context.Milestones.AddRange(
+            new Milestone
+            {
+                Title = "PLACEHOLDER - BSc Computer Science",
+                Description = "Replace with the real degree, institution and dates.",
+                Date = new DateOnly(2020, 9, 1),
+                EndDate = new DateOnly(2023, 6, 30),
+                Category = MilestoneCategory.Education,
+                SortOrder = 0
+            },
+            new Milestone
+            {
+                Title = "PLACEHOLDER - First line of production code",
+                Description = "Replace with a real early milestone worth marking.",
+                Date = new DateOnly(2023, 3, 1),
+                Category = MilestoneCategory.Personal,
+                SortOrder = 1
+            },
+            new Milestone
+            {
+                Title = "PLACEHOLDER - Open sourced Chronicle",
+                Description = "Replace with a real community or recognition milestone.",
+                Date = new DateOnly(2026, 7, 28),
+                Category = MilestoneCategory.Community,
+                Link = "https://github.com/Vinuka-Osura/Chronicle",
+                SortOrder = 2
             });
     }
 
