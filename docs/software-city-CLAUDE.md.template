@@ -1,0 +1,112 @@
+# Software City — working conventions
+
+> **Copy this file to the new repository as `CLAUDE.md` and delete the `.template`
+> suffix.** It is here only because the new repository does not exist yet.
+>
+> `~/.claude/CLAUDE.md` already carries the cross-project rules — commit format,
+> branching, the zero-cost constraint, secrets, the quality bar. This file holds only what
+> is true of *this* product.
+
+---
+
+## What this is
+
+A career-visualisation engine. It reads a **career graph** — timestamped entities with
+lifecycles — and renders an explorable city that rebuilds itself as a timeline is dragged.
+
+**It has never heard of any particular person's career.** That is what makes it a product
+rather than a page, and it is the single property most worth protecting.
+
+Concept and reasoning: `docs/software-city-concept.md`.
+Build order: `docs/software-city-start.md`.
+
+## It is sold separately, and that has consequences
+
+1. **Never import code from Chronicle.** Only read the contract. Chronicle is one producer
+   of that shape and has no special status; a buyer feeds their own data.
+2. **This repository starts at commit 1 and stays independent.** Provenance is a question
+   a buyer's lawyer asks.
+3. **`LICENSE` here is commercial**, and is *not* Chronicle's licence. The only file
+   shared between the two is the schema, which is CC0 precisely so this is allowed.
+4. **If the renderer cannot be driven by a JSON file alone, it is not a product.**
+
+## The contract is the boundary
+
+`contracts/career-graph.v1.schema.json` — copied from Chronicle, CC0.
+
+- **Types are generated from it**, never hand-written. A hand-written mirror drifts, and
+  the drift is silent.
+- **Never edit `v1` in place.** A shipped consumer is entitled to assume v1 means what it
+  meant when they built against it. A change is `v2`, a new file, and both are served.
+- **Ignore unknown fields.** `meta` exists so a producer can add detail without breaking
+  every renderer. Rejecting unknown keys makes the contract unextendable.
+- **Refuse an unrecognised `version`, loudly.** A renderer guessing at v2 is worse than
+  one that says it cannot read it.
+- **Validate at the boundary.** A consumer will hand you a malformed document, and the
+  useful failure is "entity 4 has no `built` date", not a crash inside a shader.
+
+## Layering, and it is enforced
+
+```
+react/   →  render/  →  (nothing)
+         ↘  engine/  →  contract/
+```
+
+- **`engine/` decides what exists at a date. It must not import `render/`.**
+- **`render/` draws what it is handed. It must not import `contract/`.**
+
+Add a dependency-boundary lint rule on **day one**, not later. A boundary you only intend
+is a boundary that has already been crossed.
+
+The engine is the product; everything else is drawing. Test it accordingly — the day
+something is built, the day before, an upgrade date, a retirement, and a speculative
+entity whose target date has passed.
+
+## Build order
+
+Each step ends in something you can look at. **Do not skip step 4.**
+
+1. Types generated from the schema, plus a runtime validator
+2. Fixtures in `fixtures/`: empty, small, and Chronicle's real output
+3. `worldAt(graph, date) → WorldState`, with no graphics at all
+4. **Flat SVG rendering of `WorldState`.** Ugly on purpose
+5. Three.js, one building type, no materials
+6. The timeline scrubber
+
+Step 4 is the one people skip and the one that saves the week: if the timeline and
+lifecycle logic are wrong you find out in an afternoon rather than after three days of
+camera and lighting work. It also becomes the WebGL fallback, which stops that fallback
+being an apology.
+
+## Performance is a design constraint, not a later pass
+
+- **Instanced meshes** — one draw call per building type, not per building.
+- **Budget frames against a mid-range phone**, not a development machine. That is the
+  device a recruiter is holding.
+- **`prefers-reduced-motion` stops the construction animation** and lands on the finished
+  city. Stop, do not merely shorten.
+- **The 2D renderer is a shipping fallback**, not a diagnostic. WebGL fails on plenty of
+  real devices.
+
+## Honesty rules the renderer must keep
+
+These are product promises, not preferences:
+
+- **Speculative entities must be unmistakably not built.** Blueprints, scaffolding,
+  holograms — anything, so long as nobody could mistake a goal for an achievement. A
+  renderer that ignores the `speculative` flag is misrepresenting a person.
+- **Nothing appears before its `built` date.** That is the entire premise of the timeline.
+- **Upgrades happen in place.** A capability deepening is not a demolition, because that
+  is not what learning something more deeply feels like.
+- **Retired is not deleted.** It happened. Weather it, unlight it, but do not remove it.
+
+## Development
+
+Develop against `fixtures/*.json`, not a running Chronicle. Faster, works offline, and it
+stops you accidentally building a renderer that only works with one producer's particular
+output.
+
+```bash
+# refresh the real fixture, with Chronicle running
+curl http://localhost:5002/api/career-graph > fixtures/full.json
+```
