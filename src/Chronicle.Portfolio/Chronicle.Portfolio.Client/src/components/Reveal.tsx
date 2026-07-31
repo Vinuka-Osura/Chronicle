@@ -41,7 +41,7 @@ export function Reveal() {
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          entry.target.classList.add("is-visible");
+          entry.target.classList.add("is-visible", "is-in");
           // Once. Re-animating on the way back up turns scrolling into a flicker of
           // things redoing their entrance.
           observer.unobserve(entry.target);
@@ -61,12 +61,12 @@ export function Reveal() {
      * clicks a link.
      */
     const watch = (element: Element) => {
-      if (element.classList.contains("is-visible")) {
+      if (element.classList.contains("is-visible") || element.classList.contains("is-in")) {
         return;
       }
 
       if (element.getBoundingClientRect().top < window.innerHeight * ALREADY_ON_SCREEN) {
-        element.classList.add("is-visible");
+        element.classList.add("is-visible", "is-in");
         return;
       }
 
@@ -74,17 +74,42 @@ export function Reveal() {
     };
 
     const watchWithin = (root: ParentNode) => {
-      if (root instanceof Element && root.matches("[data-rise]")) {
+      if (root instanceof Element && root.matches("[data-rise], .reveal-mask")) {
         watch(root);
       }
 
-      for (const element of root.querySelectorAll("[data-rise]")) {
+      for (const element of root.querySelectorAll("[data-rise], .reveal-mask")) {
         watch(element);
       }
     };
 
     document.body.dataset.reveal = "ready";
     watchWithin(document);
+
+    /*
+      Mask reveals split two ways.
+
+      Anything carrying `data-in-delay` is above the fold and part of an arrival
+      sequence, so it fires on a timer rather than waiting to be scrolled to — a hero
+      that only appears once you scroll is a hero nobody sees.
+
+      Everything else with `.reveal-mask` reveals on entering the viewport, through the
+      same observer as `[data-rise]`.
+    */
+    const masks = document.querySelectorAll<HTMLElement>(".reveal-mask");
+    const timers: number[] = [];
+
+    for (const mask of masks) {
+      const delay = mask.dataset.inDelay;
+
+      if (delay !== undefined) {
+        timers.push(
+          window.setTimeout(() => mask.classList.add("is-in"), Number(delay) || 0),
+        );
+      } else {
+        watch(mask);
+      }
+    }
 
     /*
       The fix for navigation.
@@ -110,6 +135,7 @@ export function Reveal() {
     return () => {
       observer.disconnect();
       arrivals.disconnect();
+      for (const timer of timers) clearTimeout(timer);
     };
   }, []);
 

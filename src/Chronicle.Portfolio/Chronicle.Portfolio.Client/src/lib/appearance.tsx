@@ -23,7 +23,25 @@ export type Theme = "light" | "dark";
  * Theme falls back to the OS preference when no cookie is set, so a first-time visitor
  * gets what their system already asked for rather than an arbitrary default.
  */
-export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);d.dataset.recruiter=r&&r[1]==="1"?"on":"off"}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.recruiter="off"}})();`;
+/**
+ * Motion tiers, decided once before first paint.
+ *
+ * `full` gets everything. `reduced` keeps scroll and reveals but no WebGL and no
+ * per-frame work. `still` moves nothing at all.
+ *
+ * **This is what allows the default to be greedy.** Recruiter Mode is opt-in, so a
+ * visitor on a weak phone who never finds the toggle would otherwise just get a bad
+ * site. Deciding here — pre-paint, from what the device reports about itself — means the
+ * rich version can be uncompromising because it is not the only version.
+ *
+ * Read from `navigator`: deviceMemory and hardwareConcurrency where available, plus the
+ * Save-Data header and effective connection type. All are hints rather than truth, so
+ * the thresholds are generous — the cost of over-delivering to a capable phone is a
+ * dropped frame, and the cost of under-delivering is a site that looks broken.
+ */
+export type MotionTier = "full" | "reduced" | "still";
+
+export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";if(cn.effectiveType&&/^(slow-)?2g$|^3g$/.test(cn.effectiveType))tier="reduced";if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.recruiter="off";document.documentElement.dataset.motion="still"}})();`;
 
 /*
   The <html> data attributes are the single source of truth, not React state.
@@ -39,7 +57,7 @@ function subscribeToRoot(onStoreChange: () => void) {
   const observer = new MutationObserver(onStoreChange);
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["data-theme", "data-recruiter"],
+    attributeFilter: ["data-theme", "data-recruiter", "data-motion"],
   });
   return () => observer.disconnect();
 }

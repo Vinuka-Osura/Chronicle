@@ -100,9 +100,28 @@
   --text-section: clamp(1.15rem, 1.05rem + 0.45vw, 1.35rem);
   --text-lede: clamp(1rem, 0.97rem + 0.15vw, 1.075rem);
 
-  /* Motion is deliberately short. Atmosphere, not spectacle. */
-  --ease-out-quiet: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-node: 300ms;
+  /*
+    Timing, quantised.
+
+    Four durations and two easings for the whole site. Arbitrary values are most of
+    why motion reads as improvised - two things moving at 340ms and 380ms look like
+    a mistake nobody caught, where the same two at one shared duration look decided.
+
+    --ease-set is for things arriving: fast out of the gate, long settle, no
+    overshoot. --ease-move is symmetric, for things that are already on screen and
+    are changing.
+  */
+  --ease-set: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-move: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --t-quick: 160ms;   /* hover, focus, a colour change */
+  --t-move: 260ms;    /* something repositioning */
+  --t-set: 520ms;     /* something arriving for the first time */
+  --t-scene: 900ms;   /* a whole section changing state */
+
+  /* Kept: a great deal already references it. */
+  --ease-out-quiet: var(--ease-set);
+  --duration-node: var(--t-move);
 }
 
 /*
@@ -759,5 +778,233 @@
 
   @page {
     margin: 16mm;
+  }
+}
+
+/*
+  ── The motion primitives ─────────────────────────────────────────────────────
+  Three moves, used everywhere, so eleven pages read as one site rather than as
+  eleven separate ideas about how things should arrive.
+
+  Every one of them is ADDITIVE: the content is in the HTML, readable, and in its
+  final position. These add a mask and a transform on top. Nothing here can leave
+  a page empty if it fails to run, which is the failure mode of most reveal
+  systems and the one that is hardest to notice in development.
+*/
+@layer components {
+  /* ── A. Mask reveal ──────────────────────────────────────────────────────
+     Content uncovered by a moving edge rather than by opacity. Fading is the
+     cheapest possible reveal and looks it; an edge reads as something being
+     drawn. */
+  .reveal-mask {
+    clip-path: inset(0 0 0 0);
+  }
+
+  [data-motion="full"] .reveal-mask,
+  [data-motion="reduced"] .reveal-mask {
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path var(--t-set) var(--ease-set);
+  }
+
+  [data-motion="full"] .reveal-mask.is-in,
+  [data-motion="reduced"] .reveal-mask.is-in {
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* ── B. Line setting ─────────────────────────────────────────────────────
+     Each measured line rises out from behind its own mask. The mask is the
+     parent and the movement is the child, because a single element cannot both
+     clip and travel. */
+  [data-set-lines] .line-mask {
+    display: block;
+    overflow: hidden;
+    /* Descenders sit below the baseline, so a mask cut exactly at the line box
+       shaves the tails off g, y and p. */
+    padding-bottom: 0.12em;
+    margin-bottom: -0.12em;
+  }
+
+  [data-set-lines] .line-inner {
+    display: block;
+    animation: line-set var(--t-set) var(--ease-set) both;
+  }
+
+  [data-motion="still"] [data-set-lines] .line-inner {
+    animation: none;
+  }
+
+  /* ── C. Velocity lean ────────────────────────────────────────────────────
+     Elements lean fractionally with scroll speed and settle when it stops. This
+     is most of why a page feels like it has mass, and it costs one custom
+     property. Capped hard - past about a degree it stops reading as weight and
+     starts reading as a fault. */
+  [data-motion="full"] .lean {
+    transform: skewY(calc(var(--scroll-velocity, 0) * 0.7deg))
+      scaleY(calc(1 + var(--scroll-speed, 0) * 0.012));
+    transition: transform var(--t-quick) linear;
+  }
+}
+
+@keyframes line-set {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/*
+  ── The Home hero ─────────────────────────────────────────────────────────────
+  An instrument face. Most visitors never reach the Timeline, so this section has
+  to carry the same idea alone: rules that frame, monospace fields that lock on,
+  a headline that sets, and then complete stillness.
+
+  As much of the work here is typographic as animated. The motion lasts one
+  second; the type is what the page looks like for the rest of the visit.
+*/
+@layer components {
+  .hero {
+    max-width: 54rem;
+    padding-block: clamp(1rem, 4vw, 3.5rem) clamp(3rem, 8vw, 6rem);
+  }
+
+  /* ── The channel strip ─────────────────────────────────────────────────── */
+  .hero-channel {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 0.9rem;
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .hero-channel-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    /* Wide tracking is what makes a monospace label read as an instrument legend
+       rather than as code. */
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+    /* Every scramble frame is the same width, so nothing reflows mid-animation. */
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .hero-channel-label:last-of-type {
+    color: var(--color-ink-faint);
+  }
+
+  .hero-channel-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-rule),
+      color-mix(in oklch, var(--color-rule) 20%, transparent)
+    );
+  }
+
+  /* ── The headline ──────────────────────────────────────────────────────────
+     The one piece of type on the site allowed to be this large, so it earns real
+     attention: negative tracking that grows with size, a line height under 1 to
+     make the block read as a mass rather than as three sentences, and a measure
+     that keeps it to three lines on a laptop. */
+  .hero-headline {
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    color: var(--color-ink);
+    text-wrap: balance;
+    margin-bottom: clamp(1.5rem, 3.5vw, 2.25rem);
+  }
+
+  /* ── The lede ──────────────────────────────────────────────────────────────
+     65 characters is the measure that reads fastest. Wider and the eye loses the
+     line return; this is the single highest-leverage typographic decision on any
+     page and the easiest to get wrong by letting a container decide it. */
+  .hero-lede {
+    max-width: 42rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── The sweep ─────────────────────────────────────────────────────────────
+     Draws last, once the words have landed. The confirmation at the end of the
+     sequence: the instrument has finished acquiring. */
+  .hero-sweep {
+    display: block;
+    height: 1px;
+    margin: clamp(2rem, 5vw, 3rem) 0 clamp(1.5rem, 3vw, 2rem);
+    background: linear-gradient(
+      to right,
+      var(--color-signal),
+      color-mix(in oklch, var(--color-signal) 15%, transparent) 55%,
+      transparent
+    );
+    transform-origin: left;
+  }
+
+  [data-motion="full"] .hero-sweep,
+  [data-motion="reduced"] .hero-sweep {
+    transform: scaleX(0);
+    animation: hero-sweep var(--t-scene) var(--ease-set) 1100ms forwards;
+  }
+
+  /* ── Actions ───────────────────────────────────────────────────────────────
+     Three links, one of them clearly first. Equal-weight buttons make a reader
+     choose, and a reader who has to choose usually chooses nothing. */
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .hero-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.5rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-ink);
+    text-decoration: none;
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move),
+      background-color var(--t-quick) var(--ease-move),
+      transform var(--t-quick) var(--ease-move);
+  }
+
+  .hero-action:hover {
+    border-color: var(--color-signal);
+    color: var(--color-signal);
+    /* A single pixel. Enough to feel answered, not enough to look like it is trying. */
+    transform: translateY(-1px);
+  }
+
+  .hero-action-primary {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .hero-action-primary:hover {
+    background: var(--color-signal);
+    border-color: var(--color-signal);
+    color: var(--color-paper);
+  }
+}
+
+@keyframes hero-sweep {
+  to {
+    transform: scaleX(1);
   }
 }

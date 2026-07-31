@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { appearanceScript } from "@/lib/appearance";
 import { lensScript } from "@/app/timeline/lenses";
 import "./globals.css";
@@ -112,6 +113,9 @@ export default function RootLayout({
         {/* Renders nothing. Arms the scroll reveal for any page using data-rise, and
             stays inert under reduced motion or Recruiter Mode. */}
         <Reveal />
+        {/* Inertial scroll, and scroll velocity published as a CSS variable.
+            Only runs on the `full` motion tier. */}
+        <SmoothScroll />
       </body>
     </html>
   );
