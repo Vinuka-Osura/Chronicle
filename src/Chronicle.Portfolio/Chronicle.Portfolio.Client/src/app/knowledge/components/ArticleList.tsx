@@ -6,12 +6,26 @@ import type { PostCard } from "@/lib/types";
 import { CardGrid } from "@/components/CardGrid";
 import { searchPosts } from "../search";
 
+/**
+ * A publication date, formatted identically on the server and in the browser.
+ *
+ * **`timeZone` is not optional here.** This is a client component, so the string is
+ * produced twice — once during server rendering and once during hydration — and without
+ * a fixed zone each side uses its own. An article published at 23:30 UTC then renders as
+ * the 4th on a server running UTC and the 5th in a browser east of it, which React
+ * reports as a hydration mismatch and the reader sees as the wrong date.
+ *
+ * UTC rather than the visitor's zone because a publication date is a fact about when
+ * something was written, not about where it is being read.
+ */
 function published(iso: string | null): string {
   if (!iso) return "Unpublished";
+
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "UTC",
   });
 }
 

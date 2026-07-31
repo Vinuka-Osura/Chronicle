@@ -85,7 +85,22 @@ export default function RootLayout({
         No appearance provider: the <html> data attributes are the source of truth and
         useAppearance subscribes to them directly, so there is no state to hoist.
       */}
-      <body className="flex min-h-full flex-col antialiased">
+      {/*
+        suppressHydrationWarning here is for browser extensions, not for anything this
+        application does.
+
+        Grammarly, password managers and similar inject attributes onto <body>
+        (`data-gr-ext-installed`, `data-new-gr-c-s-check-loaded`) between the HTML
+        arriving and React hydrating. React then compares its tree against a DOM that has
+        gained attributes nobody rendered, and reports a mismatch the developer cannot
+        act on — most visibly after a client-side navigation, when the extension rescans.
+
+        It is safe because the flag is **one level deep**: it silences attribute
+        differences on <body> itself and nothing inside it, so a genuine mismatch in any
+        component still reports normally. And there is nothing dynamic on <body> to hide
+        — the className is a literal.
+      */}
+      <body className="flex min-h-full flex-col antialiased" suppressHydrationWarning>
         <SiteHeader />
         <main
           id="main"
