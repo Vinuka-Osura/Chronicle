@@ -4,7 +4,12 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
 import { Reveal } from "@/components/Reveal";
 import { SmoothScroll } from "@/components/SmoothScroll";
-import { appearanceScript } from "@/lib/appearance";
+import { StatusBar } from "@/components/StatusBar";
+import { WaterBackground } from "@/components/WaterBackground";
+/* From the directive-free module, NOT from @/lib/appearance. That file is a client
+   module, and a server component importing a value out of one gets a stub that throws
+   instead of the value — which is exactly how this script silently vanished. */
+import { appearanceScript } from "@/lib/appearanceScript";
 import { lensScript } from "@/app/timeline/lenses";
 import "./globals.css";
 
@@ -56,9 +61,11 @@ export const viewport: Viewport = {
   // Tells the browser both themes exist, so native UI - address bar, form controls,
   // scrollbars - matches whichever one is active.
   colorScheme: "light dark",
+  // The browser chrome should match the water, not the paper colour this site had
+  // before it had a background. These track --color-paper in globals.css.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f4f6" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0f16" },
+    { media: "(prefers-color-scheme: light)", color: "#8ab4d3" },
+    { media: "(prefers-color-scheme: dark)", color: "#08131f" },
   ],
 };
 
@@ -73,15 +80,6 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full`}
       suppressHydrationWarning
     >
-      <head>
-        {/*
-          Blocking on purpose, and tiny. It stamps data-theme and data-recruiter on
-          <html> before first paint so neither preference flashes the wrong appearance.
-          suppressHydrationWarning above is because this script mutates the very element
-          React is about to hydrate - intended, not a bug.
-        */}
-        <script dangerouslySetInnerHTML={{ __html: appearanceScript + lensScript }} />
-      </head>
       {/*
         No appearance provider: the <html> data attributes are the source of truth and
         useAppearance subscribes to them directly, so there is no state to hoist.
@@ -102,6 +100,29 @@ export default function RootLayout({
         — the className is a literal.
       */}
       <body className="flex min-h-full flex-col antialiased" suppressHydrationWarning>
+        {/*
+          Blocking on purpose, and tiny. It stamps data-theme, data-recruiter and
+          data-motion on <html> before anything below it paints, so no preference
+          flashes the wrong appearance.
+
+          FIRST CHILD OF <body>, NOT IN <head>. The App Router owns <head> and drops
+          children rendered into a literal <head> element — this script was silently
+          missing from the served HTML, which meant a saved dark-mode preference was
+          ignored on every full page load and the motion tier never applied at all.
+          `next/script` with beforeInteractive is not the fix either: it is documented
+          as not blocking hydration, and a theme script that does not block is a theme
+          script that flashes.
+
+          suppressHydrationWarning on <html> above is because this mutates the very
+          element React is about to hydrate — intended, not a bug.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: appearanceScript + lensScript }} />
+
+        {/* The page background, as a body of water. Sits behind everything at
+            z-index -2; <body> already carries the still version underneath it, so
+            this failing to start is not a visible event. */}
+        <WaterBackground />
+
         <SiteHeader />
         <main
           id="main"
@@ -110,6 +131,11 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+
+        {/* Copyright, read position and the way back up, in one strip. Withdraws
+            when the footer above comes into view. */}
+        <StatusBar />
+
         {/* Renders nothing. Arms the scroll reveal for any page using data-rise, and
             stays inert under reduced motion or Recruiter Mode. */}
         <Reveal />

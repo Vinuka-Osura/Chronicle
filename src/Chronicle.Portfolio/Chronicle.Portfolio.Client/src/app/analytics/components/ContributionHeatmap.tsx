@@ -149,7 +149,9 @@ export function ContributionHeatmap({
             // pointer crosses is a stream of noise, and the monthly table is the route
             // to these values that does not need a mouse.
             aria-hidden
-            className="pointer-events-none absolute z-10 rounded-md border border-rule bg-paper-raised px-2.5 py-1.5 text-xs whitespace-nowrap shadow-sm"
+            /* Opaque, not glass: a tooltip sits over the data it describes, and reading
+               the cells through it defeats the point of having one. */
+            className="pointer-events-none absolute z-10 rounded-md border border-rule bg-paper-solid px-2.5 py-1.5 text-xs whitespace-nowrap shadow-sm"
             style={{
               left: LEFT_GUTTER + hovered.column * PITCH,
               top: TOP_GUTTER + hovered.row * PITCH + CELL + 6,

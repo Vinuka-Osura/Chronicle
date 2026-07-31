@@ -96,7 +96,11 @@ export function Scrubber({ timeline }: { timeline: Timeline }) {
 
   return (
     <div
-      className={`rm-hide fixed inset-x-0 bottom-0 z-40 border-t border-rule bg-paper/95 backdrop-blur-sm transition-transform duration-200 ${
+      /* timeline-scrubber is a hook, not a style: it is what the status bar looks for
+         to know it should stand down, since both of these live at the bottom of the
+         viewport and only one can. They merge into a single transport control in a
+         later stage. */
+      className={`timeline-scrubber glass rm-hide fixed inset-x-0 bottom-0 z-40 border-t border-rule transition-transform duration-200 ${
         hidden ? "translate-y-full" : "translate-y-0"
       }`}
     >

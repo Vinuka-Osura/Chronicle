@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Lenis from "lenis";
+import { registerScroller } from "@/lib/scroll";
 
 /**
  * Inertial scrolling, and scroll velocity published for anything that wants it.
@@ -43,6 +44,9 @@ export function SmoothScroll() {
       syncTouch: false,
     });
 
+    // So the status bar's back-to-top can go through Lenis rather than fighting it.
+    registerScroller(lenis);
+
     const root = document.documentElement;
     let frame = 0;
     let published = 0;
@@ -72,6 +76,7 @@ export function SmoothScroll() {
 
     return () => {
       cancelAnimationFrame(frame);
+      registerScroller(null);
       lenis.destroy();
       root.style.removeProperty("--scroll-velocity");
       root.style.removeProperty("--scroll-speed");

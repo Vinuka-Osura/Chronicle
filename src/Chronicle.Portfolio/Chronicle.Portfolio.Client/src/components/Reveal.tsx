@@ -6,6 +6,17 @@ import { useEffect } from "react";
 const ALREADY_ON_SCREEN = 0.9;
 
 /**
+ * Everything this component is responsible for arming.
+ *
+ * `.emerge` is normally driven by the scroll position itself and does not need an
+ * observer at all — but the CSS falls back to a one-shot transition where
+ * `animation-timeline` is unsupported, and that fallback needs `is-in` from here.
+ * Observing it in both cases is harmless: when the scroll-driven path is live, the
+ * class it adds matches nothing.
+ */
+const REVEALABLE = "[data-rise], .reveal-mask, .emerge, .emerge-set > *";
+
+/**
  * Reveals anything marked `data-rise` as it scrolls into view.
  *
  * The mechanism is deliberately CSS with a class toggle rather than Motion: these are
@@ -74,11 +85,11 @@ export function Reveal() {
     };
 
     const watchWithin = (root: ParentNode) => {
-      if (root instanceof Element && root.matches("[data-rise], .reveal-mask")) {
+      if (root instanceof Element && root.matches(REVEALABLE)) {
         watch(root);
       }
 
-      for (const element of root.querySelectorAll("[data-rise], .reveal-mask")) {
+      for (const element of root.querySelectorAll(REVEALABLE)) {
         watch(element);
       }
     };

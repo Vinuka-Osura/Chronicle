@@ -2,10 +2,26 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-export const THEME_COOKIE = "theme";
-export const RECRUITER_COOKIE = "recruiterMode";
+/*
+  Re-exported, not redefined. These live in `appearanceScript.ts`, which has no
+  "use client" directive, because the root layout is a SERVER component and importing a
+  plain value from a client module yields a throwing stub rather than the value. See the
+  comment at the top of that file — it cost a silent, total failure of theming.
 
-export type Theme = "light" | "dark";
+  `appearanceScript` itself is deliberately NOT re-exported here. Doing so would put a
+  working-looking import path for it back inside a client module, and the next server
+  component to reach for it would get the same throwing stub with no warning. Import it
+  from `@/lib/appearanceScript` directly.
+*/
+export {
+  THEME_COOKIE,
+  RECRUITER_COOKIE,
+  type Theme,
+  type MotionTier,
+} from "./appearanceScript";
+
+import { THEME_COOKIE, RECRUITER_COOKIE } from "./appearanceScript";
+import type { Theme } from "./appearanceScript";
 
 /**
  * Runs before first paint, inlined into <head>.
@@ -39,9 +55,7 @@ export type Theme = "light" | "dark";
  * the thresholds are generous — the cost of over-delivering to a capable phone is a
  * dropped frame, and the cost of under-delivering is a site that looks broken.
  */
-export type MotionTier = "full" | "reduced" | "still";
 
-export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";if(cn.effectiveType&&/^(slow-)?2g$|^3g$/.test(cn.effectiveType))tier="reduced";if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.recruiter="off";document.documentElement.dataset.motion="still"}})();`;
 
 /*
   The <html> data attributes are the single source of truth, not React state.

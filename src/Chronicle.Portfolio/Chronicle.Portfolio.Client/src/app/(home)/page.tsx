@@ -39,7 +39,11 @@ export default async function MissionControl() {
         </div>
 
         {featured.length > 0 ? (
-          <div className="rm-grid grid gap-4 sm:grid-cols-2">
+          /* emerge-set: every direct child surfaces and sinks with the scroll, staggered
+             by its position in the grid. Not on the filtered grids elsewhere — those are
+             animated by Motion, and a CSS animation on transform would override the
+             inline transform Motion uses to close the gaps. */
+          <div className="emerge-set rm-grid grid gap-4 sm:grid-cols-2">
             {featured.map((project) => (
               <ProjectCard key={project.slug} project={project} />
             ))}

@@ -19,21 +19,58 @@
   inherits both themes without knowing they exist.
 */
 @theme {
-  /* Light: a warm off-white rather than a cold grey. The previous #f2f4f6 read as
-     slightly clinical against the amber accent; this sits in the same hue family. */
-  --color-paper: #f6f5f2;
-  --color-paper-raised: #fffefc;
+  /*
+    The page is water, seen from above.
+
+    These three feed both the WebGL surface and the still gradient that stands in for
+    it, which is why they are here rather than in the shader: one definition, so the
+    handover from the CSS background to the canvas cannot flash.
+
+    `--water-deep` is the darkest tone the eye ever meets, so it is the surface every
+    contrast ratio below is measured against — not the average, which would leave text
+    failing over exactly the parts of the water that are hardest to read on.
+  */
+  --water-deep: #5d90b8;
+  --water-shallow: #b6d8ee;
+  /* Sunlight caught on a ripple: lighter than the water, not darker. A darker wake was
+     the first instinct and it fails — measured, it drops the accent to 3.9:1 wherever
+     it passes, and no crest dark enough to read leaves the text alone. */
+  --water-crest: #f4fbff;
+  --water-glint: #ffffff;
+  /* How hard the pattern is pushed away from its midpoint. Above ~2 the water starts
+     competing with the text laid over it. */
+  --water-contrast: 1.7;
+
+  /* The flat colour under everything, if both the canvas and the gradient fail.
+     A mid tone of the water, so a total failure still lands in the right family. */
+  --color-paper: #8ab4d3;
+
+  /*
+    Surfaces are glass, because a solid card would punch an opaque hole in the water
+    and turn the background into a border. The alpha is the highest value that still
+    reads as translucent - low enough and the text starts fighting the pattern moving
+    underneath it.
+  */
+  --color-paper-raised: rgb(255 255 255 / 0.66);
+  /* The same surface, opaque. Recruiter Mode and weak devices use this instead. */
+  --color-paper-solid: #e4eef5;
+
   --color-ink: #14181f;
-  --color-ink-soft: #4e5661;
-  --color-ink-faint: #8a919c;
-  --color-signal: #a8630a;
-  --color-signal-soft: #f6ecdd;
-  --color-rule: #e0ddd6;
+  --color-ink-soft: #33404d;
+  --color-ink-faint: #4c5a68;
+  /*
+    Amber, darkened from #a8630a until it clears 4.5:1 on --water-deep. Amber against
+    blue is the one pairing that gains from this background rather than tolerating it:
+    they are opposite in hue, so the accent reads as a signal light on the water.
+  */
+  --color-signal: #703a00;
+  --color-signal-soft: rgb(112 58 0 / 0.13);
+  --color-rule: rgb(16 44 68 / 0.17);
 
   /* The one colour allowed to compete with the accent, and only to say something
      failed. Kept as a token so form errors theme like everything else. */
-  --color-alert: #a3231b;
-  --color-alert-soft: #fbeceb;
+  --color-alert: #8a1a13;
+  --color-alert-soft: rgb(138 26 19 / 0.12);
 
   /*
     Sequential ramp for the contribution heatmap: one hue - the accent's own, at
@@ -46,28 +83,22 @@
     an empty one. --heat-0 is deliberately NOT on the ramp; "no contributions" is
     an absence, and it wears the rule colour like any other piece of chrome.
   */
-  --color-heat-0: #e6e3dc;
+  --color-heat-0: #c5d6e2;
   --color-heat-1: #df9c5b;
   --color-heat-2: #c77b23;
   --color-heat-3: #a65f00;
   --color-heat-4: #804600;
 
-  /* Two stops for the page wash. Very close together on purpose - a gradient you
-     can point at is a gradient that will date badly. */
-  --color-wash-top: #fbfaf7;
-  --color-wash-bottom: #f1efea;
-
   /*
-    Ambient light. Two very low-opacity colour fields fixed behind everything: a
-    warm one where the eye lands first, a cool one at the opposite corner.
+    The channel: a calm band of water down the middle, where the reading happens.
 
-    This is what a flat fill cannot do - it gives the page a direction of light,
-    so surfaces above it read as sitting ON something rather than being cut out
-    of it. Kept at single-digit alpha on purpose: a gradient you can point at and
-    name is decoration, and decoration dates. If you notice this, it is too strong.
+    This is what lets the water be a real blue instead of a pale wash. Text sitting
+    directly on #5d90b8 would take the accent to 3.4:1; the same text over this veil
+    sees #aec8dc and reads at 5.27:1. The margins keep the full depth, so the page
+    looks like a channel cut through open water rather than a background turned down
+    until it was safe.
   */
-  --ambient-warm: oklch(0.72 0.13 64 / 0.07);
-  --ambient-cool: oklch(0.66 0.09 245 / 0.05);
+  --veil: rgb(255 255 255 / 0.50);
 
   /*
     Elevation.
@@ -130,17 +161,31 @@
   staying put and going muddy.
 */
 [data-theme="dark"] {
-  --color-paper: #0b0f16;
-  --color-paper-raised: #141b25;
+  /* Deep water at night: near-black, but unmistakably blue rather than grey. The
+     shallow tone is only a few steps up, because a dark surface shows variation far
+     more readily than a light one - the same spread as the day palette would read as
+     a lava lamp. */
+  --water-deep: #040910;
+  --water-shallow: #10263d;
+  /* Same direction as daylight, much further from the base — a dark surface can carry
+     a bright wake. Verified against the veil at 4.82:1 for the accent, which is why
+     the blend in the shader is capped rather than open. */
+  --water-crest: #4d9ad4;
+  --water-glint: #bfe0ff;
+  --water-contrast: 1.5;
+
+  --color-paper: #08131f;
+  --color-paper-raised: rgb(22 32 44 / 0.62);
+  --color-paper-solid: #16202c;
   --color-ink: #e8edf3;
-  --color-ink-soft: #9aa8b8;
-  --color-ink-faint: #6f7d8f;
-  --color-signal: #e0973f;
-  --color-signal-soft: #2b2015;
-  --color-rule: #232c38;
+  --color-ink-soft: #a7b6c6;
+  --color-ink-faint: #7d8c9d;
+  --color-signal: #e8a24f;
+  --color-signal-soft: rgb(232 162 79 / 0.14);
+  --color-rule: rgb(160 200 240 / 0.15);
 
   --color-alert: #f08a80;
-  --color-alert-soft: #2c1614;
+  --color-alert-soft: rgb(240 138 128 / 0.15);
 
   /*
     Chosen for the dark surface, not flipped from the light ramp. The direction
@@ -148,19 +193,15 @@
     light that reads as "more" - and each step was re-derived against #0b0f16 so
     the quietest live cell still clears 2:1 against it.
   */
-  --color-heat-0: #1c242f;
+  --color-heat-0: #1a2a3a;
   --color-heat-1: #704415;
   --color-heat-2: #9e5f16;
   --color-heat-3: #cd7d1e;
   --color-heat-4: #f6a046;
 
-  --color-wash-top: #101720;
-  --color-wash-bottom: #080b11;
-
-  /* Warmer and weaker than the light pair. A dark surface shows a colour field far
-     more readily, so the same alpha would read as a coloured haze. */
-  --ambient-warm: oklch(0.62 0.11 62 / 0.055);
-  --ambient-cool: oklch(0.55 0.10 250 / 0.05);
+  /* Deepens the channel instead of lifting it: on a dark page the prose is the light
+     thing, so the water behind it has to give way rather than brighten. */
+  --veil: rgb(2 6 12 / 0.42);
 
   /*
     Shadows barely exist on a dark surface - there is nothing darker to cast onto.
@@ -190,32 +231,78 @@
     /* Flat colour first: if the gradients are unsupported or fail to paint, the page is
        still the right colour rather than white. */
     background-color: var(--color-paper);
-    background-image: linear-gradient(
-      to bottom,
-      var(--color-wash-top) 0%,
-      var(--color-paper) 38%,
-      var(--color-wash-bottom) 100%
-    );
+
+    /*
+      Still water.
+
+      This is the page's real background — the canvas is an enhancement painted over
+      it. Three overlapping radials rather than one linear gradient, because still
+      water is not a fade from top to bottom; it has regions. The canvas fades in over
+      the top of this in the same colours, so the handover is invisible.
+
+      It is also the finished article in Recruiter Mode, where nothing moves at all.
+    */
+    background-image:
+      radial-gradient(85% 60% at 12% 8%, var(--water-shallow) 0%, transparent 62%),
+      radial-gradient(70% 55% at 88% 30%, var(--water-shallow) 0%, transparent 58%),
+      radial-gradient(90% 70% at 60% 100%, var(--water-deep) 0%, transparent 60%),
+      linear-gradient(165deg, var(--water-shallow) 0%, var(--water-deep) 100%);
     background-attachment: fixed;
+
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+
+    /* Room for the status bar, so the last line of a page is never underneath it. */
+    padding-bottom: 2.25rem;
   }
 
   /*
-    The ambient layer, as a pseudo-element rather than more background-images on
-    <body>.
+    The water itself.
 
-    Two reasons. It stays fixed to the viewport without `background-attachment:
-    fixed`, which forces a full repaint on every scroll frame on mobile Safari and
-    is one of the reliable ways to make a site feel cheap on a phone. And it sits
-    behind everything at z-index -1, so no stacking context anywhere else has to
-    know it exists.
+    Behind the veil and therefore behind everything, and `pointer-events: none` so it
+    never intercepts a click meant for a link — the ripple comes from a window-level
+    listener, not from the canvas being hit.
 
-    The blobs are deliberately off-canvas at their centres: a radial gradient whose
-    centre you can see reads as a spotlight, whereas one bleeding in from beyond
-    the edge reads as light in the room.
+    It starts at zero opacity and is faded in by `data-ready`, set on the first frame
+    that actually draws. A canvas that appears before it has rendered shows one frame
+    of black.
+  */
+  .water {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 900ms var(--ease-set);
+  }
+
+  .water[data-ready="true"] {
+    opacity: 1;
+  }
+
+  /*
+    The veil: one layer between the water and the content.
+
+    Without it the choice is a beautiful background or readable prose, and the usual
+    resolution — turning the background down until it is barely there — throws away
+    the thing worth having. This keeps the water at full depth in the margins and
+    quietens it only across the column where the text actually is.
+
+    The stops are LENGTHS derived from the column, not percentages. The content is
+    `max-width: 72rem` centred, so its left edge sits at `50% - 36rem` — a fixed
+    percentage would be correct at one window width and wrong at every other, leaving
+    text off the end of the veil on a wide monitor. `max()` collapses the whole thing
+    to a full-width veil once the window is narrower than the band, which is exactly
+    what a phone needs.
+
+    A pseudo-element rather than another background-image on <body> because it must
+    stay fixed to the viewport without `background-attachment: fixed`, which forces a
+    full repaint on every scroll frame on mobile Safari.
   */
   body::before {
     content: "";
@@ -223,9 +310,13 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background-image:
-      radial-gradient(60rem 40rem at 15% -10%, var(--ambient-warm), transparent 70%),
-      radial-gradient(50rem 45rem at 95% 20%, var(--ambient-cool), transparent 65%);
+    background-image: linear-gradient(
+      to right,
+      transparent 0,
+      var(--veil) max(0px, calc(50% - 40rem)),
+      var(--veil) min(100%, calc(50% + 40rem)),
+      transparent 100%
+    );
   }
 
   h1,
@@ -427,6 +518,258 @@
 }
 
 /*
+  ── Emergence ─────────────────────────────────────────────────────────────────
+  Cards surface as they arrive and sink back as they leave.
+
+  This is the difference between a page that scrolls and a page you move through.
+  `[data-rise]` above animates once on entry and then stops caring — correct for a
+  section heading, wrong for a card, because the moment it has fired the page is
+  static again and scrolling is just translation.
+
+  Driven by the scroll position itself rather than by a timer started on
+  intersection, so it is reversible: scroll back up and the card sinks the way it
+  rose. A timer-based reveal cannot do that, and the difference is immediately
+  legible even to someone who could not say why.
+
+  The exit is deliberately partial — 42% opacity, not zero. Text that fades out
+  while it is still on screen is text you cannot finish reading, which is a real
+  cost for an effect nobody asked for. Departing far enough to feel like depth and
+  no further is the whole trick.
+*/
+@keyframes emerge {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 3.5rem, 0) scale(0.955);
+    filter: blur(7px);
+  }
+  26% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  76% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0.42;
+    transform: translate3d(0, -1.75rem, 0) scale(0.985);
+    filter: blur(2.5px);
+  }
+}
+
+/* No blur and no scale. Blur is the single most expensive thing here, and this is
+   the tier that already told us it cannot afford it. */
+@keyframes emerge-lite {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 2rem, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer utilities {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-motion="full"] .emerge,
+      [data-motion="full"] .emerge-set > * {
+        animation: emerge linear both;
+        animation-timeline: view();
+        animation-range: entry 0% exit 100%;
+        /* Promotes the element once, rather than the compositor discovering on every
+           frame that a blurred layer moved. Without it the blur is repainted. */
+        will-change: transform, opacity, filter;
+      }
+
+      [data-motion="reduced"] .emerge,
+      [data-motion="reduced"] .emerge-set > * {
+        animation: emerge-lite linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 34%;
+      }
+
+      /*
+        Stagger by position in the grid rather than by an index attribute, so a page
+        can add cards without wiring anything. Offsetting the RANGE rather than
+        adding a delay is what makes this work at all — a scroll-driven animation has
+        no clock for a delay to be measured against.
+      */
+      [data-motion="full"] .emerge-set > *:nth-child(2n) {
+        animation-range: entry 6% exit 100%;
+      }
+      [data-motion="full"] .emerge-set > *:nth-child(3n) {
+        animation-range: entry 11% exit 100%;
+      }
+    }
+  }
+
+  /*
+    Browsers without scroll-driven animations fall back to the same
+    IntersectionObserver that drives [data-rise]. One-shot rather than reversible,
+    which is the part that cannot be reproduced — but it arrives, and arriving is
+    most of the value.
+  */
+  @supports not (animation-timeline: view()) {
+    [data-reveal="ready"] .emerge,
+    [data-reveal="ready"] .emerge-set > * {
+      opacity: 0;
+      transform: translate3d(0, 2rem, 0);
+      transition:
+        opacity var(--t-set) var(--ease-set),
+        transform var(--t-set) var(--ease-set);
+    }
+
+    [data-reveal="ready"] .emerge.is-in,
+    [data-reveal="ready"] .emerge-set > *.is-in {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/*
+  ── Status bar ────────────────────────────────────────────────────────────────
+  The thin strip along the bottom of every page.
+
+  Three jobs in one component on purpose: the persistent copyright, how far down
+  the page you are, and the way back up. A floating round back-to-top button in
+  the corner is the most generic thing on the web; the same affordance inside a
+  readout strip reads as part of the instrument.
+
+  It withdraws when the long footer arrives — that footer says all of this and
+  more, and a fixed bar over it would be a duplicate copyright line above a
+  progress meter stuck at 100%.
+*/
+@layer components {
+  .status-bar {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 2.25rem;
+    /* Aligns with the 72rem content column, and falls back to a plain gutter when
+       the window is narrower than it. */
+    padding-inline: max(1rem, calc((100vw - 72rem) / 2));
+    border-top: 1px solid var(--color-rule);
+    background: var(--color-paper-raised);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.03em;
+    color: var(--color-ink-faint);
+    transition:
+      transform var(--t-move) var(--ease-set),
+      opacity var(--t-move) var(--ease-set);
+  }
+
+  .status-bar[data-standby="true"] {
+    transform: translateY(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /*
+    The Timeline has its own bottom-anchored control, and two strips stacked along the
+    bottom edge is one too many. `:has()` rather than a route check because the
+    condition is genuinely "is there already a transport bar on this page" — a
+    pathname test would go wrong the moment the scrubber appears anywhere else.
+  */
+  body:has(.timeline-scrubber) .status-bar {
+    display: none;
+  }
+
+  .status-bar-mark {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* The read position. A play bar, and the shape the Timeline's transport control
+     will grow out of — which is why it is a track with a fill rather than a
+     percentage on its own. */
+  .status-bar-track {
+    position: relative;
+    flex: 1 1 auto;
+    height: 3px;
+    min-width: 3rem;
+    border-radius: 999px;
+    background: var(--color-rule);
+    overflow: hidden;
+  }
+
+  .status-bar-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--color-signal);
+    /* scaleX rather than width: width is a layout change on every scroll frame. */
+    transform: scaleX(var(--read, 0));
+    transform-origin: left center;
+  }
+
+  .status-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-inline-start: auto;
+  }
+
+  .status-bar-readout {
+    color: var(--color-ink-soft);
+    /* Digits that do not change width, so the strip does not twitch as it counts. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-bar-top {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    color: var(--color-ink-soft);
+    line-height: 1;
+    transition:
+      color var(--t-quick) var(--ease-move),
+      border-color var(--t-quick) var(--ease-move),
+      transform var(--t-quick) var(--ease-move);
+  }
+
+  .status-bar-top:hover {
+    color: var(--color-signal);
+    border-color: var(--color-signal);
+    transform: translateY(-1px);
+  }
+
+  /* Below the content column there is not room for all three. The copyright is the
+     part that has to be there, so the track is what goes. */
+  @media (width < 32rem) {
+    .status-bar-track {
+      display: none;
+    }
+  }
+
+  [data-motion="reduced"] .status-bar,
+  [data-motion="still"] .status-bar {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/*
   ── Surfaces ──────────────────────────────────────────────────────────────────
   One card treatment, defined once.
 
@@ -436,11 +779,47 @@
   shadows do not look like two objects, they look like a mistake.
 */
 @layer components {
+  /*
+    Glass, not paper.
+
+    An opaque card on a moving background reads as a hole cut in it, and the eye goes
+    to the hole. Letting the water through — blurred, so it is atmosphere rather than
+    pattern — is what makes the card look like it is floating ON the surface.
+
+    `saturate` above 1 is doing real work here: blurring a colour field always washes
+    it out, and without pushing the saturation back up the cards go grey and the whole
+    page loses its blue.
+  */
   .surface {
     background: var(--color-paper-raised);
     border: 1px solid var(--color-rule);
     border-radius: 0.625rem;
     box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  /*
+    Backdrop blur is per-element and composited every frame the thing behind it moves.
+    On a weak device that is the most expensive decoration on the page, so those get
+    the same design as an opaque fill. Recruiter Mode gets it too, deliberately: a
+    document should not shimmer.
+  */
+  /* The same treatment for chrome that is not a card — the header, chiefly. Separate
+     from .surface because chrome has no border, radius or elevation. */
+  .glass {
+    background: var(--color-paper-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  [data-motion="reduced"] .surface,
+  [data-motion="still"] .surface,
+  [data-motion="reduced"] .glass,
+  [data-motion="still"] .glass {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   /*

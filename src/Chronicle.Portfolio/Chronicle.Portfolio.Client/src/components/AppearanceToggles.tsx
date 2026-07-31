@@ -70,7 +70,9 @@ export function RecruiterToggle({ className = "" }: { className?: string }) {
         aria-hidden
         className="relative h-3.5 w-6 rounded-full bg-rule transition-colors group-aria-checked:bg-signal"
       >
-        <span className="absolute top-0.5 left-0.5 size-2.5 rounded-full bg-paper-raised transition-transform group-aria-checked:translate-x-2.5" />
+        {/* The knob is a solid object, so it takes the opaque surface rather than the
+            glass one — a translucent switch handle reads as broken. */}
+        <span className="absolute top-0.5 left-0.5 size-2.5 rounded-full bg-paper-solid transition-transform group-aria-checked:translate-x-2.5" />
       </span>
       Recruiter mode
     </button>
