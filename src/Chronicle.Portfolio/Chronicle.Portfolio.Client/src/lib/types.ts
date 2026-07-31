@@ -192,6 +192,9 @@ export interface TimelineItem {
   status: string | null;
   category: string | null;
   link: string | null;
+  /** A picture for the card. Projects use their first screenshot; others are null. */
+  imageUrl: string | null;
+  videoUrl: string | null;
   highlights: string[];
   techStack: string[];
   tags: string[];

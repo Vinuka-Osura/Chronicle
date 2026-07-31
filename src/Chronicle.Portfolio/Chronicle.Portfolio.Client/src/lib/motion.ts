@@ -35,8 +35,8 @@ export function useMotionAllowed(): boolean {
  */
 export const EASE_OUT_QUIET = [0.16, 1, 0.3, 1] as const;
 
-/** Distances are small on purpose. Motion that travels far reads as a page still loading. */
-export const RISE = 12;
+/** Small on purpose. Motion that travels far reads as a page still loading. */
+export const RISE = 8;
 
 export const cardVariants = {
   hidden: { opacity: 0, y: RISE },
@@ -52,14 +52,17 @@ export const cardVariants = {
 } as const;
 
 /**
- * Stagger, capped.
+ * Stagger, capped hard.
  *
- * A fixed per-item delay looks considered for six cards and broken for forty — the last
- * one arrives two seconds after the first, long after the reader has started scrolling.
- * Dividing a fixed budget by the count keeps the whole sequence inside 240ms however
- * many there are.
+ * The first version budgeted 240ms across the set, which still read as the page loading
+ * rather than as choreography — you could watch the cards arrive, and watching content
+ * arrive is waiting. 120ms total is under the threshold where a sequence stops looking
+ * sequential and starts looking like one movement.
+ *
+ * A fixed per-item delay is worse at any budget: considered for six cards, broken for
+ * forty, where the last lands seconds after the reader has moved on.
  */
 export function staggerFor(count: number): number {
-  const TOTAL_MS = 240;
-  return count > 0 ? Math.min(0.05, TOTAL_MS / 1000 / count) : 0;
+  const TOTAL_MS = 120;
+  return count > 0 ? Math.min(0.025, TOTAL_MS / 1000 / count) : 0;
 }

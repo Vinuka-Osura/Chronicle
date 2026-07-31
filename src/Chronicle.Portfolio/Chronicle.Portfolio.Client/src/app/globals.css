@@ -385,8 +385,8 @@
     opacity: 0;
     transform: translate3d(0, 12px, 0);
     transition:
-      opacity 460ms var(--ease-out-quiet),
-      transform 460ms var(--ease-out-quiet);
+      opacity 340ms var(--ease-out-quiet),
+      transform 340ms var(--ease-out-quiet);
   }
 
   [data-reveal="ready"] [data-rise].is-visible {
@@ -400,11 +400,11 @@
     at five: past that the delay is longer than the animation and the last item
     looks broken rather than choreographed.
   */
-  [data-reveal="ready"] [data-rise="1"] { transition-delay: 60ms; }
-  [data-reveal="ready"] [data-rise="2"] { transition-delay: 120ms; }
-  [data-reveal="ready"] [data-rise="3"] { transition-delay: 180ms; }
-  [data-reveal="ready"] [data-rise="4"] { transition-delay: 240ms; }
-  [data-reveal="ready"] [data-rise="5"] { transition-delay: 300ms; }
+  [data-reveal="ready"] [data-rise="1"] { transition-delay: 40ms; }
+  [data-reveal="ready"] [data-rise="2"] { transition-delay: 80ms; }
+  [data-reveal="ready"] [data-rise="3"] { transition-delay: 120ms; }
+  [data-reveal="ready"] [data-rise="4"] { transition-delay: 160ms; }
+  [data-reveal="ready"] [data-rise="5"] { transition-delay: 200ms; }
 }
 
 /*
@@ -603,269 +603,6 @@
 }
 
 /*
-  ── Timeline ──────────────────────────────────────────────────────────────────
-  The signature page. Two tracks either side of one spine above lg; a single
-  column with the spine on the left below it, because two ~350px card columns
-  plus a spine is worse than one column at tablet width.
-*/
-@layer components {
-  .timeline-era {
-    position: relative;
-  }
-
-  /* The spine. Drawn with transform so the reveal stays on the compositor -
-     stroke-dashoffset would repaint every frame. */
-  .timeline-spine {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0.4375rem;
-    width: 1px;
-    background: var(--color-rule);
-    transform-origin: top;
-  }
-
-  /*
-    Scroll-driven animation, gated on support rather than left to chance.
-
-    Without the guard, a browser that does not understand animation-timeline falls back
-    to the document timeline with an unspecified duration - which happens to end in the
-    right place, but by accident. Gating it means unsupported browsers simply get a
-    fully drawn spine and fully visible cards, which is the correct static result.
-  */
-  @supports (animation-timeline: scroll()) {
-    @media (prefers-reduced-motion: no-preference) {
-      .timeline-spine {
-        animation: timeline-spine-draw linear both;
-        animation-timeline: scroll(root block);
-        animation-range: 0 60%;
-      }
-    }
-  }
-
-  @keyframes timeline-spine-draw {
-    from {
-      transform: scaleY(0);
-    }
-    to {
-      transform: scaleY(1);
-    }
-  }
-
-  .timeline-anchor {
-    color: inherit;
-    text-decoration: none;
-  }
-
-  .timeline-anchor:hover {
-    color: var(--color-signal);
-  }
-
-  .timeline-era-band {
-    position: relative;
-    margin-block: 2.5rem 1.25rem;
-    padding-inline-start: 2rem;
-  }
-
-  .timeline-era-band::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0;
-    top: 0.5rem;
-    width: 0.875rem;
-    height: 2px;
-    background: var(--color-signal);
-  }
-
-  .timeline-year {
-    position: relative;
-  }
-
-  .timeline-year-marker {
-    padding-inline-start: 2rem;
-    margin-block: 1.5rem 0.75rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
-    color: var(--color-ink-faint);
-  }
-
-  .timeline-items {
-    display: grid;
-    gap: 0.75rem;
-    padding-inline-start: 2rem;
-    list-style: none;
-  }
-
-  .timeline-node {
-    position: relative;
-  }
-
-  /* The dot sits on the spine. Content-based so the glyph comes from the markup. */
-  .timeline-dot {
-    position: absolute;
-    inset-inline-start: -2rem;
-    top: 0.85rem;
-    display: grid;
-    place-items: center;
-    width: 0.875rem;
-    height: 0.875rem;
-    font-size: 0.6rem;
-    line-height: 1;
-    color: var(--color-signal);
-    background: var(--color-paper);
-    border-radius: 999px;
-  }
-
-  .timeline-dot::before {
-    content: attr(data-glyph);
-  }
-
-  .timeline-dot.is-future {
-    color: var(--color-ink-faint);
-  }
-
-  .timeline-today {
-    position: relative;
-    margin-block: 2rem;
-    padding-inline-start: 0;
-  }
-
-  .timeline-today::before {
-    content: "";
-    position: absolute;
-    inset-inline: -0.5rem 0;
-    top: 1.1rem;
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      var(--color-signal),
-      color-mix(in oklab, var(--color-signal) 20%, transparent)
-    );
-  }
-
-  .timeline-today-dot {
-    position: absolute;
-    inset-inline-start: -2rem;
-    top: 0.7rem;
-    width: 0.875rem;
-    height: 0.875rem;
-    border-radius: 999px;
-    background: var(--color-signal);
-    box-shadow: 0 0 0 3px var(--color-paper);
-  }
-
-  /* The only looping animation on this page. A second one would cost this its meaning. */
-  @media (prefers-reduced-motion: no-preference) {
-    .timeline-today-dot {
-      animation: timeline-now 2.4s ease-in-out infinite;
-    }
-  }
-
-  @keyframes timeline-now {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.45;
-    }
-  }
-
-  /* Two tracks above lg. Career left, life right, sharing the centre spine. */
-  @media (width >= 64rem) {
-    .timeline-spine {
-      left: 50%;
-    }
-
-    .timeline-era-band,
-    .timeline-year-marker {
-      padding-inline-start: 0;
-      text-align: center;
-    }
-
-    .timeline-era-band::before {
-      inset-inline-start: 50%;
-      translate: -50% 0;
-      top: -0.75rem;
-      width: 2rem;
-    }
-
-    .timeline-items {
-      grid-template-columns: 1fr 1fr;
-      column-gap: 3.5rem;
-      padding-inline-start: 0;
-    }
-
-    .timeline-node[data-track="career"] .timeline-dot {
-      inset-inline-start: auto;
-      inset-inline-end: -2.1rem;
-    }
-
-    .timeline-node[data-track="life"] .timeline-dot {
-      inset-inline-start: -2.1rem;
-    }
-
-    .timeline-today {
-      grid-column: 1 / -1;
-      text-align: center;
-    }
-
-    .timeline-today::before {
-      inset-inline: 0;
-    }
-
-    .timeline-today-dot {
-      inset-inline-start: 50%;
-      translate: -50% 0;
-    }
-  }
-
-  /*
-    Card entrance, driven by an IntersectionObserver rather than animation-timeline.
-
-    The scroll-driven CSS version only ran on Chromium 115+, so the page animated in one
-    browser and sat still in another depending on which version happened to be installed.
-    A class toggled from JavaScript behaves identically everywhere.
-
-    The hidden state applies only when [data-reveal="ready"] is present, which the
-    reveal component sets on mount. No JavaScript means no attribute means every card is
-    simply visible — never stuck at opacity zero.
-  */
-  [data-reveal="ready"] .timeline-node > article,
-  [data-reveal="ready"] .timeline-today {
-    opacity: 0;
-    transform: translateY(14px);
-    transition:
-      opacity 520ms var(--ease-out-quiet),
-      transform 520ms var(--ease-out-quiet);
-  }
-
-  [data-reveal="ready"] .timeline-node.is-visible > article,
-  [data-reveal="ready"] .timeline-today.is-visible {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* On the two-track layout each card arrives from its own side of the spine, so the
-     movement reinforces which track it belongs to instead of being decoration. */
-  @media (width >= 64rem) {
-    [data-reveal="ready"] .timeline-node[data-track="career"] > article {
-      transform: translate3d(-18px, 10px, 0);
-    }
-
-    [data-reveal="ready"] .timeline-node[data-track="life"] > article {
-      transform: translate3d(18px, 10px, 0);
-    }
-
-    [data-reveal="ready"] .timeline-node.is-visible > article {
-      transform: none;
-    }
-  }
-
-}
-
-/*
   Lens filtering, applied by CSS from the data-lens attribute the pre-paint script sets.
 
   Doing it here rather than in React means a returning visitor with a narrow lens never
@@ -901,27 +638,23 @@
 
 /* Recruiter Mode: one dense column, no spine, no motion, no decoration. */
 @layer utilities {
-  [data-recruiter="on"] .timeline-spine,
-  [data-recruiter="on"] .timeline-dot,
-  [data-recruiter="on"] .timeline-today-dot {
+  /* Recruiter Mode: the path, the dots and the depth are atmosphere. What is left
+     is a dense list, which is what someone scanning for evidence wants. The rest
+     of the timeline's own Recruiter rules live in timeline.css beside the styles
+     they switch off. */
+  [data-recruiter="on"] .timeline-path,
+  [data-recruiter="on"] .timeline-slot::before {
     display: none;
   }
 
   [data-recruiter="on"] .timeline-items {
-    grid-template-columns: 1fr;
-    padding-inline-start: 0;
-    gap: 0.35rem;
+    gap: 0.75rem;
   }
 
-  [data-recruiter="on"] .timeline-era-band,
-  [data-recruiter="on"] .timeline-year-marker {
-    padding-inline-start: 0;
-    text-align: start;
-    margin-block: 1.25rem 0.5rem;
-  }
-
-  [data-recruiter="on"] .timeline-node > article {
-    padding: 0.6rem 0.75rem;
+  [data-recruiter="on"] .timeline-slot {
+    width: 100%;
+    margin: 0;
+    padding-left: 0;
   }
 }
 

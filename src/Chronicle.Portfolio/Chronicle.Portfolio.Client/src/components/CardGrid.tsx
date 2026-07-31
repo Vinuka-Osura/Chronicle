@@ -62,12 +62,14 @@ export function CardGrid<T>({
             animate="visible"
             exit="exit"
             transition={{
-              duration: 0.32,
+              // Quick. At 320ms the arrival was still visible as an arrival; the point
+              // is that the set has changed, not that each card made an entrance.
+              duration: 0.22,
               ease: EASE_OUT_QUIET,
               delay: index * stagger,
               // The reflow is quicker than the fade: the grid should look settled before
               // the arriving card finishes, not still shuffling underneath it.
-              layout: { duration: 0.22, ease: EASE_OUT_QUIET },
+              layout: { duration: 0.2, ease: EASE_OUT_QUIET },
             }}
           >
             {children(item)}

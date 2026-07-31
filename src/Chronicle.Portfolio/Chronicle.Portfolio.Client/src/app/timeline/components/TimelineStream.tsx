@@ -1,12 +1,10 @@
 import type { Timeline, TimelineEra, TimelineItem } from "@/lib/types";
-import { TimelineNode } from "./TimelineNode";
-import { TimelineReveal } from "./TimelineReveal";
+import { TimelineCard } from "./TimelineCard";
 
 /**
- * Groups items into eras, then years within an era, preserving chronological order and
- * inserting the today boundary at the right place.
+ * Groups items into eras, then years within an era, preserving chronological order.
  *
- * Items with no era are not dropped — they collect under a null-era group so a gap in
+ * Items with no era are not dropped — they collect under a null-era group, so a gap in
  * the era list can never lose content.
  */
 export interface EraGroup {
@@ -42,190 +40,105 @@ export function groupByEra(timeline: Timeline): EraGroup[] {
 
 const itemKey = (item: TimelineItem) => `${item.type}-${item.date}-${item.title}`;
 
+/**
+ * The timeline as a journey rather than a list.
+ *
+ * Every card, the path and the era names move on scroll, and all of it is CSS —
+ * `timeline.css` holds the motion. Nothing here measures anything or runs per frame,
+ * which is what keeps this smooth with forty cards on a phone.
+ *
+ * Layout is one column below `lg` and two tracks either side of the path above it, with
+ * career on the left and life on the right. At narrow widths two ~350px columns plus a
+ * path is worse than one column, so the tracks merge and the card's own glyph carries
+ * which side it came from.
+ */
 export function TimelineStream({ timeline }: { timeline: Timeline }) {
   const groups = groupByEra(timeline);
   const today = timeline.today;
 
-  // The first future item is where the boundary goes, so it lands in correct
-  // chronological position rather than pinned somewhere arbitrary.
-  //
-  // Resolved to a key up front rather than tracked with a mutable flag during the map:
-  // reassigning a variable mid-render is unsafe once React can pause and resume a render,
-  // and react-hooks/immutability is right to reject it.
+  // The boundary goes before the first future item, so it lands in true chronological
+  // position. Resolved to a key up front rather than tracked with a mutable flag during
+  // the map: reassigning mid-render is unsafe once React can pause and resume.
   const firstFuture = timeline.items.find((i) => i.date > today);
   const boundaryKey = firstFuture ? itemKey(firstFuture) : null;
 
   return (
-    <div id="timeline-start" data-timeline className="relative">
-      <TimelineReveal />
-
-      {/* The spine. Decorative: the ordered lists below carry the actual structure. */}
-      <span aria-hidden className="timeline-spine" />
+    <div id="timeline-start" data-timeline className="timeline-stage relative">
+      <div className="timeline-path" aria-hidden />
 
       {groups.map((group) => (
         <section
-          key={group.era?.id ?? "no-era"}
+          key={group.era?.id ?? "unplaced"}
+          className="timeline-era relative"
           aria-labelledby={group.era ? `era-${group.era.id}` : undefined}
-          className="timeline-era"
         >
-          {group.era ? (
-            <header
-              id={`era-${group.era.id}`}
-              data-era-marker={group.era.id}
-              className="timeline-era-band scroll-mt-32"
-            >
-              {/*
-                The heading links to its own id, so clicking a chapter puts it in the
-                address bar. Native anchor behaviour: no JavaScript, and it works from a
-                pasted URL on first load.
-              */}
-              <h2 className="text-section font-display font-semibold text-ink">
-                <a href={`#era-${group.era.id}`} className="timeline-anchor">
-                  {group.era.name}
-                </a>
-              </h2>
-              <p className="font-mono text-[0.7rem] tracking-[0.12em] text-ink-faint uppercase">
-                {group.era.startDate.slice(0, 4)} —{" "}
-                {group.era.endDate ? group.era.endDate.slice(0, 4) : "present"}
-              </p>
-              {group.era.tagline && (
-                <p className="rm-hide mt-1 max-w-prose text-sm text-ink-soft">
-                  {group.era.tagline}
-                </p>
-              )}
-            </header>
-          ) : (
-            <p className="timeline-era-band font-mono text-xs tracking-[0.14em] text-ink-faint uppercase">
-              Before the first chapter
-            </p>
+          {group.era && (
+            <>
+              {/* Decorative, and enormous. The chapter name you are inside, drifting
+                  behind the content at a different rate — which is most of the reason
+                  the scene reads as having depth. */}
+              <span className="timeline-era-ghost" aria-hidden>
+                {group.era.name}
+              </span>
+
+              <header className="timeline-era-head">
+                <h2
+                  id={`era-${group.era.id}`}
+                  className="text-section font-semibold text-ink"
+                >
+                  <a href={`#era-${group.era.id}`} className="hover:text-signal">
+                    {group.era.name}
+                  </a>
+                </h2>
+                {group.era.tagline && (
+                  <p className="text-sm text-ink-soft">{group.era.tagline}</p>
+                )}
+              </header>
+            </>
           )}
 
-          {group.years.map((yearGroup) => {
-            // When every item in a year is the same type, the lens CSS can collapse the
-            // year heading along with them instead of leaving an orphan year number.
-            const types = new Set(yearGroup.items.map((i) => i.type));
-            const onlyType = types.size === 1 ? [...types][0] : undefined;
+          {group.years.map((yearGroup) => (
+            <div key={`${group.era?.id ?? "none"}-${yearGroup.year}`} className="relative">
+              <h3
+                id={`year-${yearGroup.year}`}
+                className="timeline-year"
+                aria-label={`Year ${yearGroup.year}`}
+              >
+                {yearGroup.year}
+              </h3>
 
-            return (
-              <div key={yearGroup.year} className="timeline-year" data-only={onlyType}>
-                <h3
-                  id={`year-${yearGroup.year}`}
-                  data-year-marker={yearGroup.year}
-                  className="timeline-year-marker scroll-mt-32"
-                >
-                  <a href={`#year-${yearGroup.year}`} className="timeline-anchor">
-                    {yearGroup.year}
-                  </a>
-                </h3>
+              <ul className="timeline-items">
+                {yearGroup.items.map((item) => {
+                  const side = item.track === "life" ? "right" : "left";
 
-                <ol className="timeline-items">
-                  {yearGroup.items.map((item) => {
-                    const key = itemKey(item);
-                    return (
-                      <TodayBoundaryWrapper
-                        key={key}
-                        draw={key === boundaryKey}
-                        today={today}
-                        items={timeline.items}
-                      >
-                        <TimelineNode item={item} isFuture={item.date > today} />
-                      </TodayBoundaryWrapper>
-                    );
-                  })}
-                </ol>
-              </div>
-            );
-          })}
+                  return (
+                    <li
+                      key={itemKey(item)}
+                      className="timeline-slot"
+                      data-side={side}
+                      // The lens filter hides by node type, and it hides the whole slot
+                      // so the dot on the path goes with the card rather than being left
+                      // behind pointing at nothing.
+                      data-node={item.type}
+                    >
+                      {itemKey(item) === boundaryKey && (
+                        <p className="timeline-today">
+                          <span aria-hidden>—</span> today <span aria-hidden>—</span>
+                          <span className="timeline-today-note">
+                            everything below is a stated intention
+                          </span>
+                        </p>
+                      )}
+
+                      <TimelineCard item={item} side={side} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </section>
       ))}
-
-      {/* Everything is in the past, so the boundary belongs at the end. */}
-      {!firstFuture && <TodayLine today={today} items={timeline.items} trailing />}
     </div>
-  );
-}
-
-function TodayBoundaryWrapper({
-  draw,
-  today,
-  items,
-  children,
-}: {
-  draw: boolean;
-  today: string;
-  items: TimelineItem[];
-  children: React.ReactNode;
-}) {
-  if (!draw) return <>{children}</>;
-
-  return (
-    <>
-      <TodayLine today={today} items={items} />
-      {children}
-    </>
-  );
-}
-
-/**
- * Anything that happened on today's date in an earlier year.
- *
- * Returns nothing when there is no match, and the caller renders nothing — a feature
- * that manufactures a coincidence is worse than one that waits for a real one.
- */
-function onThisDay(items: TimelineItem[], today: string) {
-  const monthDay = today.slice(5);
-  const thisYear = today.slice(0, 4);
-
-  return items
-    .filter((i) => i.date.slice(5) === monthDay && i.date.slice(0, 4) !== thisYear)
-    .map((i) => ({
-      item: i,
-      yearsAgo: Number(thisYear) - Number(i.date.slice(0, 4)),
-    }))
-    .sort((a, b) => a.yearsAgo - b.yearsAgo);
-}
-
-function TodayLine({
-  today,
-  items,
-  trailing = false,
-}: {
-  today: string;
-  items: TimelineItem[];
-  trailing?: boolean;
-}) {
-  const label = new Date(today).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-
-  const anniversaries = onThisDay(items, today);
-
-  return (
-    <li id="timeline-today" className="timeline-today col-span-full scroll-mt-32 list-none">
-      <span aria-hidden className="timeline-today-dot" />
-      <p className="font-mono text-[0.7rem] tracking-[0.16em] text-signal uppercase">
-        You are here
-      </p>
-      <p className="text-sm text-ink-soft">{label}</p>
-
-      {anniversaries.length > 0 && (
-        <p className="rm-hide mt-1 text-xs text-ink-faint">
-          {anniversaries.map(({ item, yearsAgo }) => (
-            <span key={`${item.type}-${item.date}`} className="block">
-              {yearsAgo === 1 ? "One year ago today" : `${yearsAgo} years ago today`} —{" "}
-              {item.title}
-            </span>
-          ))}
-        </p>
-      )}
-
-      {!trailing && (
-        <p id="timeline-future" className="rm-hide mt-1 text-xs text-ink-faint">
-          Everything below is a stated goal, not an achievement.
-        </p>
-      )}
-    </li>
   );
 }

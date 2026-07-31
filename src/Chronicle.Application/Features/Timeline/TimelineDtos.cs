@@ -41,6 +41,20 @@ public sealed record TimelineItemDto(
     string? Status,
     string? Category,
     string? Link,
+
+    /// <summary>
+    /// A picture for the card, where the item has one. Projects use their first
+    /// screenshot; everything else is null.
+    /// </summary>
+    /// <remarks>
+    /// The timeline is meant to read as travelling through a life, and a wall of text
+    /// cards does not. An image is the difference between a CV entry and a memory.
+    /// </remarks>
+    string? ImageUrl,
+
+    /// <summary>A demo worth watching, if the project has one.</summary>
+    string? VideoUrl,
+
     IReadOnlyList<string> Highlights,
     IReadOnlyList<string> TechStack,
     IReadOnlyList<string> Tags,

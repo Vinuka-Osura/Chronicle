@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTimeline } from "./api";
+import "./timeline.css";
 import { ContextBar } from "./components/ContextBar";
 import { Scrubber } from "./components/Scrubber";
 import { TimelineStream } from "./components/TimelineStream";

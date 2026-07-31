@@ -1,0 +1,470 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  The Timeline
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  The brief was that scrolling this should feel like travelling through a life
+  rather than reading a list. A bordered box beside a rule cannot do that however
+  well the type is set, so the cards move through DEPTH: they approach from far
+  off, arrive, and recede behind you as you pass.
+
+  Driven by `animation-timeline: view()` — native scroll-driven animation. Every
+  frame runs on the compositor with no JavaScript at all, which is the only way
+  this stays smooth on a phone with forty cards on the page. Around 84% of
+  browsers in 2026; the @supports fallback below leaves everything visible and
+  still.
+
+  Three rules the motion obeys:
+    - transform and opacity only. Anything else means layout or paint per frame.
+    - It resolves. Nothing loops, nothing breathes, nothing waits to be noticed.
+    - prefers-reduced-motion and Recruiter Mode switch it off entirely, not
+      partially.
+*/
+
+/* ── The stage ──────────────────────────────────────────────────────────────
+   Perspective has to live on the ancestor, not on the moving element, or every
+   card gets its own vanishing point and the depth reads as a fisheye. */
+.timeline-stage {
+  perspective: 1600px;
+  perspective-origin: 50% 45%;
+  /* Cards rotate out of the plane, so the stage must not clip them sideways
+     while still never letting the page scroll horizontally. */
+  overflow-x: clip;
+}
+
+/* ── The path ───────────────────────────────────────────────────────────────
+   Not a border. A line with light travelling down it, so the eye has something
+   to follow between cards. */
+.timeline-path {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.125rem;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--color-rule) 8%,
+    var(--color-rule) 92%,
+    transparent
+  );
+}
+
+@media (width >= 64rem) {
+  .timeline-path {
+    left: 50%;
+    transform: translateX(-1px);
+  }
+}
+
+/*
+  The lit section of the path tracks the scroll position. `scroll()` rather than
+  `view()` because this is one long element whose progress is the page's, not its
+  own visibility.
+*/
+.timeline-path::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--color-signal),
+    color-mix(in oklch, var(--color-signal) 30%, transparent)
+  );
+  transform-origin: top;
+  transform: scaleY(0);
+  animation: timeline-path-fill linear both;
+  animation-timeline: scroll(root block);
+}
+
+@keyframes timeline-path-fill {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* ── Era headings ───────────────────────────────────────────────────────────
+   The name of the chapter you are currently inside, pinned while its contents
+   pass. This is what turns a list of years into somewhere you have arrived. */
+.timeline-era-head {
+  position: sticky;
+  top: 4.5rem;
+  z-index: 2;
+  padding: 0.5rem 0;
+  /* The page wash shows through, so pinned type never sits on a hard band. */
+  background: linear-gradient(
+    to bottom,
+    var(--color-paper) 55%,
+    color-mix(in oklch, var(--color-paper) 60%, transparent)
+  );
+  backdrop-filter: blur(6px);
+}
+
+/*
+  The era name again, enormous and barely there, behind everything. Parallax: it
+  drifts slower than the cards, which is most of why a scene reads as having
+  depth at all.
+*/
+.timeline-era-ghost {
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  z-index: 0;
+  translate: -50% 0;
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 16vw, 13rem);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  color: color-mix(in oklch, var(--color-ink) 4.5%, transparent);
+  animation: timeline-ghost-drift linear both;
+  animation-timeline: view();
+  animation-range: cover 0% cover 100%;
+}
+
+@keyframes timeline-ghost-drift {
+  from {
+    transform: translate3d(0, 14%, 0);
+  }
+  to {
+    transform: translate3d(0, -14%, 0);
+  }
+}
+
+/* ── The cards ──────────────────────────────────────────────────────────────
+   The whole point. A card starts far away and tipped back, comes forward into
+   the plane of the screen, holds while it is read, then falls back and away. */
+.timeline-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+
+  animation:
+    timeline-approach linear both,
+    timeline-depart linear both;
+  animation-timeline: view(), view();
+  /*
+    Approach across the first third of the pass, depart across the last quarter.
+    The gap between them is deliberate: a card that is never simply *still* is a
+    card nobody can read.
+  */
+  animation-range:
+    entry 0% cover 34%,
+    cover 76% exit 100%;
+}
+
+@keyframes timeline-approach {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--from-x, 0), 3.5rem, -22rem) rotateX(14deg)
+      rotateY(var(--from-y, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0) rotateY(0);
+  }
+}
+
+@keyframes timeline-depart {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, -2rem, -14rem) rotateX(-9deg);
+  }
+}
+
+/* Each side arrives from its own side of the path, so the movement reinforces
+   which track the card belongs to instead of being decoration. */
+@media (width >= 64rem) {
+  .timeline-card[data-side="left"] {
+    --from-x: -3rem;
+    --from-y: 9deg;
+  }
+
+  .timeline-card[data-side="right"] {
+    --from-x: 3rem;
+    --from-y: -9deg;
+  }
+}
+
+/* ── Card surface ───────────────────────────────────────────────────────── */
+.timeline-card-hit,
+.timeline-card {
+  display: block;
+  border-radius: 0.875rem;
+}
+
+.timeline-card-hit {
+  color: inherit;
+  text-decoration: none;
+}
+
+.timeline-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-rule);
+  box-shadow: var(--shadow-raised);
+  transition:
+    box-shadow 260ms var(--ease-out-quiet),
+    border-color 260ms var(--ease-out-quiet);
+  z-index: -1;
+}
+
+@media (hover: hover) {
+  .timeline-card:hover::before {
+    box-shadow: var(--shadow-lifted);
+    border-color: color-mix(in oklch, var(--color-signal) 45%, var(--color-rule));
+  }
+}
+
+.timeline-card[data-future="true"]::before {
+  /* A goal must never be mistakable for a thing that happened. */
+  border-style: dashed;
+  background: color-mix(in oklch, var(--color-paper-raised) 70%, transparent);
+  box-shadow: none;
+}
+
+/* ── Media ──────────────────────────────────────────────────────────────────
+   Big enough to be worth looking at. A picture shrunk to a thumbnail is an
+   apology for including it. */
+.timeline-card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 0.875rem 0.875rem 0 0;
+  background: color-mix(in oklch, var(--color-ink) 6%, transparent);
+}
+
+.timeline-card-media img {
+  transition: transform 600ms var(--ease-out-quiet);
+}
+
+@media (hover: hover) {
+  .timeline-card:hover .timeline-card-media img {
+    transform: scale(1.04);
+  }
+}
+
+.timeline-card-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  color: white;
+  background: color-mix(in oklch, black 28%, transparent);
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.5);
+}
+
+/* ── Card contents ──────────────────────────────────────────────────────── */
+.timeline-card-body {
+  padding: 1rem 1.15rem 1.15rem;
+}
+
+.timeline-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+
+.timeline-card-glyph {
+  color: var(--color-signal);
+}
+
+.timeline-card-goal {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 0.4rem;
+}
+
+.timeline-card-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--color-ink);
+}
+
+.timeline-card-subtitle {
+  margin-top: 0.1rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+.timeline-card-summary {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.timeline-card-stack,
+.timeline-card-links {
+  margin-top: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-ink-faint);
+}
+
+.timeline-card-links li + li {
+  margin-top: 0.15rem;
+}
+
+.timeline-card-via {
+  color: var(--color-signal);
+}
+
+/* ── Off switches ───────────────────────────────────────────────────────────
+   Both of these stop the motion rather than shortening it, and both leave every
+   card fully visible and in place. Same for a browser without scroll-driven
+   animation: no timeline means the keyframes never apply, and the static layout
+   is what remains. */
+@supports not (animation-timeline: view()) {
+  .timeline-card,
+  .timeline-era-ghost,
+  .timeline-path::after {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-card,
+  .timeline-era-ghost,
+  .timeline-path::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+[data-recruiter="on"] .timeline-card,
+[data-recruiter="on"] .timeline-era-ghost,
+[data-recruiter="on"] .timeline-path::after {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Recruiter Mode wants density, not atmosphere. */
+[data-recruiter="on"] .timeline-era-ghost,
+[data-recruiter="on"] .timeline-card-media {
+  display: none;
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────────
+   One column on a phone with the path down the left; two tracks either side of
+   a centred path above lg. Two ~350px columns plus a path is worse than one
+   column at tablet width, so the tracks merge and the glyph carries the track. */
+
+.timeline-era {
+  padding-bottom: 4rem;
+}
+
+.timeline-year {
+  position: relative;
+  z-index: 1;
+  margin: 2.5rem 0 1rem;
+  padding-left: 3rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  color: var(--color-ink-faint);
+}
+
+.timeline-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline-slot {
+  position: relative;
+  z-index: 1;
+  padding-left: 3rem;
+}
+
+/* The dot where the card meets the path. */
+.timeline-slot::before {
+  content: "";
+  position: absolute;
+  top: 1.4rem;
+  left: 0.875rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--color-paper);
+  border: 2px solid var(--color-signal);
+}
+
+.timeline-today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-signal);
+}
+
+.timeline-today-note {
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--color-ink-faint);
+}
+
+@media (width >= 64rem) {
+  .timeline-year {
+    padding-left: 0;
+    text-align: center;
+  }
+
+  .timeline-slot {
+    width: calc(50% - 2.75rem);
+    padding-left: 0;
+  }
+
+  .timeline-slot[data-side="left"] {
+    margin-right: auto;
+  }
+
+  .timeline-slot[data-side="right"] {
+    margin-left: auto;
+  }
+
+  .timeline-slot[data-side="left"]::before {
+    left: auto;
+    right: -3.05rem;
+  }
+
+  .timeline-slot[data-side="right"]::before {
+    left: -3.05rem;
+  }
+
+  .timeline-today {
+    justify-content: center;
+  }
+}

@@ -63,6 +63,13 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
                 p.EndDate,
                 Skills = p.TechStack.Select(s => s.Name).ToList(),
                 Tags = p.Tags.Select(t => t.Name).ToList(),
+                // The card's picture. First by sort order, which is the one the operator
+                // deliberately put first rather than whichever row came back first.
+                ImageUrl = p.Screenshots
+                    .OrderBy(m => m.SortOrder)
+                    .Select(m => m.Url)
+                    .FirstOrDefault(),
+                p.VideoUrl,
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -148,6 +155,7 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
             items.Add(new TimelineItemDto(
                 "experience", "career", EraFor(eras, e.StartDate), e.StartDate, e.EndDate,
                 e.Role, e.Company, e.Summary, null, null, null, null,
+                null, null,
                 e.Highlights, e.Skills, [], connections));
         }
 
@@ -171,6 +179,7 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
             items.Add(new TimelineItemDto(
                 "project", "career", EraFor(eras, p.StartDate), p.StartDate, p.EndDate,
                 p.Title, null, p.Pitch, p.Slug, null, null, null,
+                p.ImageUrl, p.VideoUrl,
                 [], p.Skills, p.Tags, connections));
         }
 
@@ -200,6 +209,7 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
             items.Add(new TimelineItemDto(
                 "certification", "life", EraFor(eras, c.IssueDate), c.IssueDate, null,
                 c.Name, c.Issuer, null, null, null, null, c.CredentialUrl,
+                null, null,
                 [], c.Skills, [], connections));
         }
 
@@ -208,6 +218,7 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
             items.Add(new TimelineItemDto(
                 "milestone", "life", EraFor(eras, m.Date), m.Date, m.EndDate,
                 m.Title, null, m.Description, null, null, m.Category.ToString(), m.Link,
+                null, null,
                 [], [], [], []));
         }
 
@@ -218,6 +229,7 @@ public sealed class GetTimelineQueryHandler(IChronicleDbContext db, IDateTimePro
             items.Add(new TimelineItemDto(
                 "roadmap", "career", EraFor(eras, r.TargetDate), r.TargetDate, null,
                 r.Title, null, r.Description, null, r.Status.ToString(), null, null,
+                null, null,
                 [], [], [], []));
         }
 
