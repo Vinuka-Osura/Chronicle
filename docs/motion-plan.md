@@ -1,247 +1,234 @@
-# Motion and UI plan — the second pass
+# Motion and UI plan — revision 2
 
-Written after the references were rejected as "still boring". This is the plan for
-approval **before** any of it is built, because building a visual phase blind has now
-been wrong twice.
+Revised after the budget constraint was lifted and Recruiter Mode was named as the
+fallback. Revision 1 was a set of tasteful moves; this one commits to a signature.
 
----
-
-## 1. What I got wrong
-
-My motion was **incremental**: things fade a little and translate a little. Correct
-engineering, no character. The references share something my version has none of:
-
-**Motion that reads as a mechanism, not as decoration.** In Far Cry 2 the menu is a map
-and a notebook — you are not navigating a UI, you are operating an object. On bamlab and
-trionn, scrolling does not move a page past you; it **advances a state** inside a scene
-that is holding still.
-
-That is the difference, and it is not a matter of longer durations or bigger distances.
-It is a different model of what scrolling *is*.
-
-The second mistake: I optimised for cost before character. Native scroll-driven CSS is
-the cheapest correct thing, so I used it everywhere — and cheap-and-correct is exactly
-what "normal boring" means.
+Approval before building, because building a visual phase blind has been wrong twice.
 
 ---
 
-## 2. The idea everything hangs off
+## 1. What was wrong, twice
 
-**The site behaves like an instrument.**
+**Pass one** was incremental: things faded a little, moved a little. Correct engineering,
+no character.
 
-It already claims to be mission control. So nothing should *fade in* — things should
-**acquire**, the way a readout locks on: a sweep, a settle, a confirmation. The Timeline
-is not a page you scroll, it is a mechanism you operate with a scrub bar.
+**Revision 1 of this plan** was better but still hedged. I was budgeting kilobytes on a
+personal portfolio, and every one of those hedges cost character. Cheap-and-correct is
+exactly what "normal boring" means.
 
-This matters because "add nice animations" with no organising idea is precisely how a
-site ends up generic. Every move below is justified by that one sentence, and anything
-that cannot be is not in the plan.
-
----
-
-## 3. The foundation: smooth scroll
-
-**Add Lenis (~3KB gzipped).**
-
-This is the single biggest difference between my version and every site referenced, and
-nothing else in this plan lands without it. Native scroll is stepped and mechanical;
-inertial scroll makes every downstream animation feel expensive because motion continues
-and decays rather than stopping dead with the wheel.
-
-It also unlocks **scroll velocity** as an input, which §4 uses repeatedly.
-
-Costs: ~3KB, and one `requestAnimationFrame` loop. It respects
-`prefers-reduced-motion` by disabling itself, and Recruiter Mode will turn it off.
+The references share one thing my work does not: **scrolling advances a state inside a
+scene that is holding still, rather than moving a page past you.** Far Cry 2's notebook
+is the same idea — you are not navigating a UI, you are operating an object.
 
 ---
 
-## 4. The motion vocabulary
+## 2. The organising idea
 
-Six named moves, used everywhere, so the site feels like one thing. Currently every page
-invents its own entrance.
+**The site is an instrument.**
 
-### A. Mask reveal — replaces every fade
+It already claims to be mission control, so nothing *fades in* — things **acquire**, the
+way a readout locks on. The Timeline is not a page, it is a **transport you operate**.
 
-Content is uncovered by a moving `clip-path` edge rather than changing opacity. Text
-lines wipe up from behind an invisible rule; images uncover from one edge.
+Every move below has to be justifiable by that sentence. "Add nice animations" with no
+organising idea is precisely how a site ends up generic.
 
-*Why:* fading is the cheapest possible reveal and reads as such. A mask reads as
-something being *drawn*, which is the instrument idea, and it is what every reference
-site uses instead of opacity.
+### And one hero moment
 
-### B. Line-split headings
+Award-tier sites are remembered for **one** thing, not for being uniformly polished. bam!
+has its arrowhead. Chronicle's is:
 
-Headings split into lines, each line masked and rising with a 40ms stagger.
+> **The Timeline is a machine.** A scrub bar you drag, era scenes you pass through, and
+> a page that reacts to where the playhead is.
 
-*Why:* a heading arriving as one block is a div moving. Arriving as lines is typesetting,
-and it is the single most recognisable "high-end site" signal there is.
-
-### C. Velocity skew
-
-While scrolling fast, cards skew and scale by a few degrees proportional to scroll
-velocity, settling to zero when it stops.
-
-*Why:* almost free, and it is most of why award-tier sites feel physical — the page has
-mass. Capped hard so it never becomes nausea.
-
-### D. Pinned scenes
-
-Key sections `position: sticky` for a screen or two while their **contents** advance —
-scroll does not move the section, it moves time inside it.
-
-*Why:* this is the Far Cry 2 book. It is the difference between reading a page and
-operating a thing.
-
-### E. Counter and glyph settle
-
-Numbers roll to their value; monospace labels resolve through a brief character scramble.
-
-*Why:* the readout-locking-on idea made literal. Used sparingly — the analytics stat
-tiles and the timeline year markers — because it is a trick that stops being charming the
-fourth time.
-
-### F. Magnetic hover
-
-Buttons and cards translate slightly *toward* the cursor within a small radius.
-
-*Why:* makes a page feel responsive to you rather than waiting for you.
+Everything else is in service of that. If the Timeline is not the thing people mention,
+this has failed regardless of how good the rest looks.
 
 ---
 
-## 5. The cursor ripple
+## 3. Degradation, since Recruiter Mode is the named fallback
 
-**A full-viewport WebGL layer that writes cursor movement into a velocity field, decays
-it, and uses it to displace and tint the ambient light.**
+Recruiter Mode is **opt-in**, so someone on a weak phone who never finds the toggle just
+gets a bad site. The default therefore goes maximal *and* scales itself down
+automatically:
 
-The ambient warm/cool fields already exist as flat CSS gradients. This makes them a
-surface that reacts: moving the cursor pushes colour outward in a ripple that settles.
+| Tier | Detected by | What runs |
+|---|---|---|
+| **Full** | default | Everything below |
+| **Reduced** | `deviceMemory < 4`, `hardwareConcurrency <= 4`, `saveData`, or `2g/3g` | No WebGL. Smooth scroll and reveals stay. |
+| **Still** | `prefers-reduced-motion`, or Recruiter Mode | Nothing moves. Everything visible, instantly. |
 
-*Why this and not brittanychiang's spotlight:* a radial gradient following the pointer is
-a **position** effect — static, and everywhere. A flowmap is a **motion** effect: it
-remembers where you moved and decays, so fast movement leaves a wake and stillness leaves
+Detected once on load, written as `data-motion="full|reduced|still"` on `<html>` by the
+existing pre-paint script, so CSS and JS both read one value and there is no flash.
+
+**This is what lets the default be greedy.** It is not a compromise on the full
+experience; it is the reason the full experience can be uncompromising.
+
+---
+
+## 4. The stack
+
+Constraint lifted, so the choice is now "what is best", not "what is smallest".
+
+| | Why |
+|---|---|
+| **Lenis** | Inertial scroll. The single change everything else depends on — native scroll is stepped, and stepped scroll makes every downstream animation feel cheap. Also gives scroll **velocity** as an input. |
+| **GSAP + ScrollTrigger** | Reversed from revision 1. It is what every referenced site uses, and its pinning and scrubbing are genuinely better than hand-rolled sticky sections for sequences that have to run *backwards* as well as forwards. That reversibility is the part that is painful to write by hand and is exactly what era scenes need. |
+| **Motion** | Stays for component-level enter/exit. Already installed. |
+| **Raw WebGL** | The cursor field and image distortion. Still **not Three.js** — that is 150KB of scene graph for two full-screen quads, and it is the wrong tool, not merely a large one. |
+| **Three.js** | Only if the Software City teaser gets a real 3D preview. Not part of this plan. |
+
+---
+
+## 5. The motion vocabulary
+
+Eight moves, used site-wide, so it reads as one thing rather than eleven pages of
+invention.
+
+**A. Mask reveal** — content uncovered by a moving `clip-path` edge, never opacity.
+Fading is the cheapest reveal and reads as such; a mask reads as something being *drawn*.
+
+**B. Line-split headings** — headings split to lines, each masked and rising on a 40ms
+stagger. A heading arriving as one block is a div moving; arriving as lines is
+typesetting, and it is the most recognisable high-end signal there is.
+
+**C. Velocity skew** — cards skew and scale a few degrees with scroll speed, settling to
+zero. Nearly free, and most of why award sites feel physical: the page has mass.
+
+**D. Pinned scenes** — sections hold still while their contents advance. The notebook.
+
+**E. Glyph acquire** — monospace labels resolve through a brief character scramble;
+numbers roll to value. The readout locking on, made literal. This is the site's verbal
+tic — used on labels and figures only, never on prose.
+
+**F. Magnetic hover** — interactive elements lean toward the cursor within a small
+radius. The page responds to you rather than waiting for you.
+
+**G. Cursor companion** *(new)* — a trailing ring that lags the pointer, grows over
+interactive things, and shows a verb ("open", "drag"). **The system cursor stays** —
+this augments it rather than replacing it, so no affordance or accessibility is lost.
+
+**H. Image displacement on hover** *(new, reversed from revision 1)* — project imagery
+warps under the pointer via a WebGL displacement shader. Reconsidered because the ambient
+field is *background* and this is *on the image*: they occupy different layers and do not
+compete the way I claimed.
+
+---
+
+## 6. The cursor field — decided: **obvious**
+
+You asked me to choose. **Obvious.**
+
+Subtle was the safe answer and safe is what produced two rejected passes. A portfolio's
+job is to be remembered, and an effect nobody notices cannot do that.
+
+Concretely: a full-viewport WebGL layer writing pointer movement into a velocity field
+that decays over ~1.2s. Moving the cursor pushes visible colour through the ambient
+warm/cool fields — a **wake**, not a glow.
+
+Not brittanychiang's spotlight, deliberately: a gradient following the pointer is a
+*position* effect, static and always present. A flowmap is a *motion* effect — it
+remembers where you went and decays, so fast movement leaves a trail and stillness leaves
 nothing. That is the difference between "there is a glow near my mouse" and "the surface
 responded to me".
 
-Implementation: raw WebGL, two ping-pong textures, ~120 lines and ~4KB. **No Three.js**
-— it would be 150KB for a full-screen quad.
-
-Constraints, because a cursor effect is exactly where a portfolio goes wrong:
-- Disabled entirely on touch (no cursor to follow) and under reduced motion / Recruiter
-  Mode.
-- Half-resolution buffer, capped at 30fps, paused when the tab is hidden.
-- Behind everything, at low alpha. **If it is the first thing you notice, it is wrong.**
-- Falls back to today's static gradients if WebGL is unavailable.
+**The one hard limit:** it never reduces text contrast. The field is masked down over
+content columns, so it is loud in the margins and quiet under paragraphs. Obvious is
+about presence, not about making the site harder to read.
 
 ---
 
-## 6. The Timeline
+## 7. The Timeline — the hero
 
-The signature page, and it needs the most.
+### 7a. The transport bar
 
-### 6a. The scrub bar — replacing the column scrubber
+A **persistent line** across the bottom that behaves like a video scrub bar.
 
-A **persistent thin line** across the bottom, behaving like a video scrub bar:
+- Drag the playhead horizontally → travel vertically. A horizontal control driving
+  vertical movement is what makes it read as a *transport* rather than a scrollbar.
+- Era boundaries are ticks; the current era's segment is lit.
+- Hover anywhere → the year at that point.
+- Not dragging → the playhead tracks scroll.
+- Keyboard: arrows step item to item, Home/End to the ends.
+- Scrubbing fast blurs the cards slightly, the way a video scrub does.
 
-- Drag the playhead left/right → the timeline scrolls vertically. A horizontal control
-  driving vertical travel is what makes it read as a *transport* rather than a scrollbar.
-- Era boundaries are ticks along the line; the current era's segment is lit.
-- Hovering anywhere shows the year at that point.
-- The playhead tracks scroll position when not being dragged.
-- Keyboard: arrows step by item, Home/End jump to the ends.
+The columns are gone. They were an information graphic pretending to be a control — they
+showed density but afforded nothing. A line with a playhead says *drag me* without a
+label.
 
-*Why this over the bar-chart columns:* the columns were an information graphic pretending
-to be a control — they showed density but afforded nothing. A line with a playhead says
-"drag me" without a label, and it is the one component that makes the whole page feel
-operable.
+### 7b. Era scenes
 
-### 6b. Era transitions as scenes
+Each era gets a pinned full-bleed title card, held for about a screen of scroll: the name
+sets at display scale, the years count up, the ambient field shifts hue, and the previous
+era's cards clear before the new era's arrive.
 
-Each era gets a pinned title card: the name at full-bleed scale, held for roughly a
-screen of scroll while the previous era's cards clear and the new era's first cards
-arrive. Between eras the ambient light shifts hue slightly.
+Chapters need a **threshold you cross**, not a heading you scroll past. This is the
+single biggest change to how the page feels.
 
-*Why:* this is what "travelling through a life" actually requires. Chapters need a
-threshold you cross, not a heading you scroll past.
+### 7c. Cards
 
-### 6c. Cards, revised
+Depth stays, character changes: cards arrive **along the path** rather than straight out
+of the screen, media uncovers by mask a beat after the card lands, and the still moment
+in the middle stays — a card that is never stationary cannot be read.
 
-Keep the depth approach but change the character: **cards arrive along the path** rather
-than straight out of the screen, with the media revealed by a mask (§4A) a beat after the
-card lands. The still moment stays.
+### 7d. The page reacts to the playhead
 
-### 6d. Media as the anchor
-
-Real project screenshots and video demos, larger than now, with the play affordance
-meaning something — clicking opens the demo rather than the case study.
+Scrubbing to 2021 shifts the whole page's ambient hue to that era's. Small, and it is what
+makes the bar feel connected to the world rather than bolted on.
 
 ---
 
-## 7. Applied per page
+## 8. Recruiter Mode becomes genuinely different
 
-| Page | What changes |
+Your note that the two modes look the same is fair — today it hides some atmosphere and
+tightens spacing. It should be a different **document**:
+
+- No motion, no WebGL, no smooth scroll. Instant.
+- Single dense column, no era scenes, no media.
+- The Timeline collapses to a **dated table** — the same content as a scannable list.
+- Every "read more" becomes the content itself. Fewer clicks, no discovery.
+
+Default: an experience. Recruiter Mode: a document. Right now both are a website.
+
+---
+
+## 9. Applied per page
+
+| Page | Changes |
 |---|---|
-| **Home** | Pinned hero: the headline sets line by line while the status strip acquires. Featured projects arrive on velocity. |
-| **Projects** | Mask reveals on cards; magnetic hover; the tag filter animates the grid rather than snapping. |
-| **Case study** | Pinned architecture diagram that draws as you scroll past it, rather than once on entry. Metrics roll. |
+| **Home** | Pinned hero; headline sets line by line; status strip acquires; featured projects arrive on velocity. |
+| **Timeline** | §7, in full. The hero. |
+| **Projects** | Mask reveals, magnetic hover, WebGL displacement on card imagery, animated filtering. |
+| **Case study** | Architecture diagram pinned and drawing as you scroll it; metrics roll. |
 | **Skills** | Bars grow on entry; category headings line-split. |
-| **Analytics** | Heatmap fills column by column on entry; stat tiles count up. |
-| **Knowledge** | Mask reveals; search results animate in on velocity. |
-| **Timeline** | §6, in full. |
-| **Résumé** | **Nothing.** It is a document. Motion there is noise, and it prints. |
+| **Analytics** | Heatmap fills column by column; stat tiles count up. |
+| **Knowledge** | Mask reveals; results arrive on velocity. |
+| **Résumé** | **Nothing.** It is a document and it prints. |
 
 ---
 
-## 8. Costs, honestly
+## 10. Still not doing, and why
 
-| | Size | Note |
-|---|---|---|
-| Lenis | ~3KB | The foundation. Non-negotiable for this look. |
-| WebGL ripple | ~4KB | Raw WebGL. No Three.js. |
-| Motion | already installed | No new dependency. |
-| **GSAP / ScrollTrigger** | **not adding** | Motion plus native scroll-driven CSS covers it. Adding a second animation engine is 50KB to do what is already there. |
-
-**~7KB total.** That is the entire budget for this, and it is less than one photograph.
-
-Three rules kept from before, because they are what keep this defensible rather than
-indulgent:
-
-1. `transform` and `opacity` only, per frame. Everything else is layout or paint.
-2. Every effect stops completely under `prefers-reduced-motion` and Recruiter Mode.
-   Stops — not shortens.
-3. Nothing loops. Every animation resolves and then holds still.
-
-And one new one: **frame budget measured on a mid-range phone, not this machine.** If the
-timeline drops frames on a five-year-old Android, the effect is not working, however good
-it looks here.
+- **Whole-page horizontal scroll** — fights the scrollbar, breaks trackpads, miserable on
+  mobile. The transport bar gives the same feeling without hijacking scrolling.
+- **Replacing the system cursor** — breaks affordances and hurts accessibility. G augments
+  instead.
+- **A blocking page-load intro** — a recruiter with thirty tabs will not wait through a
+  logo, and every second is a second before your work is visible. The acquire language
+  already gives arrival a character.
 
 ---
 
-## 9. What I am deliberately not proposing
-
-- **A page-load intro animation.** A recruiter with thirty tabs open does not wait
-  through a logo. Every second of it is a second before your work is visible.
-- **Horizontal scroll for the whole timeline.** It fights the scrollbar, breaks on
-  trackpads, and is miserable on mobile. The scrub bar delivers the same "transport"
-  feeling without hijacking scrolling.
-- **A custom cursor replacing the system one.** It breaks affordances and hurts
-  accessibility. Magnetic hover gets the same feeling honestly.
-- **WebGL image distortion on hover.** One effect too many — the ripple already carries
-  the "surface reacts" idea, and repeating it makes both look cheaper.
-
----
-
-## 10. Order, with review points
-
-Staged so you judge direction early rather than after everything is built.
+## 11. Order
 
 | | Stage | Review |
 |---|---|---|
-| 1 | Lenis + velocity + mask reveal + line-split, applied to **Home only** | **Yes — is the character right?** |
-| 2 | Cursor ripple | **Yes — subtle enough?** |
-| 3 | Timeline: scrub bar | **Yes — does it feel operable?** |
-| 4 | Timeline: pinned era scenes + revised cards | **Yes** |
-| 5 | Propagate to the remaining pages | No |
-| 6 | Performance pass on a real phone | Report |
+| 1 | Motion tiers + Lenis + velocity + mask reveal + line-split + glyph acquire — **Home only** | **Yes — is the character right?** |
+| 2 | Cursor field + companion | **Yes — right intensity?** |
+| 3 | Timeline transport bar | **Yes — does it feel operable?** |
+| 4 | Timeline era scenes + cards + hue reaction | **Yes** |
+| 5 | Remaining pages | No |
+| 6 | Recruiter Mode as a document | **Yes** |
+| 7 | Real-phone performance pass | Report |
 
-Stage 1 exists to answer one question — *is this the right character* — before four more
-stages are built on top of it.
+Stage 1 answers one question — *is this the right character* — before six stages are
+built on top of it.
