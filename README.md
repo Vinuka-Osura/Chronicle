@@ -146,6 +146,29 @@ dotnet dotnet-ef migrations add <Name> \
   --output-dir Data/Migrations
 ```
 
+### "The file is locked by: Chronicle.Portfolio.Server"
+
+```
+Could not copy "...\Chronicle.Domain.dll" to "bin\Debug
+et10.0\..."
+Exceeded retry count of 10. The file is locked by: "Chronicle.Portfolio.Server (26644)"
+```
+
+A previous run is still going, holding its dependencies open so the build cannot replace
+them.
+
+```powershell
+./scripts/stop.ps1
+```
+
+That stops only processes whose executable lives inside this repository, plus the Node dev
+server started from the client directory — it matches on path, so nothing belonging to
+another solution is touched.
+
+**Avoiding it:** stop the app with **Ctrl+C in the AppHost's own terminal**. The AppHost
+shuts its children down in order when it is asked politely. A straggler almost always
+means it was force-killed, or its terminal was closed, and never got the chance.
+
 ### Using a database container
 
 Once Docker or Podman is installed:
