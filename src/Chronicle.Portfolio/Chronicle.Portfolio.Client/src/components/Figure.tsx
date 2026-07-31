@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { comparisonBars, readMetric } from "@/lib/metricValue";
 
 /**
  * Figures that arrive rather than appear.
@@ -42,14 +43,21 @@ function motionAllowed() {
  */
 export function Counter({
   value,
+  decimals = 0,
   duration = 1400,
   className = "",
 }: {
   value: number;
+  /** Kept as written, so 2.4 does not count up as 2 and land wrong. */
+  decimals?: number;
   duration?: number;
   className?: string;
 }) {
-  const format = (n: number) => n.toLocaleString("en-GB");
+  const format = (n: number) =>
+    n.toLocaleString("en-GB", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
 
   const [shown, setShown] = useState(value);
   const ref = useRef<HTMLSpanElement>(null);
@@ -83,7 +91,8 @@ export function Counter({
         // Exponential ease-out: most of the distance early, then a long settle. A linear
         // count reads like a loading spinner; this reads like a dial finding its mark.
         const eased = 1 - Math.pow(2, -10 * t);
-        setShown(Math.round(value * (t === 1 ? 1 : eased)));
+        const step_ = 10 ** decimals;
+        setShown(Math.round(value * (t === 1 ? 1 : eased) * step_) / step_);
         if (t < 1) frame = requestAnimationFrame(step);
         else setShown(value);
       };
@@ -96,7 +105,7 @@ export function Counter({
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [value, duration]);
+  }, [value, duration, decimals]);
 
   return (
     <span ref={ref} className={className}>
@@ -109,61 +118,69 @@ export function Counter({
 }
 
 /**
- * A metric that describes a change, animating the change it describes.
+ * A metric value, set as a headline figure.
  *
- * Written for values of the form `"2.4s to 40ms"` — a before and an after. Those are the
- * most valuable numbers on an engineering portfolio and they are the ones a bar chart
- * cannot show, because the two figures are usually in different units. Here the figure
- * simply *is* the transition: it holds the old value, then crosses to the new one.
+ * The number takes display size and the unit is tucked beside it at a fraction of the
+ * size — the difference between "40ms" as one lump of text and a figure with a unit is
+ * most of why a dashboard reads as instrumentation rather than as a table.
  *
- * Any value that does not parse as a transition is rendered verbatim. Guessing would
- * mean showing a number the CMS never said.
+ * Everything here is conditional on what `readMetric` could actually work out. A value
+ * it cannot parse is printed exactly as the CMS holds it, because the alternative —
+ * guessing at a shape — means showing a number nobody wrote.
  */
-export function Transition({ value, className = "" }: { value: string; className?: string }) {
-  const parts = value.split(/\s+to\s+/i);
-  const isTransition = parts.length === 2;
+export function MetricValue({ value }: { value: string }) {
+  const reading = readMetric(value);
+  const bars = comparisonBars(reading);
 
-  const [crossed, setCrossed] = useState(true);
-  const ref = useRef<HTMLSpanElement>(null);
-  const done = useRef(false);
-
-  useEffect(() => {
-    const element = ref.current;
-    if (!element || !isTransition || done.current || !motionAllowed()) return;
-
-    setCrossed(false);
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting || done.current) continue;
-          done.current = true;
-          observer.disconnect();
-          // Long enough to read the old value before it is replaced. Any quicker and the
-          // "before" is a flicker nobody registers, which loses the whole point.
-          window.setTimeout(() => setCrossed(true), 700);
-        }
-      },
-      { threshold: 0.5 },
-    );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [isTransition]);
-
-  if (!isTransition) {
-    return <span className={className}>{value}</span>;
+  if (reading.kind === "verbatim" || !reading.to) {
+    return <span className="metric-figure">{reading.raw}</span>;
   }
 
+  const { to, from, factor } = reading;
+
   return (
-    <span ref={ref} className={className}>
-      <span aria-hidden className={`metric-cross ${crossed ? "is-after" : ""}`}>
-        <span className="metric-cross-from">{parts[0]}</span>
-        <span className="metric-cross-arrow">→</span>
-        <span className="metric-cross-to">{parts[1]}</span>
+    <>
+      <span className="metric-figure">
+        {to.prefix && <span className="metric-prefix">{to.prefix}</span>}
+        <Counter value={to.value} decimals={to.decimals} />
+        {to.unit && <span className="metric-unit">{to.unit}</span>}
       </span>
-      <span className="sr-only">{value}</span>
-    </span>
+
+      {/* Where it came from, and by how much. The multiple is arithmetic on the two
+          figures, not a judgement: "lower" and "higher" rather than "better", because
+          which of those is good depends on the metric and this cannot know. */}
+      {from && (
+        <span className="metric-delta">
+          <span className="metric-delta-arrow" aria-hidden>
+            {factor?.direction === "higher" ? "↑" : "↓"}
+          </span>
+          {factor ? `${factor.times}× ${factor.direction}` : "from"} than {from.raw}
+        </span>
+      )}
+
+      {/*
+        The comparison, drawn only when both sides are the same dimension — see
+        `comparisonBars`. This is the single most persuasive thing on the page when it
+        applies, because a bar sixty times longer than the one beneath it says what
+        "2.4s to 40ms" means faster than the sentence does.
+      */}
+      {bars && from && (
+        <span className="metric-bars" aria-hidden>
+          <span className="metric-bar-row">
+            <span className="metric-bar metric-bar-before" style={{ width: `${bars.from * 100}%` }}>
+              <span className="metric-bar-fill" />
+            </span>
+            <span className="metric-bar-tag">{from.raw}</span>
+          </span>
+          <span className="metric-bar-row">
+            <span className="metric-bar metric-bar-after" style={{ width: `${bars.to * 100}%` }}>
+              <span className="metric-bar-fill" />
+            </span>
+            <span className="metric-bar-tag is-after">{to.raw}</span>
+          </span>
+        </span>
+      )}
+    </>
   );
 }
 

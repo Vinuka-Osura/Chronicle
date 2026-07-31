@@ -61,8 +61,11 @@ export default async function MissionControl() {
         </div>
 
         {featured.length > 0 ? (
-          /* data-stagger: every direct child arrives on its own offset range. */
-          <div className="rm-grid grid gap-5 sm:grid-cols-2" data-stagger>
+          /* data-stagger: every direct child arrives on its own offset range.
+             data-depart: and sinks and blurs on the way out, rather than only
+             arriving. Only the project cards get it — the metric cards sit inside a
+             pinned scene that never leaves the viewport the same way. */
+          <div className="rm-grid grid gap-5 sm:grid-cols-2" data-stagger data-depart>
             {featured.map((project, index) => (
               <ProjectCard key={project.slug} project={project} index={index} />
             ))}

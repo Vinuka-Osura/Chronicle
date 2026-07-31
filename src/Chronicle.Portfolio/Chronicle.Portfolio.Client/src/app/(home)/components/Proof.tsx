@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Counter, Ring, Sparkline, Transition } from "@/components/Figure";
+import { Counter, MetricValue, Ring, Sparkline } from "@/components/Figure";
 import { SetLines } from "@/components/SetLines";
 import type { GitHubStats } from "@/lib/types";
 import type { ProofMetric } from "../api";
@@ -78,14 +78,21 @@ export function Proof({
             <ul className="proof-grid" data-stagger>
               {metrics.map((metric) => (
                 <li key={`${metric.projectSlug}-${metric.label}`} className="proof-item">
-                  <p className="proof-label">{metric.label}</p>
-
-                  {/* Values like "2.4s to 40ms" animate the change they describe. Ones
-                      that are simply a number are left alone rather than forced into a
-                      shape the data does not have. */}
-                  <p className="proof-value">
-                    <Transition value={metric.value} />
+                  <p className="proof-label">
+                    <span className="proof-dot" aria-hidden />
+                    {metric.label}
                   </p>
+
+                  {/*
+                    MetricValue decides how much shape the value can carry. "2.4s to
+                    40ms" gets a counting figure, a multiple and a comparison bar; "0"
+                    gets a counting figure and nothing else; anything unparseable is
+                    printed as written. None of that is chosen here, because the answer
+                    depends on the value rather than on the layout.
+                  */}
+                  <div className="proof-value">
+                    <MetricValue value={metric.value} />
+                  </div>
 
                   {metric.note && <p className="proof-note">{metric.note}</p>}
 

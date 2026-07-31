@@ -144,56 +144,181 @@
   }
 
   /* ── Outcomes ────────────────────────────────────────────────────────────── */
+  /*
+    Cards, not cells.
+
+    The first version was one flat panel divided by hairlines, which read as a table and
+    sat on the water like a slab. Separate cards with their own elevation let the water
+    through between them and give each figure a frame of its own — which matters because
+    each one is a different claim about a different system, not three columns of one
+    thing.
+  */
   .proof-grid {
     display: grid;
-    /* A one-pixel gap over the rule colour draws every divider at once, instead of
-       a border per item that doubles wherever two meet. */
-    gap: 1px;
+    gap: 1rem;
     margin-top: clamp(2rem, 5vh, 3.5rem);
-    background: var(--color-rule);
-    border-block: 1px solid var(--color-rule);
-  }
-
-  @media (width >= 40rem) {
-    .proof-grid {
-      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    }
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   }
 
   .proof-item {
     position: relative;
-    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1.35rem 1.35rem 1.15rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.85rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  [data-motion="reduced"] .proof-item,
+  [data-motion="still"] .proof-item {
     background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .proof-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.65rem;
+    font-size: 0.63rem;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-ink-faint);
   }
 
+  /* A lit indicator beside the label. Says "this is a reading" in one 6px dot, which
+     is cheaper than any amount of chrome around the card. */
+  .proof-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-signal);
+    box-shadow: 0 0 0 3px var(--color-signal-soft);
+  }
+
   .proof-value {
-    margin-top: 0.6rem;
-    font-family: var(--font-display);
-    font-size: clamp(1.4rem, 1.05rem + 1.3vw, 2.1rem);
-    font-weight: 600;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
-    color: var(--color-ink);
+    margin-top: 0.85rem;
   }
 
   .proof-note {
-    margin-top: 0.5rem;
-    font-size: 0.82rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--color-rule);
+    font-size: 0.8rem;
     line-height: 1.5;
     color: var(--color-ink-soft);
   }
 
+  /* ── The figure itself ──────────────────────────────────────────────────────
+     Number at display size with the unit tucked beside it at a third of the size.
+     "40ms" as one run of text is a string; a figure with a unit set against it is
+     a reading, and the difference is most of what makes a panel look like
+     instrumentation rather than a table. */
+  .metric-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 0.15em;
+    font-family: var(--font-display);
+    font-size: clamp(2.1rem, 1.5rem + 2.2vw, 3.1rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-ink);
+    /* Digits that do not change width, so a counting number does not jitter the
+       layout on every frame as it passes through 1s and 8s. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  .metric-prefix {
+    font-size: 0.5em;
+    font-weight: 500;
+    color: var(--color-ink-faint);
+  }
+
+  .metric-unit {
+    font-size: 0.34em;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-ink-soft);
+  }
+
+  .metric-delta {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+    color: var(--color-signal);
+  }
+
+  .metric-delta-arrow {
+    font-size: 0.85em;
+  }
+
+  /* ── The comparison ─────────────────────────────────────────────────────────
+     Two bars on one axis, drawn only where the two figures genuinely share a
+     dimension. This is the most persuasive object on the page when it applies:
+     a bar sixty times longer than the one below it says what "2.4s to 40ms"
+     means faster than the sentence does. */
+  .metric-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  .metric-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .metric-bar {
+    height: 8px;
+    /* Never narrower than this, or a sixty-fold improvement leaves the second bar
+       indistinguishable from one that failed to render. */
+    min-width: 3px;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .metric-bar-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    transform-origin: left center;
+  }
+
+  .metric-bar-before .metric-bar-fill {
+    background: color-mix(in oklch, var(--color-ink) 22%, transparent);
+  }
+
+  .metric-bar-after .metric-bar-fill {
+    background: var(--color-signal);
+  }
+
+  .metric-bar-tag {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    white-space: nowrap;
+    color: var(--color-ink-faint);
+  }
+
+  .metric-bar-tag.is-after {
+    color: var(--color-ink);
+  }
+
   .proof-source {
     display: inline-block;
-    margin-top: 0.9rem;
+    margin-top: 0.75rem;
     font-family: var(--font-mono);
     font-size: 0.66rem;
     letter-spacing: 0.06em;
@@ -421,6 +546,40 @@
     [data-motion="full"] [data-stagger] > *:nth-child(3) { animation-range: entry 20% entry 80%; }
     [data-motion="full"] [data-stagger] > *:nth-child(4) { animation-range: entry 24% entry 84%; }
     [data-motion="full"] [data-stagger] > *:nth-child(n + 5) { animation-range: entry 28% entry 88%; }
+
+    /*
+      Cards that also LEAVE.
+
+      `data-depart` swaps the arrival-only keyframes for a full pass: rise, hold,
+      then sink and blur on the way out. Without it a card arrives and then the page
+      is static again, and scrolling is only translation — which is exactly what was
+      reported as "the disappearing doesn't happen".
+
+      The departure finishes at `exit 55%`, not 100%, and that is the important
+      number. The header is sticky, so the last stretch of a card's exit happens
+      underneath it; a fade that completes there is a fade nobody sees. Ending early
+      puts the whole gesture in open view.
+    */
+    [data-motion="full"] [data-stagger][data-depart] > * {
+      animation-name: scene-pass;
+      animation-range: entry 10% exit 55%;
+      /* Promotes the layer once, rather than the compositor rediscovering on every
+         frame that something blurred has moved. */
+      will-change: transform, opacity, filter;
+    }
+
+    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(2) { animation-range: entry 15% exit 58%; }
+    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(3) { animation-range: entry 20% exit 61%; }
+    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(n + 4) { animation-range: entry 25% exit 64%; }
+
+    /* The comparison bars draw as the card arrives, on their own timeline so they
+       are still filling after the card has settled. */
+    [data-motion="full"] .metric-bar-fill,
+    [data-motion="reduced"] .metric-bar-fill {
+      animation: bar-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 30% cover 20%;
+    }
   }
 }
 
@@ -458,5 +617,35 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/*
+  A card's whole life: rise, hold, sink.
+
+  The rotation is 2deg and the scale 0.95, as asked. Both are small enough to read as
+  physics rather than as an effect — past about three degrees a card stops looking like
+  it is arriving and starts looking like it is falling over.
+
+  The long plateau between 24% and 68% is what stops this feeling busy. The card spends
+  most of its time on screen perfectly still, which is what makes the moving parts at
+  either end register at all.
+*/
+@keyframes scene-pass {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 3.5rem, 0) scale(0.95) rotate(2deg);
+    filter: blur(6px);
+  }
+  24%,
+  68% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, -2.5rem, 0) scale(0.97);
+    filter: blur(4px);
   }
 }
