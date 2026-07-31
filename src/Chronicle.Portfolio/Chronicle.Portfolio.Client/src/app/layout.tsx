@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
-import { Reveal } from "@/components/Reveal";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { StatusBar } from "@/components/StatusBar";
 import { WaterBackground } from "@/components/WaterBackground";
@@ -136,11 +135,12 @@ export default function RootLayout({
             when the footer above comes into view. */}
         <StatusBar />
 
-        {/* Renders nothing. Arms the scroll reveal for any page using data-rise, and
-            stays inert under reduced motion or Recruiter Mode. */}
-        <Reveal />
-        {/* Inertial scroll, and scroll velocity published as a CSS variable.
-            Only runs on the `full` motion tier. */}
+        {/* Inertial scroll, scroll velocity published as a CSS variable, and the motion
+            tier kept in step with the OS reduced-motion setting.
+
+            There is deliberately no reveal component any more. Every reveal on the site
+            is pure CSS, so nothing mutates the DOM React is in the middle of hydrating —
+            which is what the old one did, and why the hero reported a mismatch. */}
         <SmoothScroll />
       </body>
     </html>

@@ -100,7 +100,7 @@ export function Scrubber({ timeline }: { timeline: Timeline }) {
          to know it should stand down, since both of these live at the bottom of the
          viewport and only one can. They merge into a single transport control in a
          later stage. */
-      className={`timeline-scrubber glass rm-hide fixed inset-x-0 bottom-0 z-40 border-t border-rule transition-transform duration-200 ${
+      className={`timeline-scrubber chrome rm-hide fixed inset-x-0 bottom-0 z-40 border-t border-rule transition-transform duration-200 ${
         hidden ? "translate-y-full" : "translate-y-0"
       }`}
     >

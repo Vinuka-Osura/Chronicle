@@ -3,18 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useState } from "react";
+import { links } from "@/lib/navigation";
 import { RecruiterToggle, ThemeToggle } from "./AppearanceToggles";
 
-const links = [
-  { href: "/about", label: "About" },
-  { href: "/skills", label: "Skills" },
-  { href: "/timeline", label: "Timeline" },
-  { href: "/projects", label: "Projects" },
-  { href: "/knowledge", label: "Knowledge" },
-  { href: "/analytics", label: "Analytics" },
-  { href: "/resume", label: "Résumé" },
-  { href: "/contact", label: "Contact" },
-];
+/* From @/lib/navigation, which has no "use client" directive — the footer is a server
+   component and needs the same list. Re-exporting it from here would hand the next
+   server importer a stub. */
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -96,7 +90,7 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="glass sticky top-0 z-50 border-b border-rule">
+    <header className="chrome sticky top-0 z-50 border-b border-rule">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-ink focus:px-3 focus:py-2 focus:text-paper"

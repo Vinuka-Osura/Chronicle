@@ -38,6 +38,33 @@ export type Theme = "light" | "dark";
 export type MotionTier = "full" | "reduced" | "still";
 
 /**
+ * Applies the motion tier from the two things that can override it.
+ *
+ * The device tier is expensive to work out and never changes, so the pre-paint script
+ * computes it once and parks it on `data-motion-base`. Everything after that is just
+ * this: Recruiter Mode or `prefers-reduced-motion` force `still`, and turning them off
+ * restores whatever the device was judged capable of.
+ *
+ * **Recruiter Mode used to change `data-recruiter` and nothing else**, so the water, the
+ * inertial scroll and every tier-gated rule carried on running until the page was
+ * reloaded — it looked half-applied, because it was. Reading the base rather than
+ * recomputing it here is what stops this and the pre-paint script drifting apart.
+ */
+export function applyMotionTier(): MotionTier {
+  const root = document.documentElement;
+  const quiet =
+    root.dataset.recruiter === "on" ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const tier: MotionTier = quiet
+    ? "still"
+    : ((root.dataset.motionBase as MotionTier | undefined) ?? "full");
+
+  root.dataset.motion = tier;
+  return tier;
+}
+
+/**
  * Runs before first paint, as the first child of `<body>`.
  *
  * One script stamps all three appearance attributes, deliberately. They are the same
@@ -67,4 +94,4 @@ export type MotionTier = "full" | "reduced" | "still";
   because every later one is preceded by "; " and there is no `\s` left to match the
   space. Theme worked by luck of ordering; Recruiter Mode did not.
 */
-export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";if(cn.effectiveType&&/^(slow-)?2g$|^3g$/.test(cn.effectiveType))tier="reduced";if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){document.documentElement.dataset.theme="light";document.documentElement.dataset.recruiter="off";document.documentElement.dataset.motion="still"}})();`;
+export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";if(cn.effectiveType&&/^(slow-)?2g$|^3g$/.test(cn.effectiveType))tier="reduced";d.dataset.motionBase=tier;if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){var f=document.documentElement.dataset;f.theme="light";f.recruiter="off";f.motionBase="still";f.motion="still"}})();`;

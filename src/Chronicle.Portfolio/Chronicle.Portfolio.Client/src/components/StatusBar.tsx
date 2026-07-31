@@ -28,6 +28,7 @@ const WORTH_OFFERING = 0.08;
  */
 export function StatusBar() {
   const [percent, setPercent] = useState(0);
+  const [scene, setScene] = useState<string | null>(null);
   const [atEnd, setAtEnd] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +38,19 @@ export function StatusBar() {
 
     let frame = 0;
     let shown = -1;
+    let shownScene: string | null = null;
+
+    /*
+      Cached, because querying the document on every scroll frame would be the most
+      expensive thing this component does. Refreshed on DOM changes instead — a
+      client-side navigation replaces the page under a component that never unmounts,
+      so a list captured once at mount would describe the wrong page from the second
+      route onwards.
+    */
+    let scenes: HTMLElement[] = [];
+    const collectScenes = () => {
+      scenes = [...document.querySelectorAll<HTMLElement>("[data-scene]")];
+    };
 
     const measure = () => {
       frame = 0;
@@ -54,6 +68,28 @@ export function StatusBar() {
         shown = rounded;
         setPercent(rounded);
       }
+
+      /*
+        Whichever scene contains the middle of the screen is the one you are in.
+
+        A midpoint rather than the top edge, because a pinned scene occupies the whole
+        viewport for a screen and a half — measuring at the top would flip the label to
+        the next section while you are still reading this one.
+      */
+      let current: string | null = null;
+      const middle = window.innerHeight / 2;
+
+      for (const element of scenes) {
+        const box = element.getBoundingClientRect();
+        if (box.top <= middle && box.bottom >= middle) {
+          current = element.dataset.scene ?? null;
+        }
+      }
+
+      if (current !== shownScene) {
+        shownScene = current;
+        setScene(current);
+      }
     };
 
     const onScroll = () => {
@@ -62,9 +98,18 @@ export function StatusBar() {
       if (frame === 0) frame = requestAnimationFrame(measure);
     };
 
+    collectScenes();
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+
+    // Reads the DOM, never writes to it — so unlike the reveal component this replaced,
+    // it cannot disagree with what React is hydrating.
+    const arrivals = new MutationObserver(() => {
+      collectScenes();
+      onScroll();
+    });
+    arrivals.observe(document.body, { childList: true, subtree: true });
 
     /*
       Stand down over the long footer.
@@ -88,6 +133,7 @@ export function StatusBar() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       observer?.disconnect();
+      arrivals.disconnect();
     };
   }, []);
 
@@ -107,6 +153,12 @@ export function StatusBar() {
         <span suppressHydrationWarning>&copy; {YEAR}</span> Sam Iversen. All rights
         reserved.
       </p>
+
+      {/* Where you are, keyed so it re-enters when it changes rather than swapping the
+          text in place. The label is the readout; the track is the position. */}
+      <span className="status-bar-scene" aria-hidden>
+        {scene && <span key={scene}>{scene}</span>}
+      </span>
 
       <div className="status-bar-track" aria-hidden>
         <span className="status-bar-fill" />

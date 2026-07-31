@@ -1,3 +1,4 @@
+import { Counter } from "@/components/Figure";
 import type { GitHubStats } from "@/lib/types";
 
 /**
@@ -49,7 +50,9 @@ export function StatTiles({ stats }: { stats: GitHubStats }) {
             at this size.
           */}
           <dd className="mt-1.5 font-display text-3xl font-semibold text-ink">
-            {tile.value.toLocaleString("en-GB")}
+            {/* Counts up when it is scrolled to. The final value is what renders on the
+                server, so the figure is correct before — and without — JavaScript. */}
+            <Counter value={tile.value} />
             {tile.unit && (
               <span className="ml-1.5 text-sm font-normal text-ink-faint">{tile.unit}</span>
             )}

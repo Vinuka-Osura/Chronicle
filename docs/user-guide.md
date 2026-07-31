@@ -48,6 +48,25 @@ The strip loads separately from the rest of the page, so a slow or unavailable s
 never delays the content behind it, and its space is reserved so nothing jumps when it
 appears.
 
+Below it the page reads as five scenes, in this order:
+
+| Scene | What it is | Where the content comes from |
+|---|---|---|
+| **Introduction** | The positioning statement and three entry points. Holds still briefly while the headline draws back, then releases. | Fixed copy |
+| **Selected work** | The featured projects, as cards. | Projects marked *Featured* in the admin |
+| **Outcomes** | What the work actually did — "Statement p95: 2.4s to 40ms". Holds still while each figure resolves. | The **Metrics** field on each featured project |
+| **Range** | Strongest skills by category, and how many projects each was used on. | Skills, and the projects they are linked to |
+| **Get in touch** | A closing sign-off. | Fixed copy |
+
+**Two of these depend on you filling something in.** *Outcomes* shows a figure for every
+metric on a featured project and disappears entirely if there are none, so adding metrics
+to a case study is what makes it grow. Project cards show whatever image you upload as
+the thumbnail; until then each one gets a generated pattern of its own, so a card without
+a picture still looks finished.
+
+The strip along the bottom of every page names the scene you are in, how far down you
+are, and offers the way back to the top. It stands aside when the full footer arrives.
+
 **Working now.**
 
 ### About
@@ -268,7 +287,13 @@ about sixty seconds and a stack of candidates.
 
 Turned on: animation stops, the layout becomes a single dense column, decorative
 imagery disappears, project outcomes move to the front, and the résumé becomes the most
-prominent action everywhere.
+prominent action everywhere. The moving background stops entirely, the scrolling loses
+its momentum, and the sections that hold still on the way past stop doing so — so the
+page is not merely quieter, it is meaningfully shorter.
+
+**It takes effect the instant you switch it, with no reload.** That was not true before
+August 2026: the switch changed the layout but left the background and the motion
+running, so the mode looked half-applied until the page was reloaded.
 
 It is not a stripped-down version. It is the same content arranged for a different
 reader, and the choice is remembered — navigate away, come back tomorrow, still on.

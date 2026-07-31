@@ -72,10 +72,31 @@ Constraint lifted, so the choice is now "what is best", not "what is smallest".
 | | Why |
 |---|---|
 | **Lenis** | Inertial scroll. The single change everything else depends on — native scroll is stepped, and stepped scroll makes every downstream animation feel cheap. Also gives scroll **velocity** as an input. |
-| **GSAP + ScrollTrigger** | Reversed from revision 1. It is what every referenced site uses, and its pinning and scrubbing are genuinely better than hand-rolled sticky sections for sequences that have to run *backwards* as well as forwards. That reversibility is the part that is painful to write by hand and is exactly what era scenes need. |
+| ~~GSAP + ScrollTrigger~~ | **Reversed again, and this time not adopted — see the note below.** |
 | **Motion** | Stays for component-level enter/exit. Already installed. |
 | **Raw WebGL** | The cursor field and image distortion. Still **not Three.js** — that is 150KB of scene graph for two full-screen quads, and it is the wrong tool, not merely a large one. |
 | **Three.js** | Only if the Software City teaser gets a real 3D preview. Not part of this plan. |
+
+### Why GSAP was dropped, after being chosen twice
+
+The case for it was pinning and *reversible* scrubbing — sequences that have to run
+backwards as well as forwards. That case turns out to be an argument for the platform
+rather than for a library.
+
+`position: sticky` pins. `animation-timeline: view()` and `scroll()` scrub. And a
+scroll-driven animation is reversible **by construction**, because it is a pure function
+of scroll position rather than a tween with a direction and a playhead — which is
+precisely the property GSAP was being brought in to provide. They also run on the
+compositor at no main-thread cost, which matters here more than on most sites, because
+the water simulation already has the GPU and the main thread should stay out of the way.
+
+The Home page's two pinned scenes, the hero's title transformation, the staggered
+arrivals, the bar fills, the drawn sparkline and the ring are all built this way, in
+`src/app/(home)/home.css`. Where `animation-timeline` is unsupported the page is static
+and completely readable, which is the correct failure mode and needs no second code path.
+
+The one thing CSS cannot animate is *content*, so a number counting to its value is
+JavaScript — `src/components/Figure.tsx`. Everything else is declarative.
 
 ---
 

@@ -1,14 +1,32 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { getGitHubStats } from "@/app/analytics/api";
 import { getProjects } from "@/app/projects/api";
 import { ProjectCard } from "@/app/projects/components/ProjectCard";
+import { getSkills } from "@/app/skills/api";
 import { JsonLd } from "@/components/JsonLd";
 import { personSchema, websiteSchema } from "@/lib/structuredData";
+import { getProofMetrics } from "./api";
+import { Capability } from "./components/Capability";
+import { Closing } from "./components/Closing";
 import { Hero } from "./components/Hero";
+import { Proof } from "./components/Proof";
 import { StatusStrip, StatusStripSkeleton } from "./components/StatusStrip";
+import "./home.css";
 
 export default async function MissionControl() {
-  const featured = await getProjects({ featured: true });
+  /*
+    Fetched together rather than in sequence. Each of these is `use cache` behind its
+    own tag, so the cost after the first render is a cache read — but on a cold render
+    awaiting them one after another would make the page as slow as the sum of the API,
+    rather than as slow as its slowest call.
+  */
+  const [featured, metrics, stats, skills] = await Promise.all([
+    getProjects({ featured: true }),
+    getProofMetrics(),
+    getGitHubStats(),
+    getSkills(),
+  ]);
 
   return (
     <>
@@ -28,24 +46,25 @@ export default async function MissionControl() {
 
       <Hero />
 
-      <section data-rise="1" aria-labelledby="featured-heading">
-        <div className="mb-5 flex items-baseline justify-between gap-4">
-          <h2 id="featured-heading" className="text-section font-semibold">
-            Selected work
-          </h2>
-          <Link href="/projects" className="text-sm text-signal hover:underline">
+      <section className="scene" data-scene="Selected work" aria-labelledby="featured-heading">
+        <div className="mb-8 flex items-baseline justify-between gap-4">
+          <div>
+            <p className="scene-eyebrow">Selected work</p>
+            <h2 id="featured-heading" className="scene-heading">
+              Four systems, and what each one had to survive.
+            </h2>
+          </div>
+
+          <Link href="/projects" className="shrink-0 text-sm text-signal hover:underline">
             All projects
           </Link>
         </div>
 
         {featured.length > 0 ? (
-          /* emerge-set: every direct child surfaces and sinks with the scroll, staggered
-             by its position in the grid. Not on the filtered grids elsewhere — those are
-             animated by Motion, and a CSS animation on transform would override the
-             inline transform Motion uses to close the gaps. */
-          <div className="emerge-set rm-grid grid gap-4 sm:grid-cols-2">
-            {featured.map((project) => (
-              <ProjectCard key={project.slug} project={project} />
+          /* data-stagger: every direct child arrives on its own offset range. */
+          <div className="rm-grid grid gap-5 sm:grid-cols-2" data-stagger>
+            {featured.map((project, index) => (
+              <ProjectCard key={project.slug} project={project} index={index} />
             ))}
           </div>
         ) : (
@@ -55,6 +74,14 @@ export default async function MissionControl() {
           </p>
         )}
       </section>
+
+      {/* The second and last pinned scene. Renders nothing at all if there is neither a
+          published metric nor a GitHub token configured. */}
+      <Proof metrics={metrics} stats={stats.isLive ? stats : null} />
+
+      <Capability groups={skills} />
+
+      <Closing />
     </>
   );
 }

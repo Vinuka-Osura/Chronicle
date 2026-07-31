@@ -22,40 +22,54 @@ import { SetLines } from "@/components/SetLines";
  */
 export function Hero() {
   return (
-    <section className="hero" aria-labelledby="hero-heading">
-      {/* The channel strip. Monospace, rules above and below, and the one place on the
-          page where the acquire language is literal. */}
-      <div className="hero-channel">
-        <Acquire text="SOFTWARE ENGINEER" className="hero-channel-label" delay={120} />
-        <span className="hero-channel-rule" aria-hidden />
-        <Acquire text="BANKING SYSTEMS" className="hero-channel-label" delay={220} />
+    /*
+      The track is taller than the screen and the inner sticks to the top of it, so the
+      hero holds while the headline shrinks into place and then releases. That is the
+      whole pinning mechanism — `position: sticky` plus a scroll-driven animation, no
+      library — and it collapses to an ordinary section under Recruiter Mode, where the
+      extra 90vh of track would be scroll spent on nothing.
+    */
+    <div className="hero-track" data-scene="Introduction">
+      <div className="hero-pin">
+        <section className="hero" aria-labelledby="hero-heading">
+          {/* The channel strip. Monospace, rules above and below, and the one place on
+              the page where the acquire language is literal. */}
+          <div className="hero-channel">
+            <Acquire text="SOFTWARE ENGINEER" className="hero-channel-label" delay={120} />
+            <span className="hero-channel-rule" aria-hidden />
+            <Acquire text="BANKING SYSTEMS" className="hero-channel-label" delay={220} />
+          </div>
+
+          <SetLines as="h1" className="hero-headline" delay={320} id="hero-heading">
+            I build backends that stay correct when things go wrong.
+          </SetLines>
+
+          {/* The arrival delays are in the stylesheet, not on the element. They belong
+              to the hero's choreography rather than to this paragraph, and keeping them
+              in CSS is what lets the whole sequence run without any JavaScript. */}
+          <p className="hero-lede reveal-mask">
+            Most of my work is ledgers, statements and the unglamorous reliability around
+            them — the parts where being nearly right is the same as being wrong. This
+            site is a working example: a .NET&nbsp;10 API and CMS behind a Next.js
+            frontend, so everything you read here is content I can edit without a deploy.
+          </p>
+
+          {/* The confirmation. Draws last, once the words have landed. */}
+          <span className="hero-sweep" aria-hidden />
+
+          <nav className="hero-actions reveal-mask" aria-label="Start here">
+            <Link href="/projects" className="hero-action hero-action-primary">
+              Read the case studies
+            </Link>
+            <Link href="/timeline" className="hero-action">
+              Career timeline
+            </Link>
+            <Link href="/resume" className="hero-action rm-hide">
+              Résumé
+            </Link>
+          </nav>
+        </section>
       </div>
-
-      <SetLines as="h1" className="hero-headline" delay={320}>
-        I build backends that stay correct when things go wrong.
-      </SetLines>
-
-      <p className="hero-lede reveal-mask" data-in-delay="820">
-        Most of my work is ledgers, statements and the unglamorous reliability around them
-        — the parts where being nearly right is the same as being wrong. This site is a
-        working example: a .NET&nbsp;10 API and CMS behind a Next.js frontend, so
-        everything you read here is content I can edit without a deploy.
-      </p>
-
-      {/* The confirmation. Draws last, once the words have landed. */}
-      <span className="hero-sweep" aria-hidden />
-
-      <nav className="hero-actions reveal-mask" data-in-delay="980" aria-label="Start here">
-        <Link href="/projects" className="hero-action hero-action-primary">
-          Read the case studies
-        </Link>
-        <Link href="/timeline" className="hero-action">
-          Career timeline
-        </Link>
-        <Link href="/resume" className="hero-action rm-hide">
-          Résumé
-        </Link>
-      </nav>
-    </section>
+    </div>
   );
 }

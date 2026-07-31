@@ -1,0 +1,462 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  The Home page, as a sequence of scenes
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  Beside the page rather than in globals.css, for the same reason `timeline.css`
+  is: these classes describe one route's choreography and nothing else uses them.
+  Card styles are the exception and live in globals.css, because the Projects page
+  renders the same card.
+
+  Two scenes PIN — the hero and the outcomes — and the rest arrive and settle.
+  Pinning is `position: sticky` inside a track taller than the viewport, and the
+  animation over it is `animation-timeline: view()`. No library: a scroll-driven
+  animation is a pure function of scroll position, so it runs backwards for free.
+  That reversibility is the part that is genuinely painful to hand-write, and it is
+  the reason the motion plan originally reached for GSAP.
+
+  It is used exactly twice, deliberately. Pinning every section is the failure mode
+  of every site that discovers the technique — each one costs a screen of scroll
+  before the page will move on, and a reader looking for one fact sits through all
+  of them.
+*/
+
+@layer components {
+  /* ── An ordinary scene ───────────────────────────────────────────────────── */
+  .scene {
+    /* Emptiness is most of what reads as expensive, and it costs nothing to
+       render. This is the highest-value number in the file. */
+    margin-block: clamp(7rem, 14vh, 12rem);
+  }
+
+  .scene-eyebrow {
+    margin-bottom: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+  }
+
+  .scene-heading {
+    max-width: 22ch;
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.028em;
+    text-wrap: balance;
+  }
+
+  .scene-more {
+    display: inline-block;
+    margin-top: 2.5rem;
+    padding-bottom: 2px;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-signal) 35%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--color-signal);
+    transition: border-color var(--t-quick) var(--ease-move);
+  }
+
+  .scene-more:hover {
+    border-color: var(--color-signal);
+  }
+
+  /* ── A pinned scene ──────────────────────────────────────────────────────── */
+  .scene-track {
+    /* The extra height IS the pin duration: 240vh holds the scene for a little
+       over one screen of scrolling. Long enough to read, short enough not to feel
+       trapped. */
+    height: 240vh;
+    margin-block: clamp(7rem, 14vh, 12rem);
+  }
+
+  .scene-pin {
+    position: sticky;
+    /* Below the 3.5rem header, so a pinned heading never sits underneath it. */
+    top: 3.5rem;
+    display: flex;
+    align-items: center;
+    min-height: calc(100vh - 3.5rem);
+  }
+
+  .scene-inner {
+    width: 100%;
+  }
+
+  /*
+    No track, no pin, no scene.
+
+    Recruiter Mode and reduced motion collapse the track to its content height, so
+    the section becomes an ordinary section. This has to be expressed here rather
+    than only in the component, because the track height is what does the pinning —
+    hiding the animation alone would leave a screen and a half of empty scroll.
+  */
+  [data-motion="still"] .scene-track,
+  [data-recruiter="on"] .scene-track {
+    height: auto;
+    margin-block: 4rem;
+  }
+
+  [data-motion="still"] .scene-pin,
+  [data-recruiter="on"] .scene-pin {
+    position: static;
+    min-height: 0;
+  }
+
+  /* ── The hero, as scene one ──────────────────────────────────────────────── */
+  .hero-track {
+    /*
+      150vh, not 190. The extra height is the hold, and 90vh of hold was long enough
+      that the hero had finished transforming with most of a screen still to scroll —
+      the reader sat looking at the leftovers. Half a screen is the most this earns.
+    */
+    height: 150vh;
+  }
+
+  .hero-pin {
+    position: sticky;
+    /* Below the sticky header, so the channel strip is never underneath it. */
+    top: 3.5rem;
+    display: flex;
+    align-items: center;
+    /*
+      Short of a full viewport on purpose. The status strip sits above this in the
+      flow, so a 100vh box pushed the actions past the fold — and "Read the case
+      studies" being the one thing you have to scroll to find is the wrong trade for
+      a round number.
+    */
+    min-height: calc(100vh - 9rem);
+  }
+
+  [data-motion="still"] .hero-track,
+  [data-recruiter="on"] .hero-track {
+    height: auto;
+  }
+
+  [data-motion="still"] .hero-pin,
+  [data-recruiter="on"] .hero-pin {
+    position: static;
+    min-height: 0;
+    padding-block: 3rem;
+  }
+
+  /* ── Outcomes ────────────────────────────────────────────────────────────── */
+  .proof-grid {
+    display: grid;
+    /* A one-pixel gap over the rule colour draws every divider at once, instead of
+       a border per item that doubles wherever two meet. */
+    gap: 1px;
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+    background: var(--color-rule);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  @media (width >= 40rem) {
+    .proof-grid {
+      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    }
+  }
+
+  .proof-item {
+    position: relative;
+    padding: 1.5rem 1.25rem;
+    background: var(--color-paper-solid);
+  }
+
+  .proof-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .proof-value {
+    margin-top: 0.6rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 1.05rem + 1.3vw, 2.1rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+
+  .proof-note {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+  }
+
+  .proof-source {
+    display: inline-block;
+    margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--color-signal);
+  }
+
+  .proof-source:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── The pulse band ──────────────────────────────────────────────────────── */
+  .pulse {
+    display: grid;
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  @media (width >= 56rem) {
+    .pulse {
+      grid-template-columns: auto 1fr;
+    }
+  }
+
+  .pulse-figures {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 2.75rem);
+  }
+
+  .pulse-figure {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .pulse-value {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+
+  .pulse-label,
+  .pulse-spark-label {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .pulse-spark-label {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .pulse-spark-link {
+    color: var(--color-signal);
+  }
+
+  .pulse-spark-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── Capability ──────────────────────────────────────────────────────────── */
+  .capability-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: clamp(2rem, 4vw, 3rem);
+    margin-top: clamp(2.5rem, 6vh, 4rem);
+  }
+
+  .capability-category {
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+  }
+
+  .capability-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+
+  .capability-skill {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 0.15rem 0.75rem;
+  }
+
+  .capability-name {
+    font-size: 0.95rem;
+    color: var(--color-ink);
+  }
+
+  .capability-used {
+    grid-column: 1 / -1;
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Closing ─────────────────────────────────────────────────────────────── */
+  .closing {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 78vh;
+    margin-block: clamp(7rem, 14vh, 12rem) 0;
+  }
+
+  .closing-heading {
+    max-width: 18ch;
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+  }
+
+  .closing-lede {
+    max-width: 40rem;
+    margin-top: 1.75rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .closing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 2.5rem;
+  }
+}
+
+/*
+  ── The choreography ─────────────────────────────────────────────────────────
+  Everything above is layout. This is the part driven by scroll position.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /*
+      The hero's title transformation.
+
+      One animation over the whole pinned track: the headline shrinks and rises,
+      the lede and the strip give way, so the hero hands over to the page rather
+      than being scrolled off it. `scroll()` scoped to the track, not `view()`,
+      because the sticky child never moves relative to the viewport — a view
+      timeline on it would never advance.
+    */
+    [data-motion="full"] .hero-track {
+      view-timeline-name: --hero-track;
+    }
+
+    /*
+      THE WHOLE BLOCK DEPARTS AS ONE, and that is the important part.
+
+      The first version animated the headline, the lede and the strip separately and
+      left the sweep rule and the three buttons behind at full opacity, floating in
+      most of a screen of empty water. Fading the pieces individually always risks
+      that: every element you forget is a fragment left on stage.
+
+      So the hero is the thing that leaves, and the headline merely shrinks faster
+      than the rest inside it. Nothing can be forgotten, because there is only one
+      animation deciding what is still visible.
+    */
+    [data-motion="full"] .hero-pin .hero {
+      animation: hero-depart linear both;
+      animation-timeline: --hero-track;
+      animation-range: contain 0% contain 100%;
+      transform-origin: left center;
+    }
+
+    /* The title transformation, relative to a block that is already leaving. Origin
+       top-left so it draws back toward the corner rather than collapsing inward. */
+    [data-motion="full"] .hero-pin .hero-headline {
+      animation: hero-title linear both;
+      animation-timeline: --hero-track;
+      animation-range: contain 0% contain 85%;
+      transform-origin: left top;
+    }
+
+    /*
+      Scenes lift slightly as they arrive and settle. The rise is small and the
+      settle is long — a big movement over a short range is what makes an
+      entrance read as a jolt rather than as weight.
+    */
+    [data-motion="full"] .scene,
+    [data-motion="full"] .scene-inner,
+    [data-motion="full"] .closing {
+      animation: scene-arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 78%;
+    }
+
+    /*
+      Stagger, by position rather than by an index attribute, so a section can gain
+      or lose children without anything being rewired. A scroll-driven animation
+      has no clock, so the offset is applied to the RANGE — there is nothing for a
+      delay to be measured against.
+    */
+    [data-motion="full"] [data-stagger] > * {
+      animation: scene-arrive linear both;
+      animation-timeline: view();
+      animation-range: entry 12% entry 72%;
+    }
+
+    [data-motion="full"] [data-stagger] > *:nth-child(2) { animation-range: entry 16% entry 76%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(3) { animation-range: entry 20% entry 80%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(4) { animation-range: entry 24% entry 84%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(n + 5) { animation-range: entry 28% entry 88%; }
+  }
+}
+
+/*
+  Holds at full strength for the first third — the hold is meant to let the hero be
+  read, and a block that starts dissolving immediately has no reason to be pinned at
+  all. Then it withdraws, and is gone by the time the track releases.
+*/
+@keyframes hero-depart {
+  0%,
+  32% {
+    transform: none;
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.94) translate3d(0, -2.5rem, 0);
+    opacity: 0;
+  }
+}
+
+/* Shrinks further than the block around it, so the title reads as being drawn back
+   rather than the page simply zooming out. Modest on purpose: scaling it to 0.42, as
+   the first version did, left a visible gap between it and the paragraph below. */
+@keyframes hero-title {
+  to {
+    transform: scale(0.76);
+  }
+}
+
+@keyframes scene-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2.5rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

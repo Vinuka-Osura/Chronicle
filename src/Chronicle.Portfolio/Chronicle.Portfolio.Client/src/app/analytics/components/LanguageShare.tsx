@@ -44,11 +44,22 @@ export function LanguageShare({ languages }: { languages: Language[] }) {
               100 - so the track would be quietly lying about what "full" means.
             */}
             <span className="block h-2.5 w-full">
-              {/* Square at the baseline, 4px rounded at the data end. */}
+              {/*
+                Two elements, because the fill has to animate and the length has to
+                stay a layout fact.
+
+                The outer span holds the real width, so the bar is the correct length in
+                the server HTML and without JavaScript. The inner one is scaled from 0 to
+                1 on a scroll timeline — `transform`, never `width`, because animating
+                width is a layout write on every frame and the whole row reflows with it.
+              */}
               <span
-                className="block h-full rounded-r-[4px] bg-signal"
+                className="block h-full"
                 style={{ width: `${Math.max(2, (language.percent / widest) * 100)}%` }}
-              />
+              >
+                {/* Square at the baseline, 4px rounded at the data end. */}
+                <span className="bar-fill block h-full origin-left rounded-r-[4px] bg-signal" />
+              </span>
             </span>
 
             {/* Direct-labelled at the tip: eight rows is few enough that every value can

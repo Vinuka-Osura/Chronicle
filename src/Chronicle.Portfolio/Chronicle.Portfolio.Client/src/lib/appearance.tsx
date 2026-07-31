@@ -20,7 +20,7 @@ export {
   type MotionTier,
 } from "./appearanceScript";
 
-import { THEME_COOKIE, RECRUITER_COOKIE } from "./appearanceScript";
+import { THEME_COOKIE, RECRUITER_COOKIE, applyMotionTier } from "./appearanceScript";
 import type { Theme } from "./appearanceScript";
 
 /**
@@ -122,6 +122,16 @@ export function useAppearance(): Appearance {
     const next = root.dataset.recruiter !== "on";
     root.dataset.recruiter = next ? "on" : "off";
     writeCookie(RECRUITER_COOKIE, next ? "1" : "0");
+
+    /*
+      The line this was missing.
+
+      Recruiter Mode is one of the two things that force the `still` motion tier, and
+      the tier is what the water, the inertial scroll and every animated rule actually
+      read. Setting `data-recruiter` alone left all of them running, so the mode only
+      appeared to work after a reload — when the pre-paint script recomputed the tier.
+    */
+    applyMotionTier();
   }, []);
 
   return { theme, toggleTheme, isRecruiterMode, toggleRecruiterMode };

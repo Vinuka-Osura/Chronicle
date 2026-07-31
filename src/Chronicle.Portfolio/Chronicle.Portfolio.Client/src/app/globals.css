@@ -483,38 +483,54 @@
   ── Scroll reveal ─────────────────────────────────────────────────────────────
   Anything with data-rise lifts into place as it enters the viewport.
 
-  The hidden state is gated on [data-reveal="ready"], which only the Reveal
-  component sets. No JavaScript means no attribute means nothing is ever hidden —
-  the failure mode this guards against is a page permanently at opacity zero,
-  which is how most scroll-reveal implementations break.
+  **The visible state is the base state, and nothing but a supported, permitted
+  animation can ever take it away.** The hidden state lives only inside the
+  keyframes, which apply only where `animation-timeline` exists AND motion is
+  allowed. An unsupported browser, a stylesheet that half-loads, or Recruiter Mode
+  therefore all land on "everything visible", which is the one outcome a reveal
+  system must never get wrong.
+
+  It used to be gated on `[data-reveal="ready"]`, set by a JS component. That
+  component is gone: it wrote `className` on nodes React had not hydrated yet and
+  caused a hydration mismatch on the hero.
 
   transform and opacity only, so it stays on the compositor.
 */
 @layer utilities {
-  [data-reveal="ready"] [data-rise] {
-    opacity: 0;
-    transform: translate3d(0, 12px, 0);
-    transition:
-      opacity 340ms var(--ease-out-quiet),
-      transform 340ms var(--ease-out-quiet);
-  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-motion="full"] [data-rise],
+      [data-motion="reduced"] [data-rise] {
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 5% entry 70%;
+      }
 
-  [data-reveal="ready"] [data-rise].is-visible {
+      /*
+        Sections stagger by their own index rather than a wrapper orchestrating
+        them, so a page can add or reorder sections without anything being rewired.
+        A scroll-driven animation has no clock, so the stagger offsets the RANGE
+        rather than adding a delay. Capped at five: past that the offset is longer
+        than the animation and the last item looks broken rather than choreographed.
+      */
+      [data-motion="full"] [data-rise="1"] { animation-range: entry 8% entry 73%; }
+      [data-motion="full"] [data-rise="2"] { animation-range: entry 11% entry 76%; }
+      [data-motion="full"] [data-rise="3"] { animation-range: entry 14% entry 79%; }
+      [data-motion="full"] [data-rise="4"] { animation-range: entry 17% entry 82%; }
+      [data-motion="full"] [data-rise="5"] { animation-range: entry 20% entry 85%; }
+    }
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 2rem, 0);
+  }
+  to {
     opacity: 1;
     transform: none;
   }
-
-  /*
-    Sections stagger by their own index rather than a wrapper orchestrating them,
-    so a page can add or reorder sections without anything being rewired. Capped
-    at five: past that the delay is longer than the animation and the last item
-    looks broken rather than choreographed.
-  */
-  [data-reveal="ready"] [data-rise="1"] { transition-delay: 40ms; }
-  [data-reveal="ready"] [data-rise="2"] { transition-delay: 80ms; }
-  [data-reveal="ready"] [data-rise="3"] { transition-delay: 120ms; }
-  [data-reveal="ready"] [data-rise="4"] { transition-delay: 160ms; }
-  [data-reveal="ready"] [data-rise="5"] { transition-delay: 200ms; }
 }
 
 /*
@@ -612,27 +628,13 @@
   }
 
   /*
-    Browsers without scroll-driven animations fall back to the same
-    IntersectionObserver that drives [data-rise]. One-shot rather than reversible,
-    which is the part that cannot be reproduced — but it arrives, and arriving is
-    most of the value.
-  */
-  @supports not (animation-timeline: view()) {
-    [data-reveal="ready"] .emerge,
-    [data-reveal="ready"] .emerge-set > * {
-      opacity: 0;
-      transform: translate3d(0, 2rem, 0);
-      transition:
-        opacity var(--t-set) var(--ease-set),
-        transform var(--t-set) var(--ease-set);
-    }
+    Where scroll-driven animation is unsupported there is deliberately no fallback.
 
-    [data-reveal="ready"] .emerge.is-in,
-    [data-reveal="ready"] .emerge-set > *.is-in {
-      opacity: 1;
-      transform: none;
-    }
-  }
+    The previous one was an IntersectionObserver adding a class, and that is precisely
+    what caused the hydration mismatch. Trading a correctness bug for an entrance on a
+    shrinking minority of browsers is a bad trade: those visitors get the page with
+    everything in place and nothing moving, which is a perfectly good page.
+  */
 }
 
 /*
@@ -662,9 +664,9 @@
        the window is narrower than it. */
     padding-inline: max(1rem, calc((100vw - 72rem) / 2));
     border-top: 1px solid var(--color-rule);
-    background: var(--color-paper-raised);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    /* Chrome, so solid — see the .chrome rule. A readout you glance at while scrolling
+       is the last thing that should have moving water behind it. */
+    background: var(--color-paper-solid);
     font-family: var(--font-mono);
     font-size: 0.66rem;
     letter-spacing: 0.03em;
@@ -696,6 +698,32 @@
     text-overflow: ellipsis;
   }
 
+  /* The name of the scene you are inside. Slides up as it changes rather than
+     swapping in place, so the strip reads as one instrument tracking your position
+     instead of two independent readouts. */
+  .status-bar-scene {
+    display: none;
+    overflow: hidden;
+    max-width: 12rem;
+    white-space: nowrap;
+    color: var(--color-signal);
+  }
+
+  @media (width >= 48rem) {
+    .status-bar-scene {
+      display: block;
+    }
+  }
+
+  .status-bar-scene > span {
+    display: inline-block;
+    animation: scene-label var(--t-move) var(--ease-set) both;
+  }
+
+  [data-motion="still"] .status-bar-scene > span {
+    animation: none;
+  }
+
   /* The read position. A play bar, and the shape the Timeline's transport control
      will grow out of — which is why it is a track with a fill rather than a
      percentage on its own. */
@@ -717,6 +745,20 @@
     /* scaleX rather than width: width is a layout change on every scroll frame. */
     transform: scaleX(var(--read, 0));
     transform-origin: left center;
+    /*
+      Slightly behind the scroll, on purpose.
+
+      The value is written every frame, so without this the fill is mathematically
+      perfect and reads as mechanical — it stops the instant the wheel does, which is
+      the one thing the rest of the page has been carefully arranged not to do. A short
+      linear transition lets it chase the position instead of being it, and matches the
+      weight the inertial scroll already gives everything else.
+    */
+    transition: transform 220ms linear;
+  }
+
+  [data-motion="still"] .status-bar-fill {
+    transition: none;
   }
 
   .status-bar-right {
@@ -761,12 +803,6 @@
     }
   }
 
-  [data-motion="reduced"] .status-bar,
-  [data-motion="still"] .status-bar {
-    background: var(--color-paper-solid);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
 }
 
 /*
@@ -805,18 +841,54 @@
     the same design as an opaque fill. Recruiter Mode gets it too, deliberately: a
     document should not shimmer.
   */
-  /* The same treatment for chrome that is not a card — the header, chiefly. Separate
-     from .surface because chrome has no border, radius or elevation. */
-  .glass {
-    background: var(--color-paper-raised);
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  /*
+    Chrome is solid. Content floats.
+
+    The header, the page footer and the status strip are frame, not content — they are
+    the same on every page and they are not what anyone came to look at. Made of glass
+    they read as unfinished: the water slides underneath the navigation while you are
+    trying to use it, and the eye keeps being pulled to the movement behind the one
+    element that should be completely still.
+
+    Cards keep `.surface` and stay translucent, because a card IS content and floating
+    on the water is the whole idea. One rule, stateable in a sentence, applied
+    consistently — which is most of what separates a designed interface from a set of
+    effects.
+  */
+  .chrome {
+    background: var(--color-paper-solid);
+  }
+
+  /* Footer links. An underline that grows from the left rather than appearing whole,
+     so a column of them reads as one system instead of eight separate hovers. */
+  .footer-link {
+    position: relative;
+    color: var(--color-ink-soft);
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .footer-link::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: -2px;
+    height: 1px;
+    background: var(--color-signal);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--t-move) var(--ease-set);
+  }
+
+  .footer-link:hover {
+    color: var(--color-ink);
+  }
+
+  .footer-link:hover::after {
+    transform: scaleX(1);
   }
 
   [data-motion="reduced"] .surface,
-  [data-motion="still"] .surface,
-  [data-motion="reduced"] .glass,
-  [data-motion="still"] .glass {
+  [data-motion="still"] .surface {
     background: var(--color-paper-solid);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -1175,19 +1247,43 @@
      Content uncovered by a moving edge rather than by opacity. Fading is the
      cheapest possible reveal and looks it; an edge reads as something being
      drawn. */
-  .reveal-mask {
+  /*
+    Two variants, and NEITHER involves JavaScript.
+
+    `.reveal-mask` is part of an arrival sequence above the fold: it runs on a timer
+    from page load, staggered by `--in-delay`, because a hero that waits to be scrolled
+    to is a hero nobody sees.
+
+    `.reveal-mask-in-view` uncovers as it enters the viewport, and re-covers on the way
+    back up, because it is driven by scroll position rather than by a one-shot trigger.
+
+    This used to be a class toggled by an IntersectionObserver in a `<Reveal>`
+    component mounted in the root layout. That component mutated `className` on elements
+    belonging to a page segment that had not hydrated yet, so React found DOM it never
+    rendered and reported a hydration mismatch on the hero. The fix is not to suppress
+    the warning — it is to stop writing to the DOM at all.
+  */
+  .reveal-mask,
+  .reveal-mask-in-view {
     clip-path: inset(0 0 0 0);
   }
 
-  [data-motion="full"] .reveal-mask,
-  [data-motion="reduced"] .reveal-mask {
-    clip-path: inset(0 0 100% 0);
-    transition: clip-path var(--t-set) var(--ease-set);
+  @media (prefers-reduced-motion: no-preference) {
+    [data-motion="full"] .reveal-mask,
+    [data-motion="reduced"] .reveal-mask {
+      animation: uncover var(--t-set) var(--ease-set) var(--in-delay, 0ms) both;
+    }
   }
 
-  [data-motion="full"] .reveal-mask.is-in,
-  [data-motion="reduced"] .reveal-mask.is-in {
-    clip-path: inset(0 0 0 0);
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-motion="full"] .reveal-mask-in-view,
+      [data-motion="reduced"] .reveal-mask-in-view {
+        animation: uncover linear both;
+        animation-timeline: view();
+        animation-range: entry 10% entry 85%;
+      }
+    }
   }
 
   /* ── B. Line setting ─────────────────────────────────────────────────────
@@ -1230,6 +1326,17 @@
   }
   to {
     transform: translate3d(0, 0, 0);
+  }
+}
+
+/* The moving edge. Shared by both reveal-mask variants so the gesture is identical
+   whether it is fired by a delay or by scroll position. */
+@keyframes uncover {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -1306,6 +1413,9 @@
      line return; this is the single highest-leverage typographic decision on any
      page and the easiest to get wrong by letting a container decide it. */
   .hero-lede {
+    /* Its place in the arrival sequence, read by .reveal-mask. Held here rather than
+       on the element so the whole hero's timing can be read in one place. */
+    --in-delay: 820ms;
     max-width: 42rem;
     font-size: var(--text-lede);
     line-height: 1.65;
@@ -1339,6 +1449,7 @@
      Three links, one of them clearly first. Equal-weight buttons make a reader
      choose, and a reader who has to choose usually chooses nothing. */
   .hero-actions {
+    --in-delay: 980ms;
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
@@ -1385,5 +1496,447 @@
 @keyframes hero-sweep {
   to {
     transform: scaleX(1);
+  }
+}
+
+/*
+  ── Animated figures ──────────────────────────────────────────────────────────
+  Counters, fills, rings and drawn lines.
+
+  The governing rule is in Figure.tsx and worth repeating here, because it is a
+  design rule and not an implementation detail: a bar or a ring asserts a scale.
+  Nothing below is applied to a number that has no denominator.
+
+  Everything except the counter is scrubbed by the scroll rather than triggered by
+  it, so a figure fills on the way down and empties on the way back up. That
+  reversibility is what separates "the page is responding to me" from "an
+  animation played once".
+*/
+
+/*
+  Registering the property is what makes the ring animatable at all. A plain custom
+  property is a string to the interpolator, so a conic-gradient built from one
+  jumps from its start value to its end with nothing in between.
+*/
+@property --ring {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@layer components {
+  .figure-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .figure-ring {
+    display: grid;
+    place-items: center;
+    width: 5.5rem;
+    height: 5.5rem;
+    border-radius: 50%;
+    /* The track, the arc, then the disc that punches the middle out. Drawn with a
+       gradient rather than an SVG circle so there is one element and no viewBox
+       to keep in step with the size. */
+    background:
+      radial-gradient(
+        closest-side,
+        var(--color-paper-solid) 79%,
+        transparent 80% 100%
+      ),
+      conic-gradient(
+        var(--color-signal) var(--ring),
+        var(--color-rule) 0
+      );
+  }
+
+  .figure-ring-value {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .figure-ring-unit {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-ink-faint);
+  }
+
+  .figure-ring-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+  }
+
+  .figure-ring-caption {
+    max-width: 14rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Ordinal meter ───────────────────────────────────────────────────────── */
+  .figure-meter {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: middle;
+  }
+
+  .figure-meter-step {
+    width: 0.75rem;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--color-rule);
+    transform-origin: left;
+  }
+
+  .figure-meter-step.is-on {
+    background: var(--color-signal);
+  }
+
+  /* ── Sparkline ───────────────────────────────────────────────────────────── */
+  .figure-spark {
+    display: block;
+    width: 100%;
+    height: 2rem;
+    overflow: visible;
+  }
+
+  .figure-spark-line {
+    fill: none;
+    stroke: var(--color-signal);
+    /* 2px at the rendered size, not at the viewBox size — without this the stroke
+       stretches with the non-uniform preserveAspectRatio and thickens on wide
+       screens. */
+    vector-effect: non-scaling-stroke;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ── Before → after ──────────────────────────────────────────────────────── */
+  .metric-cross {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+  }
+
+  .metric-cross-from,
+  .metric-cross-arrow,
+  .metric-cross-to {
+    transition:
+      opacity var(--t-set) var(--ease-set),
+      transform var(--t-set) var(--ease-set);
+  }
+
+  /* Before the crossing: only the old value, in place. */
+  .metric-cross-from {
+    color: var(--color-ink-faint);
+  }
+
+  .metric-cross-arrow,
+  .metric-cross-to {
+    opacity: 0;
+    transform: translate3d(-0.4em, 0, 0);
+  }
+
+  .metric-cross.is-after .metric-cross-arrow,
+  .metric-cross.is-after .metric-cross-to {
+    opacity: 1;
+    transform: none;
+  }
+
+  .metric-cross-arrow {
+    color: var(--color-ink-faint);
+    font-size: 0.6em;
+  }
+
+  .metric-cross-to {
+    color: var(--color-ink);
+  }
+}
+
+/*
+  The scroll-driven half. Fills, draws and lights, each on its own view() timeline
+  so it tracks that element's position rather than the page's.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-motion="full"] .figure-ring,
+    [data-motion="reduced"] .figure-ring {
+      animation: ring-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 30%;
+    }
+
+    [data-motion="full"] .figure-spark-line,
+    [data-motion="reduced"] .figure-spark-line {
+      animation: spark-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 35%;
+    }
+
+    [data-motion="full"] .figure-meter-step,
+    [data-motion="reduced"] .figure-meter-step {
+      animation: meter-step linear both;
+      animation-timeline: view();
+      /* Each segment starts fractionally later than the one before, so the meter
+         reads left to right instead of snapping on as a block. */
+      animation-range: entry calc(20% + var(--step) * 4%) entry calc(52% + var(--step) * 4%);
+    }
+
+    /* The share bars. scaleX, never width — width is a layout write, and a layout
+       write on every scroll frame is how a page starts dropping them. */
+    [data-motion="full"] .bar-fill,
+    [data-motion="reduced"] .bar-fill {
+      animation: bar-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 25%;
+    }
+  }
+}
+
+@keyframes ring-fill {
+  from { --ring: 0%; }
+  to { --ring: var(--ring-target, 0%); }
+}
+
+@keyframes spark-draw {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+
+@keyframes meter-step {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes scene-label {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.7em, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+  ── The project card ──────────────────────────────────────────────────────────
+  In globals.css rather than beside the Home page because Projects renders the
+  same component.
+
+  The previous card was a bordered box of text and read as a search result. What
+  changed is structural rather than decorative: something to look at before you
+  read, one clear first line, and everything administrative demoted to a hairline
+  row at the bottom where it can be found without having to be read.
+*/
+@layer components {
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.75rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    transition:
+      transform var(--t-move) var(--ease-set),
+      box-shadow var(--t-move) var(--ease-set),
+      border-color var(--t-move) var(--ease-set);
+  }
+
+  [data-motion="reduced"] .card,
+  [data-motion="still"] .card {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lifted);
+    border-color: color-mix(in oklch, var(--color-signal) 45%, var(--color-rule));
+  }
+
+  /* ── The plate ───────────────────────────────────────────────────────────── */
+  .card-plate {
+    position: relative;
+    display: block;
+    /* A fixed ratio, so a grid of cards has its titles on the same line whether or
+       not the images have loaded. */
+    aspect-ratio: 16 / 9;
+    /* And a ceiling, because the ratio alone is a trap: in Recruiter Mode the grid
+       collapses to one column, and 16/9 of a full-width card is over 600px of
+       picture above the title. The image is support for the words, not the point. */
+    max-height: 15rem;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--color-signal) 8%, var(--color-paper-solid));
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .card-plate-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--t-scene) var(--ease-set);
+  }
+
+  .card:hover .card-plate-image {
+    transform: scale(1.04);
+  }
+
+  /*
+    The generated plate.
+
+    Not a placeholder box — a figure derived from the slug, so it reads as identity
+    rather than as something missing. Hue, angle and stripe frequency all come from
+    the same hash, which means two projects do not collide by accident and the same
+    project looks identical on every visit. It claims to be nothing; it is
+    obviously a pattern, not a screenshot.
+  */
+  .card-plate-generated {
+    background:
+      repeating-linear-gradient(
+        var(--plate-turn, 0deg),
+        color-mix(in oklch, var(--color-signal) 20%, transparent) 0,
+        color-mix(in oklch, var(--color-signal) 20%, transparent) 1px,
+        transparent 1px,
+        transparent var(--plate-gap, 12px)
+      ),
+      linear-gradient(
+        135deg,
+        oklch(from var(--color-signal) l c calc(h + var(--plate-hue, 0deg)) / 0.16),
+        transparent 62%
+      ),
+      var(--color-paper-solid);
+  }
+
+  .card-plate-index {
+    position: absolute;
+    right: 1rem;
+    bottom: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 3.25rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: color-mix(in oklch, var(--color-ink) 16%, transparent);
+    user-select: none;
+  }
+
+  /* ── The body ────────────────────────────────────────────────────────────── */
+  .card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 1.25rem 1.25rem 1rem;
+  }
+
+  .card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  .card-flag {
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--color-signal-soft);
+    padding: 0.15rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+  }
+
+  .card-pitch {
+    margin-top: 0.5rem;
+    /* A measure, not a container width. The single most effective typographic
+       decision available, and the easiest to lose by not making it. */
+    max-width: 42ch;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-rule);
+    /* Pushes the footer to the bottom whatever the pitch length, so a row of cards
+       has its rules aligned. */
+  }
+
+  .card-dates,
+  .card-stack {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: var(--color-ink-faint);
+  }
+
+  .card-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .card-stack > li::after {
+    content: "·";
+    margin-left: 0.35rem;
+    color: var(--color-rule);
+  }
+
+  .card-stack > li:last-child::after {
+    content: none;
+  }
+
+  .card-stack-more {
+    color: var(--color-signal);
+  }
+
+  .card-arrow {
+    margin-left: auto;
+    color: var(--color-ink-faint);
+    transition:
+      transform var(--t-move) var(--ease-set),
+      color var(--t-move) var(--ease-set);
+  }
+
+  .card:hover .card-arrow {
+    transform: translateX(4px);
+    color: var(--color-signal);
   }
 }

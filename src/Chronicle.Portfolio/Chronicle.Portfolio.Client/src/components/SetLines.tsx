@@ -24,11 +24,14 @@ export function SetLines({
   className = "",
   as: Tag = "h1",
   delay = 0,
+  id,
 }: {
   children: string;
   className?: string;
   as?: "h1" | "h2" | "h3" | "p";
   delay?: number;
+  /** So a section can point `aria-labelledby` at the heading this renders. */
+  id?: string;
 }) {
   const ref = useRef<HTMLElement>(null);
   const [lines, setLines] = useState<string[] | null>(null);
@@ -90,7 +93,12 @@ export function SetLines({
   }, [children]);
 
   return (
-    <Tag ref={ref as never} className={className} data-set-lines={lines ? "" : undefined}>
+    <Tag
+      ref={ref as never}
+      id={id}
+      className={className}
+      data-set-lines={lines ? "" : undefined}
+    >
       {lines
         ? lines.map((line, index) => (
             <span key={`${index}-${line}`} className="line-mask">
