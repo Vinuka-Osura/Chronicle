@@ -185,7 +185,8 @@ surface is real. Then deployment. Software City stays a separate repository.
 | [`docs/content-template.md`](docs/content-template.md) | Fill this in to replace the demo persona with real content |
 | [`docs/deployment.md`](docs/deployment.md) | Hosting, domains, storage, email — what it costs and what to buy |
 | [`docs/technical-decisions.md`](docs/technical-decisions.md) | The decisions that were expensive to make, and why |
-| [`docs/roadmap.md`](docs/roadmap.md) | The day-by-day plan |
+| [`docs/roadmap.md`](docs/roadmap.md) | Where this is, and what is left |
+| [`docs/software-city-start.md`](docs/software-city-start.md) | How to begin the second product against this one's contract |
 
 > The content is currently a fictional engineer, **Sam Iversen**, so the application is
 > coherent end to end before real content exists. See `docs/content-template.md`.
