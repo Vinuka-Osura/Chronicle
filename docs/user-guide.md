@@ -55,14 +55,26 @@ Below it the page reads as five scenes, in this order:
 | **Introduction** | The positioning statement and three entry points. Holds still briefly while the headline draws back, then releases. | Fixed copy |
 | **Selected work** | The featured projects, as cards. | Projects marked *Featured* in the admin |
 | **Outcomes** | What the work actually did — "Statement p95: 2.4s to 40ms". Holds still while each figure resolves. | The **Metrics** field on each featured project |
+| **By the numbers** | The work in aggregate: contributions, languages, streak, repositories, projects and skills, each with its own chart. | GitHub, plus your projects, skills and timeline |
 | **Range** | Strongest skills by category, and how many projects each was used on. | Skills, and the projects they are linked to |
 | **Get in touch** | A closing sign-off. | Fixed copy |
 
-**Two of these depend on you filling something in.** *Outcomes* shows a figure for every
-metric on a featured project and disappears entirely if there are none, so adding metrics
-to a case study is what makes it grow. Project cards show whatever image you upload as
-the thumbnail; until then each one gets a generated pattern of its own, so a card without
-a picture still looks finished.
+**Several of these depend on you filling something in.** *Outcomes* shows a figure for
+every metric on a featured project and disappears entirely if there are none, so adding
+metrics to a case study is what makes it grow. Project cards show whatever image you
+upload as the thumbnail; until then each one gets a generated pattern of its own, so a
+card without a picture still looks finished.
+
+**A card only ever appears when its data exists.** In *By the numbers*, the four GitHub
+cards need a configured token — without one they are simply absent rather than showing
+zeroes, because a headline "0 contributions" is a worse claim than no claim. The two
+drawn from your own content, projects and timeline, are always there.
+
+**A number is never given a chart it has not earned.** A bar or a ring says its
+quantities sit on one scale. So "2.4s to 40ms" gets a comparison bar, because seconds and
+milliseconds are the same measurement; a value like "40ms to 3 incidents" gets none, and
+a metric written as a word rather than a number is shown exactly as you typed it. Every
+figure counts up when you scroll to it, and counts again if you come back.
 
 The strip along the bottom of every page names the scene you are in, how far down you
 are, and offers the way back to the top. It stands aside when the full footer arrives.

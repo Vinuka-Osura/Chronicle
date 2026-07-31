@@ -49,7 +49,10 @@ public sealed class GetGitHubStatsQueryHandler(IGitHubService github, IDateTimeP
                 .ToList(),
             LastCommit: stats.LastCommit is { } commit
                 ? new LastCommitDto(commit.Message, commit.Repo, commit.When)
-                : null);
+                : null,
+            Repos: stats.RecentRepos
+                .Select(repo => new RepoSummaryDto(repo.Name, repo.Language, repo.PushedAt, repo.Url))
+                .ToList());
     }
 
     /// <summary>

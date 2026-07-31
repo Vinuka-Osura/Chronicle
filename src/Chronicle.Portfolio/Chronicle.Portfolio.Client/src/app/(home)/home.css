@@ -391,6 +391,222 @@
     text-underline-offset: 3px;
   }
 
+
+  /* ── The pulse grid ─────────────────────────────────────────────────────────
+     The work in aggregate. Every card here has a real series behind it, which is
+     what lets them all carry a chart — the metric cards above cannot, because a
+     one-off result has no shape to draw. */
+  .pulse-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1rem;
+    margin-top: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .pulse-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.35rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.85rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  [data-motion="reduced"] .pulse-card,
+  [data-motion="still"] .pulse-card {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .pulse-card-centred {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .pulse-card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .pulse-card .metric-figure {
+    font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.6rem);
+  }
+
+  /* ── Column chart ───────────────────────────────────────────────────────────
+     The shape borrowed from the reference dashboards. Bars grow from the baseline
+     on a scroll timeline, staggered left to right so the chart builds rather than
+     appearing. */
+  .figure-bars {
+    margin-top: auto;
+    padding-top: 0.5rem;
+  }
+
+  .figure-bars-row,
+  .figure-bars-labels {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 3px;
+  }
+
+  .figure-bars-row {
+    align-items: end;
+    height: 3.5rem;
+  }
+
+  .figure-bar {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+    border-radius: 3px;
+    /* The unfilled part of the column, so a quiet month still reads as a measured
+       zero rather than as a gap where a bar failed to draw. */
+    background: color-mix(in oklch, var(--color-ink) 8%, transparent);
+    overflow: hidden;
+  }
+
+  .figure-bar-fill {
+    display: block;
+    width: 100%;
+    height: var(--bar, 0%);
+    border-radius: 3px;
+    background: color-mix(in oklch, var(--color-signal) 55%, transparent);
+    transform-origin: bottom;
+  }
+
+  /* The most recent column, when "now" is the point of the chart. */
+  .figure-bar.is-now .figure-bar-fill {
+    background: var(--color-signal);
+  }
+
+  .figure-bars-labels {
+    margin-top: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    text-align: center;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Ranked rows, for the language mix ──────────────────────────────────── */
+  .pulse-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-top: auto;
+  }
+
+  .pulse-row {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr 2.6rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .pulse-row-name {
+    overflow: hidden;
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-ink);
+  }
+
+  .pulse-row-track {
+    display: block;
+    width: 100%;
+    height: 7px;
+  }
+
+  /* The outer span carries the real length so the bar is correct without any
+     JavaScript; the inner one is what scales, because animating width is a layout
+     write on every frame. */
+  .pulse-row-bar {
+    display: block;
+    height: 100%;
+  }
+
+  .pulse-row-bar .bar-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: var(--color-signal);
+    transform-origin: left center;
+  }
+
+  .pulse-row-value {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-soft);
+  }
+
+  /* ── Repository list ────────────────────────────────────────────────────── */
+  .pulse-repos {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+  }
+
+  .pulse-repo {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.4rem 0;
+    border-top: 1px solid var(--color-rule);
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .pulse-repos li:first-child .pulse-repo {
+    border-top: 0;
+  }
+
+  .pulse-repo-name {
+    overflow: hidden;
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-ink);
+  }
+
+  .pulse-repo:hover .pulse-repo-name {
+    color: var(--color-signal);
+  }
+
+  .pulse-repo-lang,
+  .pulse-repo-when {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    white-space: nowrap;
+    color: var(--color-ink-faint);
+  }
+
+  .pulse-more {
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: var(--color-signal);
+  }
+
+  .pulse-more:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
   /* ── Capability ──────────────────────────────────────────────────────────── */
   .capability-grid {
     display: grid;
@@ -572,13 +788,50 @@
     [data-motion="full"] [data-stagger][data-depart] > *:nth-child(3) { animation-range: entry 20% exit 61%; }
     [data-motion="full"] [data-stagger][data-depart] > *:nth-child(n + 4) { animation-range: entry 25% exit 64%; }
 
+    /*
+      Metric and pulse cards POP rather than rise.
+
+      They are readings on an instrument, not sheets of paper arriving, so they come
+      up from slightly behind the surface with a short overshoot instead of sliding
+      in from below like the project cards. Different gesture, different kind of
+      object — which is the point of having two.
+    */
+    [data-motion="full"] [data-stagger][data-pop] > *,
+    [data-motion="full"] .proof-grid > * {
+      animation-name: card-pop;
+      animation-range: entry 18% entry 65%;
+    }
+
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(2),
+    [data-motion="full"] .proof-grid > *:nth-child(2) { animation-range: entry 22% entry 69%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(3),
+    [data-motion="full"] .proof-grid > *:nth-child(3) { animation-range: entry 26% entry 73%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(4) { animation-range: entry 30% entry 77%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(5) { animation-range: entry 34% entry 81%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(n + 6) { animation-range: entry 38% entry 85%; }
+
     /* The comparison bars draw as the card arrives, on their own timeline so they
        are still filling after the card has settled. */
     [data-motion="full"] .metric-bar-fill,
-    [data-motion="reduced"] .metric-bar-fill {
+    [data-motion="reduced"] .metric-bar-fill,
+    [data-motion="full"] .pulse-row-bar .bar-fill,
+    [data-motion="reduced"] .pulse-row-bar .bar-fill {
       animation: bar-fill linear both;
       animation-timeline: view();
       animation-range: entry 30% cover 20%;
+    }
+
+    /*
+      Columns grow from the baseline, each one a little after the one to its left, so
+      the chart builds rather than appearing. The stagger is on the RANGE and not on a
+      delay: a scroll-driven animation has no clock for a delay to be measured against.
+    */
+    [data-motion="full"] .figure-bar-fill,
+    [data-motion="reduced"] .figure-bar-fill {
+      animation: column-grow linear both;
+      animation-timeline: view();
+      animation-range: entry calc(32% + var(--col, 0) * 1.6%) cover calc(16% + var(--col, 0) * 1.6%);
+      transform-origin: bottom;
     }
   }
 }
@@ -606,6 +859,38 @@
 @keyframes hero-title {
   to {
     transform: scale(0.76);
+  }
+}
+
+/*
+  A reading coming up to the surface.
+
+  Deliberately not the same gesture as a project card. That one slides up from below
+  with a tilt, like a sheet being dealt; this one rises from *behind* the page with a
+  short overshoot past its resting size, which reads as a panel switching on. Two kinds
+  of object, two ways of arriving — the distinction is the reason there are two.
+*/
+@keyframes card-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translate3d(0, 1.25rem, 0);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.015) translate3d(0, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes column-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
   }
 }
 

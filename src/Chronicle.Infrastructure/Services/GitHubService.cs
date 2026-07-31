@@ -118,6 +118,9 @@ public sealed class GitHubService(
     // Fetch
     // -----------------------------------------------------------------------
 
+    /// <summary>How many repository names the public site has any use for.</summary>
+    private const int RecentRepoLimit = 6;
+
     private async Task<GitHubStats?> FetchAsync(CancellationToken cancellationToken)
     {
         var repos = await FetchReposAsync(cancellationToken).ConfigureAwait(false);
@@ -139,7 +142,18 @@ public sealed class GitHubService(
             ContributionCalendar: calendar,
             TopLanguages: languages,
             LastCommit: lastCommit,
-            FetchedAt: clock.UtcNow);
+            FetchedAt: clock.UtcNow,
+            // Already sorted by most recently pushed, so this is the top of that list and
+            // needs no extra request. Capped because the site shows a handful, and a
+            // hundred repository names in a cached payload is weight nobody reads.
+            RecentRepos: repos
+                .Take(RecentRepoLimit)
+                .Select(r => new Application.Common.Models.RepoSummary(
+                    r.Name,
+                    string.IsNullOrWhiteSpace(r.Language) ? null : r.Language,
+                    r.PushedAt,
+                    r.HtmlUrl))
+                .ToList());
     }
 
     /// <summary>Public, non-fork repositories, most recently pushed first.</summary>
@@ -438,7 +452,12 @@ public sealed class GitHubService(
         string Name,
         [property: JsonPropertyName("full_name")] string FullName,
         bool Fork,
-        bool Private);
+        bool Private,
+        // Nullable because a repository with no code in it yet reports no language, and
+        // that is a normal state rather than a failure to parse.
+        string? Language = null,
+        [property: JsonPropertyName("pushed_at")] DateTimeOffset PushedAt = default,
+        [property: JsonPropertyName("html_url")] string HtmlUrl = "");
 }
 
 /// <summary>Source-generated log messages (CA1848).</summary>

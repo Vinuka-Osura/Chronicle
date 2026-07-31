@@ -16,6 +16,7 @@ const NOT_CONNECTED: GitHubStats = {
   calendar: [],
   languages: [],
   lastCommit: null,
+  repos: [],
 };
 
 /**

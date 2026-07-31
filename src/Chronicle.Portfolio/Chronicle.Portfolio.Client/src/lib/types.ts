@@ -227,6 +227,13 @@ export interface ContributionDay {
   count: number;
 }
 
+export interface RepoSummary {
+  name: string;
+  language: string | null;
+  pushedAt: IsoDateTime;
+  url: string;
+}
+
 export interface LanguageShare {
   name: string;
   percent: number;
@@ -252,4 +259,6 @@ export interface GitHubStats {
   calendar: ContributionDay[];
   languages: LanguageShare[];
   lastCommit: LastCommit | null;
+  /** Most recently pushed public repositories. Empty until GitHub has been reached. */
+  repos: RepoSummary[];
 }

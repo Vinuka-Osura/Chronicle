@@ -61,48 +61,74 @@ export function Counter({
 
   const [shown, setShown] = useState(value);
   const ref = useRef<HTMLSpanElement>(null);
-  const done = useRef(false);
 
   useEffect(() => {
     const element = ref.current;
-    if (!element || done.current || !motionAllowed()) return;
-
-    // Waits to be seen. Counting a figure that is three screens below the fold means the
-    // visitor arrives to a number that has already finished moving.
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting || done.current) continue;
-          done.current = true;
-          observer.disconnect();
-          run();
-        }
-      },
-      { threshold: 0.4 },
-    );
+    if (!element || !motionAllowed()) return;
 
     let frame = 0;
     let start: number | null = null;
 
     const run = () => {
+      cancelAnimationFrame(frame);
+      start = null;
+
       const step = (time: number) => {
         if (start === null) start = time;
         const t = Math.min(1, (time - start) / duration);
         // Exponential ease-out: most of the distance early, then a long settle. A linear
         // count reads like a loading spinner; this reads like a dial finding its mark.
         const eased = 1 - Math.pow(2, -10 * t);
-        const step_ = 10 ** decimals;
-        setShown(Math.round(value * (t === 1 ? 1 : eased) * step_) / step_);
+        const places = 10 ** decimals;
+        setShown(Math.round(value * (t === 1 ? 1 : eased) * places) / places);
         if (t < 1) frame = requestAnimationFrame(step);
         else setShown(value);
       };
+
       frame = requestAnimationFrame(step);
     };
 
-    observer.observe(element);
+    /*
+      TWO observers, because starting and resetting are not the same question.
+
+      **Start** when the figure reaches a band across the middle of the screen. Firing on
+      any intersection at all was the original bug: these figures sit inside a pinned
+      scene whose sticky content becomes geometrically visible at the top of a 240vh
+      track, a screen and a half before anyone has arrived to read it, so the count
+      reliably finished while the reader was still scrolling towards it — which is
+      indistinguishable from it never having run.
+
+      **Reset** only once the figure has genuinely left the viewport. Resetting at the
+      edge of the trigger band instead was the obvious shortcut and it is visibly wrong:
+      a card sitting perfectly readable near the top of the screen would show 0, because
+      it had scrolled out of the middle third. A figure that is on screen always reads
+      its real value.
+    */
+    const arrive = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) run();
+      },
+      { rootMargin: "-38% 0px -38% 0px", threshold: 0 },
+    );
+
+    const rearm = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) continue;
+          // Off screen entirely: put it back to zero so returning plays it again.
+          cancelAnimationFrame(frame);
+          setShown(0);
+        }
+      },
+      { rootMargin: "80px", threshold: 0 },
+    );
+
+    arrive.observe(element);
+    rearm.observe(element);
 
     return () => {
-      observer.disconnect();
+      arrive.disconnect();
+      rearm.disconnect();
       cancelAnimationFrame(frame);
     };
   }, [value, duration, decimals]);
@@ -253,6 +279,66 @@ export function Meter({
         />
       ))}
     </span>
+  );
+}
+
+/**
+ * A column chart, sized to sit under a headline figure.
+ *
+ * The shape borrowed from the reference dashboards: a short row of vertical bars with a
+ * label under each, giving a headline number the context of how it got there. Bars grow
+ * from the baseline on a scroll timeline, so they fill on the way down and empty on the
+ * way back up with no JavaScript.
+ *
+ * **Only ever fed a real, evenly-spaced series.** The points must be successive
+ * measurements of one thing — contributions per month, projects per year. A row of bars
+ * asserts that its categories are comparable and ordered, and there is no way to draw it
+ * "just for looks" without making that claim.
+ */
+export function BarSeries({
+  points,
+  labels,
+  label,
+  highlightLast = false,
+}: {
+  points: number[];
+  labels: string[];
+  /** For screen readers, since the bars themselves carry no text. */
+  label: string;
+  /** Marks the most recent column, when "now" is the point of the chart. */
+  highlightLast?: boolean;
+}) {
+  if (points.length === 0) return null;
+
+  const peak = Math.max(...points, 1);
+
+  return (
+    <div className="figure-bars" role="img" aria-label={label}>
+      <div className="figure-bars-row">
+        {points.map((value, index) => (
+          <span
+            key={index}
+            className={`figure-bar ${highlightLast && index === points.length - 1 ? "is-now" : ""}`}
+            // The delay is per column, so the chart builds left to right instead of
+            // appearing all at once.
+            style={
+              {
+                "--bar": `${Math.max(0.04, value / peak) * 100}%`,
+                "--col": index,
+              } as React.CSSProperties
+            }
+          >
+            <span className="figure-bar-fill" />
+          </span>
+        ))}
+      </div>
+
+      <div className="figure-bars-labels" aria-hidden>
+        {labels.map((text, index) => (
+          <span key={index}>{text}</span>
+        ))}
+      </div>
+    </div>
   );
 }
 

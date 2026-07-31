@@ -26,10 +26,18 @@ public sealed record GitHubStatsDto(
     DateOnly? CalendarTo,
     IReadOnlyList<ContributionDayDto> Calendar,
     IReadOnlyList<LanguageShareDto> Languages,
-    LastCommitDto? LastCommit);
+    LastCommitDto? LastCommit,
+    IReadOnlyList<RepoSummaryDto> Repos);
 
 public sealed record ContributionDayDto(DateOnly Date, int Count);
 
 public sealed record LanguageShareDto(string Name, double Percent);
 
 public sealed record LastCommitDto(string Message, string Repo, DateTimeOffset When);
+
+/// <summary>A public repository, for the "what has been touched lately" readout.</summary>
+public sealed record RepoSummaryDto(
+    string Name,
+    string? Language,
+    DateTimeOffset PushedAt,
+    string Url);

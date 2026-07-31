@@ -1,17 +1,7 @@
 import Link from "next/link";
-import { Counter, MetricValue, Ring, Sparkline } from "@/components/Figure";
+import { MetricValue } from "@/components/Figure";
 import { SetLines } from "@/components/SetLines";
-import type { GitHubStats } from "@/lib/types";
 import type { ProofMetric } from "../api";
-
-/** Sums the daily contribution calendar into weeks, for the sparkline. */
-function byWeek(days: { count: number }[]): number[] {
-  const weeks: number[] = [];
-  for (let index = 0; index < days.length; index += 7) {
-    weeks.push(days.slice(index, index + 7).reduce((total, day) => total + day.count, 0));
-  }
-  return weeks;
-}
 
 /**
  * The pinned scene: what the work actually did.
@@ -25,42 +15,9 @@ function byWeek(days: { count: number }[]): number[] {
  * spends the visitor's scroll, so it is reserved for the two moments worth holding still
  * for. The rest of the page keeps moving normally.
  */
-export function Proof({
-  metrics,
-  stats,
-}: {
-  metrics: ProofMetric[];
-  stats: GitHubStats | null;
-}) {
-  const weeks = stats ? byWeek(stats.calendar) : [];
-  const streakRatio =
-    stats && stats.longestStreakDays > 0
-      ? (stats.currentStreakDays / stats.longestStreakDays) * 100
-      : null;
-
-  /*
-    Only figures that have something to say.
-
-    The endpoint answers `isLive: true` with every count at zero when no GitHub token is
-    configured, which is accurate and would read as broken — "0 contributions this year"
-    in display type is a worse claim than no claim. Each figure appears on its own merit,
-    and if none of them do, the band goes with them.
-  */
-  const figures = stats
-    ? [
-        {
-          key: "contributions",
-          value: stats.contributionsLastYear,
-          label: "Contributions, 12 months",
-        },
-        { key: "repos", value: stats.publicRepos, label: "Public repositories" },
-      ].filter((figure) => figure.value > 0)
-    : [];
-
-  const hasPulse = figures.length > 0 || streakRatio !== null || weeks.length > 1;
-
-  // Nothing to prove yet: better no section than a heading over an empty grid.
-  if (metrics.length === 0 && !hasPulse) return null;
+export function Proof({ metrics }: { metrics: ProofMetric[] }) {
+  // Nothing published yet: better no section than a heading over an empty grid.
+  if (metrics.length === 0) return null;
 
   return (
     /* The track is taller than the screen; the inner sticks. That is the whole pinning
@@ -74,8 +31,7 @@ export function Proof({
             Shipping is the easy half. This is what happened next.
           </SetLines>
 
-          {metrics.length > 0 && (
-            <ul className="proof-grid" data-stagger>
+          <ul className="proof-grid" data-stagger>
               {metrics.map((metric) => (
                 <li key={`${metric.projectSlug}-${metric.label}`} className="proof-item">
                   <p className="proof-label">
@@ -101,48 +57,8 @@ export function Proof({
                   </Link>
                 </li>
               ))}
-            </ul>
-          )}
+          </ul>
 
-          {hasPulse && stats && (
-            <div className="pulse">
-              <div className="pulse-figures">
-                {figures.map((figure) => (
-                  <div key={figure.key} className="pulse-figure">
-                    <span className="pulse-value">
-                      <Counter value={figure.value} />
-                    </span>
-                    <span className="pulse-label">{figure.label}</span>
-                  </div>
-                ))}
-
-                {/* A ring only because this is a true ratio. The counts beside it have no
-                    denominator, so they stay as numbers. */}
-                {streakRatio !== null && (
-                  <Ring
-                    percent={streakRatio}
-                    label="Streak vs best"
-                    caption={`${stats.currentStreakDays} days, against a best of ${stats.longestStreakDays}`}
-                  />
-                )}
-              </div>
-
-              {weeks.length > 1 && (
-                <div className="pulse-spark">
-                  <Sparkline
-                    points={weeks}
-                    label={`Weekly contributions over the last ${weeks.length} weeks`}
-                  />
-                  <p className="pulse-spark-label">
-                    Weekly contributions
-                    <Link href="/analytics" className="pulse-spark-link">
-                      See the detail
-                    </Link>
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </section>
