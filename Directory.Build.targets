@@ -1,0 +1,65 @@
+<Project>
+
+  <!--
+    Stops this repository's own processes before building, so a build can always replace
+    its output.
+
+    The failure this removes:
+
+      Could not copy "...\Chronicle.Infrastructure.dll" to "bin\Debug\net10.0\..."
+      Exceeded retry count of 10. The file is locked by: "Chronicle.Portfolio.Server (36700)"
+
+    A running server holds its dependencies open. Normally the AppHost stops its children
+    when it stops, so this only bites when it was force-killed or its terminal was closed
+    - which happens often enough to be worth removing rather than documenting.
+
+    SAFETY, because a build that kills processes deserves the scrutiny:
+
+      - It only ever matches processes whose executable path is inside THIS repository.
+        A server from another solution is untouched; so is anything else on the machine.
+      - It runs once, on the server project only, not on all nine projects.
+      - Set /p:KeepRunningApps=true to skip it.
+
+    Deliberately does NOT touch the Next.js dev server. That one holds no .NET files, is
+    slow to restart, and killing it would break `dotnet watch` workflows for no gain.
+    Use scripts/stop.ps1 when you want everything gone.
+  -->
+  <Target Name="StopOwnProcessesBeforeBuild"
+          BeforeTargets="PrepareForBuild"
+          Condition="'$(MSBuildProjectName)' == 'Chronicle.Portfolio.Server'
+                     AND '$(KeepRunningApps)' != 'true'
+                     AND '$(OS)' == 'Windows_NT'">
+
+    <PropertyGroup>
+      <!--
+        -NoProfile so a slow PowerShell profile does not tax every build, and
+        -NonInteractive so it can never sit waiting for input in CI.
+
+        Failures are swallowed: not being able to stop a process is not a reason to fail
+        a build. If something really is locked, the copy step reports it exactly as it
+        did before, naming the process.
+      -->
+      <_StopOwnProcesses>
+        <![CDATA[
+          $repo = '$(MSBuildThisFileDirectory)'.TrimEnd('\');
+          Get-Process -ErrorAction SilentlyContinue |
+            Where-Object {
+              $p = $null; try { $p = $_.Path } catch { };
+              $p -and $p.StartsWith($repo, [StringComparison]::OrdinalIgnoreCase)
+            } |
+            Where-Object { $_.Id -ne $PID } |
+            ForEach-Object {
+              Write-Host ('  stopping ' + $_.ProcessName + ' (' + $_.Id + ') - it was holding this build''s output');
+              try { Stop-Process -Id $_.Id -Force -ErrorAction Stop } catch { }
+            }
+        ]]>
+      </_StopOwnProcesses>
+    </PropertyGroup>
+
+    <Exec Command="powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command &quot;$(_StopOwnProcesses.Replace('&#xD;',' ').Replace('&#xA;',' '))&quot;"
+          ContinueOnError="true"
+          StandardOutputImportance="normal"
+          EchoOff="true" />
+  </Target>
+
+</Project>
