@@ -297,14 +297,42 @@ recent push the server saw when it last looked.
 
 ### Résumé
 
-A one-page résumé assembled from the same experience, skills, projects, education and
+A full CV assembled from the same profile, experience, skills, projects, education and
 certifications as the rest of the site. There is no separate résumé document to keep in
 step — edit a job in the CMS and the résumé changes with everything else.
 
-Use **Print / Save as PDF** for a copy to attach to an application. The printed version
-drops the site navigation, the theme toggle and the button itself, and comes out as
-selectable text rather than an image — which is what an applicant-tracking system needs
-in order to read it at all.
+**It is written for an applicant-tracking system first and a reader second.** Most
+applications are read by software before a person sees them, and the things that make a
+CV parse correctly are structural rather than decorative:
+
+- **One column.** Two columns look better and are extracted in the wrong order by a great
+  many parsers, which interleave them line by line and turn a job title into a sentence
+  about a programming language.
+- **Conventional headings** — Experience, Education, Skills — because they are matched
+  against a fixed vocabulary. The site's own voice would be better writing and an
+  unrecognised section.
+- **Real bullet lists**, where the bullet is drawn by the renderer rather than typed into
+  the text. A typed bullet character is extracted as part of the sentence, so every
+  achievement arrives with a stray dash welded to the front of it.
+- **No graphics** — no meters, no rings, no card art. All of those exist elsewhere on this
+  site and none of them survive text extraction as anything but a gap.
+- **Six bullets per role at most.** Which six is an editing decision, and it is yours: the
+  résumé shows the first six highlights on the job, in the order you put them.
+
+Two ways to take a copy:
+
+| Button | What you get |
+|---|---|
+| **Print or save as PDF** | The browser's own print output. Selectable text, not an image. |
+| **Word (.docx)** | A real Word document, generated from the same data as the page. |
+
+The Word copy exists because some application forms will not accept a PDF at all. It is
+built from the same source as the page, so the two cannot say different things — and it is
+deliberately plain: one column, standard font, no tables and no images.
+
+**If the page says no profile has been set**, fill in *Profile* in the CMS. The name,
+contact details and summary live there; everything below them is assembled from content
+you have already entered.
 
 ### Contact
 
@@ -399,8 +427,8 @@ Counts for every content type, so you can see at a glance what exists.
 **Everything on the public site is editable here.** Nothing needs a deploy to change.
 
 The navigation groups the screens by what you are doing: the work (projects, articles),
-the person (experience, skills, certifications), and the timeline (eras, milestones,
-learning, roadmap, status).
+the person (profile, experience, skills, certifications), and the timeline (eras,
+milestones, learning, roadmap, status).
 
 > **Start with Skills.** Projects, roles and certifications can only name a skill that
 > already exists, so an empty Skills page will block you everywhere else. That is
@@ -488,6 +516,27 @@ saved — an image has to belong to something.
 The one-line "Now" on the home page, plus an optional mood. The last-commit half of the
 strip comes from GitHub and is shown here read-only — there is nothing to edit.
 
+#### Profile
+
+Who the site is about: your name, the line under it, your contact details, and the
+professional summary at the top of the CV. It is one form and there is only ever one of
+it — you cannot create a second person.
+
+- **The headline is a job title, not a slogan.** A parser reads the line under the name as
+  the role you are applying for, so *Software Engineer* belongs there and *building things
+  that matter* does not.
+- **The summary is two to four sentences of prose**, and the field will not take more than
+  about four. It is the block a human skims and a keyword matcher reads, so use the actual
+  nouns of the work rather than adjectives about yourself.
+- **Links need the full `https://` address.** A shorter one is resolved against whatever
+  site the CV is opened on, and becomes a dead link on someone else's desk.
+- **Anything optional you leave blank is omitted entirely**, not printed as an empty
+  label. That includes the whole Availability section.
+- **Location is city and country.** Enough to answer "can they work here?" — a street
+  address on a public CV is an address on a public page.
+
+Until this is filled in, the résumé page says so rather than showing an invented person.
+
 #### Experience
 
 Roles held. **Highlights are one per line** — three to five is right. Write what you did
@@ -496,6 +545,10 @@ where you do not.
 
 A role feeds three places at once: the timeline, the résumé, and the "used in" lists on
 the skills page. Saving one refreshes all three.
+
+**The résumé shows the first six highlights**, in your order. A role with more than six is
+not truncated by accident — it is showing the six you put first, and reordering them here
+is how you choose which.
 
 #### Skills
 

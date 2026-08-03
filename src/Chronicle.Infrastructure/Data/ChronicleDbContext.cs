@@ -27,6 +27,7 @@ public class ChronicleDbContext(DbContextOptions<ChronicleDbContext> options)
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<Media> Media => Set<Media>();
     public DbSet<SiteStatus> SiteStatuses => Set<SiteStatus>();
+    public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<GitHubStatsCache> GitHubStatsCaches => Set<GitHubStatsCache>();
 
     protected override void OnModelCreating(ModelBuilder builder)

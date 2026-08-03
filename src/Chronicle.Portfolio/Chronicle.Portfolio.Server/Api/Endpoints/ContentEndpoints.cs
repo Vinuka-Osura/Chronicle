@@ -9,6 +9,10 @@ using Chronicle.Application.Features.Experience;
 using Chronicle.Application.Features.Experience.Queries.GetExperience;
 using Chronicle.Application.Features.Learning;
 using Chronicle.Application.Features.Learning.Queries.GetLearningItems;
+using Chronicle.Application.Features.Profile;
+using Chronicle.Application.Features.Profile.Queries.GetProfile;
+using Chronicle.Application.Features.Resumes;
+using Chronicle.Application.Features.Resumes.Queries.GetResume;
 using Chronicle.Application.Features.Roadmap;
 using Chronicle.Application.Features.Roadmap.Queries.GetRoadmapItems;
 using Chronicle.Application.Features.SiteStatus;
@@ -28,6 +32,25 @@ namespace Chronicle.Portfolio.Server.Api.Endpoints;
 /// </remarks>
 public static class ContentEndpoints
 {
+    /// <summary>
+    /// Everything the résumé is assembled from, so any CMS edit that changes the CV
+    /// evicts it.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="CacheTags.Timeline"/> is in the list because education comes from
+    /// milestones, and editing a milestone evicts the chronology tags rather than a tag
+    /// of its own. Miss it and a new degree appears everywhere except the CV.
+    /// </remarks>
+    private static readonly string[] ResumeTags =
+    [
+        CacheTags.Profile,
+        CacheTags.Experience,
+        CacheTags.Projects,
+        CacheTags.Skills,
+        CacheTags.Certifications,
+        CacheTags.Timeline,
+    ];
+
     public static IEndpointRouteBuilder MapContentEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/api/experience", (ISender sender, CancellationToken ct) =>
@@ -76,6 +99,50 @@ public static class ContentEndpoints
             .Produces<SiteStatusDto>()
             // Shorter TTL than the rest: this is the one surface that claims to be live.
             .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(30)).Tag(CacheTags.Status))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/profile", (ISender sender, CancellationToken ct) =>
+                sender.Send(new GetProfileQuery(), ct))
+            .WithTags("Profile")
+            .WithName("GetProfile")
+            .WithSummary("Name, contact details and professional summary")
+            .WithDescription(
+                "Null until the profile is filled in, rather than a placeholder person. Every " +
+                "field on it is a claim about someone real, so an unset profile is an absent " +
+                "one.")
+            .Produces<ProfileDto>()
+            .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(60)).Tag(CacheTags.Profile))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/resume", (ISender sender, CancellationToken ct) =>
+                sender.Send(new GetResumeQuery(), ct))
+            .WithTags("Resume")
+            .WithName("GetResume")
+            .WithSummary("The whole CV, assembled from the content the site already serves")
+            .WithDescription(
+                "A projection rather than a stored document, so it cannot disagree with the " +
+                "pages it is built from.")
+            .Produces<ResumeDto>()
+            .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(60)).Tag(ResumeTags))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/resume.docx", async (ISender sender, CancellationToken ct) =>
+            {
+                var resume = await sender.Send(new GetResumeQuery(), ct);
+
+                return Results.File(
+                    WordResume.Build(resume),
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    WordResume.FileName(resume));
+            })
+            .WithTags("Resume")
+            .WithName("GetResumeDocx")
+            .WithSummary("The same CV as a Word document")
+            .WithDescription(
+                "For the applications that will not take a PDF. One column, no tables and no " +
+                "images, because that is what an applicant-tracking system can read.")
+            .Produces<IResult>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(60)).Tag(ResumeTags))
             .RequireRateLimiting("api");
 
         app.MapGet("/api/career-graph", (ISender sender, CancellationToken ct) =>

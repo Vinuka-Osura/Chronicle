@@ -7,6 +7,18 @@
  */
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5080";
 
+/**
+ * The absolute URL of an API path, for the few links the browser follows itself.
+ *
+ * `request` builds its own; this is for an `<a href>` or a `<form action>`, where the
+ * browser needs the whole address and the fetch layer is not involved at all. The
+ * variable is `NEXT_PUBLIC_`, so the value is inlined at build time and works from a
+ * client component.
+ */
+export function apiUrl(path: string): string {
+  return `${BASE_URL}${path}`;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly path: string,

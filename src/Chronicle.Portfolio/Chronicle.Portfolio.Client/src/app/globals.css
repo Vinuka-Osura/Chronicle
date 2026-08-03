@@ -1148,47 +1148,26 @@
   }
 }
 
-/* Résumé, on screen and on paper. */
-@layer components {
-  .resume-header {
-    border-bottom: 1px solid var(--color-rule);
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .resume-contact {
-    margin-top: 0.35rem;
-  }
-
-  .resume-section {
-    margin-bottom: 1.75rem;
-  }
-
-  .resume-section > h2 {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--color-signal);
-    border-bottom: 1px solid var(--color-rule);
-    padding-bottom: 0.3rem;
-    margin-bottom: 0.75rem;
-  }
-
-  /* Title and dates on one line, dates pushed right — the shape a reader scans. */
-  .resume-entry-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.25rem 1rem;
-  }
-}
+/* The résumé's own styles are in `app/resume/resume.css`, beside the page. */
 
 @media print {
   nav,
   footer,
   .rm-hide-print {
+    display: none !important;
+  }
+
+  /*
+    The water, the veil and every other decorative layer.
+
+    `.water` is `position: fixed; z-index: -2`, which does NOT hide behind the white
+    background set below — a background paints beneath its own element's descendants,
+    not beneath a sibling layer. Left in, Chrome prints a full-bleed blue canvas on
+    page one and the CV lands on a recruiter's desk on top of a photograph of the sea.
+  */
+  canvas,
+  .water,
+  .veil {
     display: none !important;
   }
 
@@ -1220,16 +1199,6 @@
   a {
     color: inherit !important;
     text-decoration: none !important;
-  }
-
-  /* Never split an entry across a page break mid-sentence. */
-  .resume-section,
-  .resume-section li {
-    break-inside: avoid;
-  }
-
-  .resume-section > h2 {
-    break-after: avoid;
   }
 
   @page {

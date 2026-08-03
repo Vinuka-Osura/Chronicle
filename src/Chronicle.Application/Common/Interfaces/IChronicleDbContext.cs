@@ -29,6 +29,7 @@ public interface IChronicleDbContext
     DbSet<Tag> Tags { get; }
     DbSet<Media> Media { get; }
     DbSet<SiteStatus> SiteStatuses { get; }
+    DbSet<Profile> Profiles { get; }
     DbSet<GitHubStatsCache> GitHubStatsCaches { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

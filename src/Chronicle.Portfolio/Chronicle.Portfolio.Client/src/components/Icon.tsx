@@ -76,6 +76,16 @@ export function Close(props: IconProps) {
   );
 }
 
+export function Download(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 4v11" />
+      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+      <path d="M4 19h16" />
+    </Svg>
+  );
+}
+
 export function External(props: IconProps) {
   return (
     <Svg {...props}>

@@ -1,39 +1,33 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { requestOr } from "@/lib/http";
-import type { Certification, Experience, ProjectCard, SkillGroup, Timeline } from "@/lib/types";
+import type { Resume } from "@/lib/types";
+
+/** Where the Word copy comes from. Same projection, different renderer. */
+export const RESUME_DOCX_PATH = "/api/resume.docx";
 
 /**
- * Everything the résumé is assembled from.
+ * The CV, as one call.
  *
- * Deliberately no separate résumé endpoint or stored document. A CV that is typed out
- * separately is a CV that disagrees with the site within a month; this one cannot,
- * because it is the same rows the rest of the pages render.
+ * Deliberately no stored résumé document. A CV that is typed out separately is a CV that
+ * disagrees with the site within a month; this one cannot, because it is the same rows
+ * the rest of the pages render.
  *
- * Education comes from the timeline's milestones rather than a dedicated call — it is
- * the only place education lives, and the timeline already merges it.
+ * It used to be five parallel fetches assembled here. It is one now because the Word
+ * export needs the same document, and a second assembler on the server would have been a
+ * second definition of what the CV says. The server owns the projection; this page and
+ * the .docx are two renderings of it.
  */
-export async function getResumeData(): Promise<{
-  experience: Experience[];
-  skills: SkillGroup[];
-  projects: ProjectCard[];
-  certifications: Certification[];
-  timeline: Timeline;
-}> {
+export async function getResume(): Promise<Resume> {
   "use cache";
-  cacheTag("experience", "skills", "projects", "certifications", "timeline", "milestones");
+  cacheTag("profile", "experience", "skills", "projects", "certifications", "timeline");
   cacheLife("hours");
 
-  const [experience, skills, projects, certifications, timeline] = await Promise.all([
-    requestOr<Experience[]>("/api/experience", []),
-    requestOr<SkillGroup[]>("/api/skills", []),
-    requestOr<ProjectCard[]>("/api/projects", []),
-    requestOr<Certification[]>("/api/certifications", []),
-    requestOr<Timeline>("/api/timeline", {
-      today: new Date().toISOString().slice(0, 10),
-      eras: [],
-      items: [],
-    }),
-  ]);
-
-  return { experience, skills, projects, certifications, timeline };
+  return requestOr<Resume>("/api/resume", {
+    profile: null,
+    roles: [],
+    education: [],
+    projects: [],
+    skills: [],
+    certifications: [],
+  });
 }

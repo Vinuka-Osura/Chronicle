@@ -25,6 +25,7 @@ public static class CacheTags
     public const string Roadmap = "roadmap";
     public const string Certifications = "certifications";
     public const string Status = "status";
+    public const string Profile = "profile";
     public const string Timeline = "timeline";
     public const string CareerGraph = "career-graph";
 

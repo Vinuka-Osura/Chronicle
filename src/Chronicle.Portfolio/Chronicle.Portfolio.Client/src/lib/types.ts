@@ -208,6 +208,48 @@ export interface Timeline {
   items: TimelineItem[];
 }
 
+/**
+ * The CV header. Null on a site whose profile has not been filled in — every field on it
+ * is a claim about a real person, so an unset profile is absent rather than a placeholder.
+ */
+export interface Profile {
+  fullName: string;
+  /** Read by a parser as the job title, so it is a role and not a slogan. */
+  headline: string;
+  summary: string;
+  email: string;
+  phone: string | null;
+  location: string | null;
+  linkedInUrl: string | null;
+  gitHubUrl: string | null;
+  websiteUrl: string | null;
+  availability: string | null;
+}
+
+/** A qualification, lifted from the timeline's education milestones. */
+export interface ResumeEducation {
+  title: string;
+  detail: string | null;
+  startDate: IsoDate;
+  endDate: IsoDate | null;
+}
+
+/**
+ * The whole CV in one payload.
+ *
+ * Assembled server-side rather than from five calls here, because there are two renderers
+ * — this page and the Word export — and two renderers assembling the same document
+ * separately is how the download starts disagreeing with the page.
+ */
+export interface Resume {
+  profile: Profile | null;
+  roles: Experience[];
+  education: ResumeEducation[];
+  projects: ProjectCard[];
+  skills: SkillGroup[];
+  certifications: Certification[];
+}
+
 export interface SiteStatus {
   currentFocus: string;
   mood: string | null;

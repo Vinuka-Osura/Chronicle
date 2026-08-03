@@ -1,0 +1,417 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  Résumé
+
+  Two documents from one markup: a page on the site, and a CV on A4. The screen
+  half may have a surface and a shadow; the paper half may have neither, and
+  nothing here is allowed to exist only on screen — an element the print
+  stylesheet has to hide is an element the PDF's reader will not see but a text
+  extractor still will.
+
+  The arrival gestures come from `app/scenes.css`. They are `view()`-driven, so on
+  paper there is no scroll position and every element is simply at rest.
+  ═══════════════════════════════════════════════════════════════════════════════
+*/
+
+@layer components {
+  .resume {
+    max-width: 48rem;
+    margin-inline: auto;
+  }
+
+  /* ── The bar above the document ─────────────────────────────────────────── */
+  .resume-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-block: clamp(1rem, 4vh, 2.5rem) clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .resume-note {
+    max-width: 34rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .resume-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .resume-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-ink);
+    white-space: nowrap;
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      background-color var(--t-quick) var(--ease-move),
+      transform var(--t-quick) var(--ease-move);
+  }
+
+  .resume-action:hover {
+    border-color: var(--color-signal);
+    transform: translateY(-1px);
+  }
+
+  .resume-action.is-primary {
+    border-color: var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .resume-action.is-primary:hover {
+    background: var(--color-signal);
+    border-color: var(--color-signal);
+  }
+
+  .resume-action .icon {
+    width: 0.95em;
+    height: 0.95em;
+  }
+
+  /* ── The sheet ──────────────────────────────────────────────────────────── */
+  .resume-sheet {
+    padding: clamp(1.75rem, 5vw, 3rem);
+    border: 1px solid var(--color-rule);
+    border-radius: 0.9rem;
+    background: var(--color-paper-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  /* The glass is atmosphere; a document that has to stay legible over a moving
+     background is not the place to spend it. */
+  [data-motion="reduced"] .resume-sheet,
+  [data-motion="still"] .resume-sheet {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .resume-empty {
+    padding: clamp(2rem, 6vh, 3.5rem) 1.5rem;
+    border: 1px dashed var(--color-rule);
+    border-radius: 0.85rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── The header block ───────────────────────────────────────────────────── */
+  .resume-head {
+    padding-bottom: 1.25rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .resume-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 5vw, 2.6rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+
+  .resume-headline {
+    margin-top: 0.35rem;
+    font-size: 1.02rem;
+    color: var(--color-ink-soft);
+  }
+
+  /* `address` is the right element and its italic default is not. */
+  .resume-contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.1rem 0.45rem;
+    margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-style: normal;
+    line-height: 1.8;
+    color: var(--color-ink-soft);
+  }
+
+  .resume-contact a {
+    color: var(--color-ink-soft);
+    border-bottom: 1px solid transparent;
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .resume-contact a:hover {
+    color: var(--color-signal);
+    border-bottom-color: currentColor;
+  }
+
+  .resume-dot {
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Sections ───────────────────────────────────────────────────────────── */
+  .resume-section {
+    margin-top: clamp(1.5rem, 3.5vh, 2.25rem);
+  }
+
+  .resume-section-title {
+    position: relative;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  /* `.rule-draw` paints this as the section arrives; see scenes.css. */
+  .resume-section-title::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    bottom: -1px;
+    width: 100%;
+    height: 1px;
+    background: var(--color-signal);
+    transform-origin: left;
+  }
+
+  .resume-summary {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── Entries ────────────────────────────────────────────────────────────── */
+  .resume-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+    list-style: none;
+  }
+
+  /* Title and dates on one line, dates pushed right — the shape a reader scans. */
+  .resume-entry-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.15rem 1rem;
+  }
+
+  .resume-entry-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .resume-entry-title a:hover {
+    color: var(--color-signal);
+  }
+
+  .resume-entry-org {
+    font-weight: 400;
+    color: var(--color-ink-soft);
+  }
+
+  .resume-dates {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+    color: var(--color-ink-faint);
+    white-space: nowrap;
+  }
+
+  .resume-entry-summary {
+    margin-top: 0.35rem;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /*
+    Real list markers, not a character in a span.
+
+    A glyph in the markup is a glyph in the text layer, so every achievement would be
+    extracted with an em dash welded to the front of it. `::marker` is drawn by the
+    renderer and is not part of the run of text a parser reads.
+  */
+  .resume-bullets {
+    margin-top: 0.5rem;
+    padding-inline-start: 1.1rem;
+    list-style: disc;
+  }
+
+  .resume-bullets li {
+    margin-bottom: 0.28rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .resume-bullets li::marker {
+    color: var(--color-signal);
+  }
+
+  .resume-stack {
+    margin-top: 0.5rem;
+    font-size: 0.76rem;
+    line-height: 1.55;
+    color: var(--color-ink-faint);
+  }
+
+  .resume-stack-label {
+    color: var(--color-ink-soft);
+  }
+
+  /* ── Skills ─────────────────────────────────────────────────────────────── */
+  .resume-skills {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  /*
+    A definition list, and on wide screens a two-column one — but the columns are a
+    `dt`/`dd` pair on one row, not two independent text columns. Extraction order stays
+    "category, then its skills", which is the order it is read in.
+  */
+  .resume-skill-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.1rem 1rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  @media (width >= 34rem) {
+    .resume-skill-row {
+      grid-template-columns: 10rem 1fr;
+    }
+  }
+
+  .resume-skill-row dt {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .resume-skill-row dd {
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── Certifications ─────────────────────────────────────────────────────── */
+  .resume-certs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    list-style: none;
+  }
+
+  .resume-certs li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .resume-cert-name {
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .resume-cert-name a:hover {
+    color: var(--color-signal);
+  }
+
+  .resume-cert-issuer {
+    flex: 1;
+    color: var(--color-ink-soft);
+  }
+}
+
+/*
+  ── On paper ────────────────────────────────────────────────────────────────
+  The global print block in globals.css handles the palette, the chrome and the
+  page margins. What is here is only what is specific to this document.
+*/
+@media print {
+  .resume {
+    max-width: none;
+  }
+
+  /* No card. On paper the page IS the sheet. */
+  .resume-sheet {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .resume-name {
+    font-size: 20pt;
+  }
+
+  .resume-headline {
+    font-size: 11pt;
+  }
+
+  .resume-contact {
+    font-size: 8.5pt;
+  }
+
+  .resume-section {
+    margin-top: 12pt;
+  }
+
+  .resume-section-title {
+    font-size: 8.5pt;
+    letter-spacing: 0.14em;
+    /* A heading alone at the foot of a page is a section the reader will not find. */
+    break-after: avoid;
+  }
+
+  .resume-entry,
+  .resume-skill-row,
+  .resume-certs li {
+    break-inside: avoid;
+  }
+
+  .resume-entries {
+    gap: 9pt;
+  }
+
+  .resume-summary,
+  .resume-entry-summary,
+  .resume-bullets li,
+  .resume-skill-row {
+    font-size: 9.5pt;
+    line-height: 1.45;
+  }
+
+  .resume-stack,
+  .resume-dates {
+    font-size: 8pt;
+  }
+}

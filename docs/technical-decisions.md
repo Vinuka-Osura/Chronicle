@@ -325,6 +325,69 @@ shade; quartiles give both a readable spread of the year they actually had.
 
 ---
 
+## 4b. The résumé is a projection, and the Word export is hand-written OOXML
+
+Two decisions, taken together because the second only makes sense given the first.
+
+### The CV has one definition, on the server
+
+`/api/resume` returns the whole document — profile, roles, education, projects, skills,
+certifications — assembled by `GetResumeQueryHandler` from the queries the public pages
+already use. The page renders it; so does the Word export.
+
+The client used to assemble it from five parallel fetches. That was fine while there was
+one renderer. The moment there were two, it stopped being fine: a second assembler would
+have been a second answer to "what is on the CV", and the two would have disagreed within
+a month — which is precisely the failure the whole feature exists to prevent.
+
+The handler composes through `ISender` rather than re-querying the tables. The ordering
+rules, the published filter and the skills' derived usage lists live in those handlers,
+and a copy of them here would be the same duplication one layer down. It costs a handful
+of local queries on a page nobody loads in a loop.
+
+Education is the one exception, read straight from milestones: there is no education query
+to reuse, because the timeline merges it into a mixed feed the CV cannot use.
+
+### The .docx is four XML files in a zip, and no package
+
+A `.docx` is a zip containing `[Content_Types].xml`, two relationship parts and
+`word/document.xml`. `System.IO.Compression` writes all four in about forty lines.
+
+**`DocumentFormat.OpenXml` was considered and rejected.** Its value is in the parts this
+document deliberately does not have — tables, sections, images, numbering definitions —
+because ATS compatibility *means* not having them. Adding a large dependency to emit
+headings and paragraphs would be paying for exactly the complexity being avoided.
+
+Everything about the output is chosen for a parser:
+
+- **One column, no tables, no text boxes, no headers or footers, no images.** Multi-column
+  layouts are interleaved line-by-line by many parsers.
+- **Conventional heading text** — `EXPERIENCE`, `EDUCATION`, `SKILLS` — matched against a
+  fixed vocabulary.
+- **Direct formatting, not Word's built-in styles.** A document whose `styles.xml` is
+  missing renders styled headings as body text; direct formatting cannot degrade that way,
+  and it keeps the package at four parts.
+- **Bullets are a literal `•` in an indented paragraph**, not a numbering reference. A
+  numbering definition a parser fails to resolve turns a list into one run-on line.
+- **Calibri, stated on every run.** A font the reader lacks is substituted at a different
+  width, and two pages become three at the worst possible moment.
+- **Skills are names only.** `React (4y)` does not match a search for `React`; the years
+  are on the Skills page, where a human can weigh them.
+
+`WordResumeTests` covers this without a database: every required part present, every part
+well-formed XML, content escaped (`Northwind & Co` is an ordinary employer name and a raw
+ampersand is a fatal XML error), sections omitted when empty, and the six-highlight cap.
+Every one of those failures is silent — the file downloads happily and fails on someone
+else's desk.
+
+### What the page gives up for this
+
+No meters, no rings, no card art, and a modest scroll-driven arrival that exists only on
+screen. The résumé is the one page on this site where looking impressive and being read
+are in tension, and being read wins.
+
+---
+
 ## 5. Software City as a saleable product, and what that forces
 
 Software City is now intended to be **sold separately**, not just kept in its own

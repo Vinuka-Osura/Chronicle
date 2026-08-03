@@ -1,0 +1,233 @@
+@page "/admin/profile"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Features.Profile.Commands.UpdateProfile
+@using Chronicle.Application.Features.Profile.Queries.GetProfile
+@using Chronicle.Portfolio.Server.Components.Shared
+@using MediatR
+@inject ISender Sender
+@inject PublicSite PublicSite
+
+<PageTitle>Profile - Chronicle admin</PageTitle>
+
+<div class="page-head">
+    <div>
+        <h1>Profile</h1>
+        <p class="lede">
+            The top of the CV: who you are, how to reach you, and the paragraph a recruiter
+            reads before deciding whether to read the rest. Everything below this on the
+            résumé — roles, skills, education, certifications — is edited on its own screen
+            and assembled automatically.
+        </p>
+    </div>
+    <a class="button-quiet" href="/admin">Back to dashboard</a>
+</div>
+
+@if (loading)
+{
+    <p class="muted">Loading...</p>
+}
+else
+{
+    <SaveResult Errors="errors" Message="@message" PublicUrl="@savedUrl" />
+
+    <EditForm Model="form" OnValidSubmit="SaveAsync" FormName="profile-editor">
+        <section class="field-group">
+            <h2>Identity</h2>
+
+            <div class="field">
+                <label for="full-name">Full name</label>
+                <InputText id="full-name" @bind-Value="form.FullName" />
+                <p class="field-help">
+                    Spelled the way it should be filed. This is the first thing an
+                    applicant-tracking system looks for.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="headline">Headline</label>
+                <InputText id="headline" @bind-Value="form.Headline" />
+                <p class="field-help">
+                    The role, not a slogan. A parser reads the line under the name as your
+                    job title, so <em>Software Engineer</em> belongs here and
+                    <em>building things that matter</em> does not.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="summary">Professional summary</label>
+                <InputTextArea id="summary" rows="5" @bind-Value="form.Summary" />
+                <p class="field-help">
+                    Two to four sentences of prose. This is the block a human skims and a
+                    keyword matcher reads, so use the actual nouns of the work rather than
+                    adjectives about yourself. @(form.Summary?.Length ?? 0) of 900 characters.
+                </p>
+            </div>
+        </section>
+
+        <section class="field-group">
+            <h2>Contact</h2>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <InputText id="email" type="email" @bind-Value="form.Email" />
+                <p class="field-help">Printed on the CV. A CV with no way to reply to it is a dead end.</p>
+            </div>
+
+            <div class="field">
+                <label for="phone">Phone <span class="optional">optional</span></label>
+                <InputText id="phone" @bind-Value="form.Phone" />
+                <p class="field-help">In international format, so it works from anywhere it is read.</p>
+            </div>
+
+            <div class="field">
+                <label for="location">Location <span class="optional">optional</span></label>
+                <InputText id="location" @bind-Value="form.Location" />
+                <p class="field-help">
+                    City and country. Enough to answer "can they work here?" and no more —
+                    a street address on a public CV is an address on a public page.
+                </p>
+            </div>
+        </section>
+
+        <section class="field-group">
+            <h2>Links</h2>
+            <p class="muted">
+                Full <code>https://</code> addresses. Anything shorter is resolved against
+                whatever host the CV is opened on and becomes a dead link on someone else's
+                desk. Leave blank to omit the line entirely.
+            </p>
+
+            <div class="field">
+                <label for="linkedin">LinkedIn <span class="optional">optional</span></label>
+                <InputText id="linkedin" @bind-Value="form.LinkedInUrl" placeholder="https://www.linkedin.com/in/..." />
+            </div>
+
+            <div class="field">
+                <label for="github">GitHub <span class="optional">optional</span></label>
+                <InputText id="github" @bind-Value="form.GitHubUrl" placeholder="https://github.com/..." />
+            </div>
+
+            <div class="field">
+                <label for="website">Website <span class="optional">optional</span></label>
+                <InputText id="website" @bind-Value="form.WebsiteUrl" placeholder="https://..." />
+            </div>
+        </section>
+
+        <section class="field-group">
+            <h2>Availability <span class="optional">optional</span></h2>
+
+            <div class="field">
+                <label for="availability">Note</label>
+                <InputText id="availability" @bind-Value="form.Availability" />
+                <p class="field-help">
+                    Notice period, work authorisation, willingness to relocate — whatever a
+                    reader would otherwise have to email to find out. Left blank, the whole
+                    section is omitted rather than printed empty.
+                </p>
+            </div>
+        </section>
+
+        <div class="form-actions">
+            <button type="submit" class="button-primary" disabled="@saving">
+                @(saving ? "Saving…" : "Save")
+            </button>
+        </div>
+    </EditForm>
+
+    <section class="next-up">
+        <h2>What else is on the CV</h2>
+        <p class="muted">
+            Nothing on the résumé is typed twice. The rest of it is assembled from content
+            you edit elsewhere, so it cannot disagree with the site:
+        </p>
+        <ul class="muted">
+            <li><a href="/admin/experience">Experience</a> — roles, with up to six highlights each shown on the CV</li>
+            <li><a href="/admin/chronology">Timeline</a> — education comes from milestones filed under Education</li>
+            <li><a href="/admin/projects">Projects</a> — the first three in your chosen order become "Selected projects"</li>
+            <li><a href="/admin/skills">Skills</a> and <a href="/admin/certifications">Certifications</a></li>
+        </ul>
+    </section>
+}
+
+@code {
+    private readonly Form form = new();
+    private bool loading = true;
+    private bool saving;
+    private IDictionary<string, string[]>? errors;
+    private string? message;
+    private string? savedUrl;
+
+    private sealed class Form
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Headline { get; set; } = string.Empty;
+        public string Summary { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Location { get; set; }
+        public string? LinkedInUrl { get; set; }
+        public string? GitHubUrl { get; set; }
+        public string? WebsiteUrl { get; set; }
+        public string? Availability { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Null on a site nobody has filled in yet, which is the normal first run. The form
+        // stays empty rather than being pre-filled with an invented person.
+        var profile = await Sender.Send(new GetProfileQuery());
+
+        if (profile is not null)
+        {
+            form.FullName = profile.FullName;
+            form.Headline = profile.Headline;
+            form.Summary = profile.Summary;
+            form.Email = profile.Email;
+            form.Phone = profile.Phone;
+            form.Location = profile.Location;
+            form.LinkedInUrl = profile.LinkedInUrl;
+            form.GitHubUrl = profile.GitHubUrl;
+            form.WebsiteUrl = profile.WebsiteUrl;
+            form.Availability = profile.Availability;
+        }
+
+        loading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        saving = true;
+        errors = null;
+        message = null;
+        savedUrl = null;
+
+        try
+        {
+            await Sender.Send(new UpdateProfileCommand(
+                form.FullName,
+                form.Headline,
+                form.Summary,
+                form.Email,
+                form.Phone,
+                form.Location,
+                form.LinkedInUrl,
+                form.GitHubUrl,
+                form.WebsiteUrl,
+                form.Availability));
+
+            message = "Saved.";
+            savedUrl = PublicSite.Absolute("/resume");
+        }
+        catch (ValidationException ex)
+        {
+            errors = ex.Errors;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+}

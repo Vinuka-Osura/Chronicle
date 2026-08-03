@@ -1,52 +1,31 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import type { PostCard } from "@/lib/types";
+import { useEffect, useId, useMemo, useState } from "react";
 import { CardGrid } from "@/components/CardGrid";
+import { Close, Search } from "@/components/Icon";
+import type { PostCard } from "@/lib/types";
 import { searchPosts } from "../search";
+import { ArticleCard } from "./ArticleCard";
 
 /**
- * A publication date, formatted identically on the server and in the browser.
+ * Articles, searchable in the archive and filterable by tag in the browser.
  *
- * **`timeZone` is not optional here.** This is a client component, so the string is
- * produced twice — once during server rendering and once during hydration — and without
- * a fixed zone each side uses its own. An article published at 23:30 UTC then renders as
- * the 4th on a server running UTC and the 5th in a browser east of it, which React
- * reports as a hydration mismatch and the reader sees as the wrong date.
- *
- * UTC rather than the visitor's zone because a publication date is a fact about when
- * something was written, not about where it is being read.
- */
-function published(iso: string | null): string {
-  if (!iso) return "Unpublished";
-
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-/**
- * Articles, filterable by tag in the browser.
- *
- * Same reasoning as the projects list: the API supports `?tag=`, but a filter someone is
- * scrubbing through should not cost a round trip each time. The server filter remains
- * the one that matters for deep links.
+ * Two different mechanisms on purpose. The tag filter runs in memory, because a chip
+ * someone is toggling should not cost a round trip. Full-text search goes to the server,
+ * because it reads the article bodies, which are not on this page and should not be.
  */
 export function ArticleList({ posts }: { posts: PostCard[] }) {
   const [active, setActive] = useState<string | null>(null);
   const [term, setTerm] = useState("");
+  const searchId = useId();
 
   /**
    * The last answer, tagged with the term it answers.
    *
    * Storing the term alongside the results is what lets everything else be *derived*
-   * rather than kept in sync. "Is a search showing" and "is one in flight" are then
-   * facts about the current input, not two more pieces of state that can disagree with
-   * it — and nothing has to be reset when the box is cleared.
+   * rather than kept in sync. "Is a search showing" and "is one in flight" are then facts
+   * about the current input, not two more pieces of state that can disagree with it — and
+   * nothing has to be reset when the box is cleared.
    */
   const [answer, setAnswer] = useState<{ term: string; results: PostCard[] } | null>(null);
 
@@ -90,148 +69,150 @@ export function ArticleList({ posts }: { posts: PostCard[] }) {
     for (const post of posts) {
       for (const tag of post.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
     }
+    // Commonest first: the tag that filters least is the one most people want.
     return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }, [posts]);
 
-  // Search wins when it is running. Combining the two would mean explaining to the
-  // reader why a term that clearly appears in an article did not show up - because a
-  // tag chip they set two minutes ago was still on.
+  // Search wins when it is running. Combining the two would mean explaining to the reader
+  // why a term that clearly appears in an article did not show up — because a tag chip
+  // they set two minutes ago was still on.
   const shown = results ?? (active ? posts.filter((p) => p.tags.includes(active)) : posts);
 
   return (
-    <section aria-labelledby="articles-heading" className="mb-16">
-      <h2 id="articles-heading" className="text-section mb-2 font-semibold">
-        Articles
-      </h2>
-      <p className="rm-compact mb-5 max-w-prose text-sm text-ink-soft">
-        Write-ups on problems worth explaining properly — mostly ledgers, correctness and
-        the things that turned out harder than they looked.
-      </p>
+    <>
+      {/*
+        The controls arrive in sequence as the scene does — scroll-driven CSS, so they
+        reverse on the way back up. The grid below is deliberately NOT in here: its cards
+        are Motion-animated so they can move into each other's places when a filter
+        changes, and a CSS transform on the same elements would fight Motion's inline one.
+      */}
+      <div className="article-controls" data-stagger data-slide>
+        <div className="browser rm-hide">
+          <div className="browser-search">
+            <Search className="browser-search-icon" />
+            <label htmlFor={searchId} className="sr-only">
+              Search articles by title, summary or full text
+            </label>
+            <input
+              id={searchId}
+              type="search"
+              value={term}
+              onChange={(event) => setTerm(event.target.value)}
+              placeholder="Search titles, summaries and full text"
+              className="browser-input"
+              autoComplete="off"
+            />
+            {term && (
+              <button
+                type="button"
+                onClick={() => setTerm("")}
+                className="browser-clear"
+                aria-label="Clear search"
+              >
+                <Close />
+              </button>
+            )}
+          </div>
+        </div>
 
-      <div className="rm-hide mb-5">
-        <label htmlFor="article-search" className="sr-only">
-          Search articles
-        </label>
-        <input
-          id="article-search"
-          type="search"
-          value={term}
-          onChange={(event) => setTerm(event.target.value)}
-          placeholder="Search articles…"
-          className="field-input max-w-md"
-          autoComplete="off"
-        />
-        <p className="mt-1.5 text-xs text-ink-faint">
-          Searches titles, summaries and full text. Understands quoted
-          &ldquo;exact phrases&rdquo;, <code>OR</code>, and a leading <code>-</code> to
-          exclude a word.
+        <p className="article-search-help rm-hide">
+          Understands quoted &ldquo;exact phrases&rdquo;, <code>OR</code>, and a leading{" "}
+          <code>-</code> to exclude a word.
+        </p>
+
+        {tags.length > 0 && results === null && (
+          /* A group rather than a bare row of buttons: without the label a screen reader
+             announces a dozen unrelated toggles and no reason for them. */
+          <div role="group" aria-label="Filter articles by tag" className="browser-tags rm-hide">
+            <FilterChip
+              label="All"
+              count={posts.length}
+              active={active === null}
+              onClick={() => setActive(null)}
+            />
+            {tags.map(([tag, count]) => (
+              <FilterChip
+                key={tag}
+                label={tag}
+                count={count}
+                active={active === tag}
+                onClick={() => setActive(active === tag ? null : tag)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* The count is on screen as well as announced. A filtered list that silently
+            shows four of twelve looks like a list of four. */}
+        <p className="browser-count" aria-live="polite">
+          {results !== null ? (
+            <>
+              <strong>{results.length}</strong>{" "}
+              {results.length === 1 ? "result" : "results"} for “{query}”
+              {results.length > 0 && ", best match first"}
+              {". "}
+              <button type="button" onClick={() => setTerm("")} className="browser-reset">
+                Clear
+              </button>
+            </>
+          ) : (
+            <>
+              <strong>{shown.length}</strong>
+              {shown.length !== posts.length && ` of ${posts.length}`}{" "}
+              {shown.length === 1 ? "article" : "articles"}
+              {active ? ` tagged ${active}` : ""}
+            </>
+          )}
         </p>
       </div>
 
-      {results !== null && (
-        <p className="mb-5 text-sm text-ink-soft">
-          {results.length === 0
-            ? `Nothing matches “${query}”.`
-            : `${results.length} result${results.length === 1 ? "" : "s"} for “${query}”, best match first.`}{" "}
-          <button
-            type="button"
-            onClick={() => setTerm("")}
-            className="text-signal underline underline-offset-2"
-          >
-            Clear
-          </button>
-        </p>
-      )}
-
-      {tags.length > 0 && results === null && (
-        <div className="rm-hide mb-5 flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setActive(null)}
-            aria-pressed={active === null}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-              active === null
-                ? "border-signal bg-signal-soft text-ink"
-                : "border-rule text-ink-soft hover:border-ink-soft hover:text-ink"
-            }`}
-          >
-            All {posts.length}
-          </button>
-          {tags.map(([tag, count]) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => setActive(active === tag ? null : tag)}
-              aria-pressed={active === tag}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
-                active === tag
-                  ? "border-signal bg-signal-soft text-ink"
-                  : "border-rule text-ink-soft hover:border-ink-soft hover:text-ink"
-              }`}
-            >
-              {tag}
-              <span className={active === tag ? "text-signal" : "text-ink-faint"}>{count}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <p aria-live="polite" className="sr-only">
-        {results !== null
-          ? `${results.length} search results for ${query}.`
-          : `Showing ${shown.length} of ${posts.length} articles${active ? ` tagged ${active}` : ""}.`}
-      </p>
-
-      {/* While a new search is in flight the previous results are held at reduced
-          opacity rather than replaced by a skeleton: the layout does not jump, and the
-          old answer stays readable until a better one arrives. */}
       {shown.length > 0 ? (
-        <div className={`transition-opacity ${searching ? "opacity-60" : ""}`}>
-          <CardGrid
-            items={shown}
-            keyOf={(post) => post.slug}
-            className="rm-grid grid gap-3"
-          >
-            {(post) => (
-              <article className="group relative surface surface-interactive p-4">
-                <p className="mb-1.5 flex flex-wrap items-center gap-x-2 font-mono text-[0.68rem] tracking-[0.12em] text-ink-faint uppercase">
-                  <span>{published(post.publishedAt)}</span>
-                  <span aria-hidden>&middot;</span>
-                  <span>{post.readingTimeMinutes} min read</span>
-                </p>
-
-                <h3 className="mb-1 font-display text-lg font-semibold text-ink">
-                  <Link
-                    href={`/knowledge/${post.slug}`}
-                    className="after:absolute after:inset-0 after:content-['']"
-                  >
-                    {post.title}
-                  </Link>
-                </h3>
-
-                <p className="rm-compact text-sm text-ink-soft">{post.excerpt}</p>
-
-                {post.tags.length > 0 && (
-                  <ul className="rm-hide mt-3 flex flex-wrap gap-1.5">
-                    {post.tags.map((tag) => (
-                      <li
-                        key={tag}
-                        className="rounded border border-rule px-1.5 py-0.5 font-mono text-[0.7rem] text-ink-soft"
-                      >
-                        {tag}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </article>
-            )}
+        /* While a new search is in flight the previous results are held at reduced opacity
+           rather than replaced by a skeleton: the layout does not jump, and the old answer
+           stays readable until a better one arrives. */
+        <div className={`article-results${searching ? " is-searching" : ""}`}>
+          <CardGrid items={shown} keyOf={(post) => post.slug} className="article-grid rm-grid">
+            {(post) => <ArticleCard post={post} />}
           </CardGrid>
         </div>
       ) : (
-        <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">
-          Nothing published yet.
-        </p>
+        <div className="browser-empty">
+          <p className="browser-empty-line">
+            {results !== null ? `Nothing matches “${query}”.` : "Nothing published yet."}
+          </p>
+          {(results !== null || active) && (
+            <button
+              type="button"
+              className="browser-reset"
+              onClick={() => {
+                setTerm("");
+                setActive(null);
+              }}
+            >
+              Clear the filters
+            </button>
+          )}
+        </div>
       )}
-    </section>
+    </>
+  );
+}
+
+function FilterChip({
+  label,
+  count,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={active} className="browser-chip">
+      {label}
+      <span className="browser-chip-count">{count}</span>
+    </button>
   );
 }

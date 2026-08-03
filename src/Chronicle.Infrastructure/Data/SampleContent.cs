@@ -530,6 +530,37 @@ internal static partial class SampleContent
                 Status = RoadmapStatus.Planned,
                 SortOrder = 2
             });
+
+        // ---- Profile: the CV header, and the only place the name is written down ----
+        //
+        // Until this existed the résumé's name, contact details and summary were typed
+        // into the page component, which meant the demo persona was half in the seed and
+        // half in the markup — and the one part of the CV a recruiter reads first was the
+        // one part the CMS could not change.
+        //
+        // The address and phone number are reserved-for-documentation values, not
+        // deliverable ones: this seed runs on any developer machine, and a plausible
+        // address here is a real inbox somewhere receiving mail meant for a fiction.
+        context.Profiles.Add(new Profile
+        {
+            Id = Profile.SingletonId,
+            FullName = "Sam Iversen",
+            Headline = "Software Engineer — payments systems and reliability",
+            Summary =
+                "Backend engineer working on payments systems: ledgers, settlement and " +
+                "reconciliation. Most of my work is in domains where being nearly right is " +
+                "the same as being wrong, which shapes how I build — correctness first, " +
+                "predictable under load, and diagnosable when it does fail. Four years in " +
+                "C# and .NET against PostgreSQL, most recently owning the double-entry " +
+                "ledger behind every account posting.",
+            Email = "sam@example.com",
+            Phone = "+44 7700 900123",
+            Location = "London, United Kingdom",
+            LinkedInUrl = "https://www.linkedin.com/in/example",
+            GitHubUrl = "https://github.com/example",
+            WebsiteUrl = null,
+            Availability = "Open to senior backend roles, one month's notice.",
+        });
     }
 
     private static Tag NewTag(string name, string slug, string category) =>
