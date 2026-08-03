@@ -296,16 +296,16 @@
       the movement slow: a longer range is a slower animation, because the scroll
       is the clock.
     */
-    [data-motion="full"] [data-stagger] > * {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger] > * {
       animation: scene-arrive linear both;
       animation-timeline: view();
       animation-range: entry 5% cover 42%;
     }
 
-    [data-motion="full"] [data-stagger] > *:nth-child(2) { animation-range: entry 12% cover 49%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(3) { animation-range: entry 19% cover 56%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(4) { animation-range: entry 26% cover 63%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(n + 5) { animation-range: entry 33% cover 70%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger] > *:nth-child(2) { animation-range: entry 12% cover 49%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger] > *:nth-child(3) { animation-range: entry 19% cover 56%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger] > *:nth-child(4) { animation-range: entry 26% cover 63%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger] > *:nth-child(n + 5) { animation-range: entry 33% cover 70%; }
 
     /*
       Cards that also LEAVE.
@@ -320,7 +320,7 @@
       underneath it; a fade that completes there is a fade nobody sees. Ending early
       puts the whole gesture in open view.
     */
-    [data-motion="full"] [data-stagger][data-depart] > * {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-depart] > * {
       animation-name: scene-pass;
       animation-range: entry 10% exit 55%;
       /* Promotes the layer once, rather than the compositor rediscovering on every
@@ -328,9 +328,9 @@
       will-change: transform, opacity, filter;
     }
 
-    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(2) { animation-range: entry 15% exit 58%; }
-    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(3) { animation-range: entry 20% exit 61%; }
-    [data-motion="full"] [data-stagger][data-depart] > *:nth-child(n + 4) { animation-range: entry 25% exit 64%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-depart] > *:nth-child(2) { animation-range: entry 15% exit 58%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-depart] > *:nth-child(3) { animation-range: entry 20% exit 61%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-depart] > *:nth-child(n + 4) { animation-range: entry 25% exit 64%; }
 
     /*
       Metric and pulse cards POP rather than rise.
@@ -340,19 +340,19 @@
       in from below like the project cards. Different gesture, different kind of
       object — which is the point of having two.
     */
-    [data-motion="full"] [data-stagger][data-pop] > *,
-    [data-motion="full"] .proof-grid > * {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *,
+    :is([data-motion="full"], [data-motion="reduced"]) .proof-grid > * {
       animation-name: card-pop;
       animation-range: entry 8% cover 44%;
     }
 
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(2),
-    [data-motion="full"] .proof-grid > *:nth-child(2) { animation-range: entry 15% cover 51%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(3),
-    [data-motion="full"] .proof-grid > *:nth-child(3) { animation-range: entry 22% cover 58%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(4) { animation-range: entry 29% cover 65%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(5) { animation-range: entry 36% cover 72%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(n + 6) { animation-range: entry 43% cover 79%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *:nth-child(2),
+    :is([data-motion="full"], [data-motion="reduced"]) .proof-grid > *:nth-child(2) { animation-range: entry 15% cover 51%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *:nth-child(3),
+    :is([data-motion="full"], [data-motion="reduced"]) .proof-grid > *:nth-child(3) { animation-range: entry 22% cover 58%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *:nth-child(4) { animation-range: entry 29% cover 65%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *:nth-child(5) { animation-range: entry 36% cover 72%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-pop] > *:nth-child(n + 6) { animation-range: entry 43% cover 79%; }
 
     /*
       A row arriving from the side.
@@ -361,17 +361,17 @@
       edge, with its rule drawing across ahead of it. Cards are objects and arrive by
       moving toward you; a row is a line of a document and arrives by being written.
     */
-    [data-motion="full"] [data-stagger][data-slide] > * {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-slide] > * {
       animation-name: slide-in;
       animation-range: entry 5% cover 40%;
     }
 
-    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(2) { animation-range: entry 10% cover 45%; }
-    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(3) { animation-range: entry 15% cover 50%; }
-    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(n + 4) { animation-range: entry 20% cover 55%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-slide] > *:nth-child(2) { animation-range: entry 10% cover 45%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-slide] > *:nth-child(3) { animation-range: entry 15% cover 50%; }
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-slide] > *:nth-child(n + 4) { animation-range: entry 20% cover 55%; }
 
     /* The rule above each row draws across as the row arrives. */
-    [data-motion="full"] .rule-draw::before {
+    :is([data-motion="full"], [data-motion="reduced"]) .rule-draw::before {
       animation: rule-draw linear both;
       animation-timeline: view();
       animation-range: entry 5% cover 38%;
@@ -381,7 +381,7 @@
       Section eyebrows and headings arrive ahead of what they introduce, so a scene
       announces itself rather than materialising all at once.
     */
-    [data-motion="full"] .scene > .scene-eyebrow {
+    :is([data-motion="full"], [data-motion="reduced"]) .scene > .scene-eyebrow {
       animation: eyebrow-in linear both;
       animation-timeline: view();
       animation-range: entry 0% cover 26%;
@@ -402,20 +402,72 @@
       The rotation is under two degrees on purpose. Past about three a card stops
       looking like it is settling and starts looking like it is falling over.
     */
-    [data-motion="full"] [data-stagger][data-weave] > *:nth-child(odd) {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-weave] > *:nth-child(odd) {
       animation-name: weave-down;
     }
 
-    [data-motion="full"] [data-stagger][data-weave] > *:nth-child(even) {
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-weave] > *:nth-child(even) {
       animation-name: weave-up;
+    }
+
+    /*
+      CHILDREN OF A PINNED SCENE NEED THE TRACK'S TIMELINE, NOT THEIR OWN.
+
+      `view()` measures an element against the viewport, and a sticky element stops
+      moving relative to the viewport the instant it sticks — so its progress freezes
+      and whatever it was animating is stranded wherever it happened to have got to.
+      Measured on the outcomes scene: the metric cards reached full opacity at y=738,
+      below the fold, and then held there for the entire pin. Same symptom as the
+      `entry`-range bug and an entirely different cause, which is why finding one did
+      not find the other.
+
+      The track itself keeps moving, so it names a timeline and its children scrub
+      against that. `contain`, for an element taller than the viewport, is exactly the
+      period during which it covers the screen — which is exactly the pin. The cards
+      therefore arrive during the hold, where the reader is looking, instead of before
+      it starts.
+
+      The selectors carry an extra `:nth-child(n)` purely for specificity: this has to
+      beat the generic rules above it whichever order the stylesheets happen to load in.
+    */
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track {
+      view-timeline-name: --scene-track;
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track .scene-pin .scene-inner {
+      animation-timeline: --scene-track;
+      animation-range: entry 55% contain 6%;
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track [data-stagger] > *:nth-child(n) {
+      animation-timeline: --scene-track;
+      animation-range: contain 3% contain 24%;
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track [data-stagger] > *:nth-child(2) { animation-range: contain 8% contain 29%; }
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track [data-stagger] > *:nth-child(3) { animation-range: contain 13% contain 34%; }
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-track [data-stagger] > *:nth-child(n + 4) { animation-range: contain 18% contain 39%; }
+
+    /*
+      `reduced` gets the same choreography, minus the blur.
+
+      That tier is documented as "no WebGL, scroll and reveals stay", and the CSS did
+      not honour it: every arrival was gated on `full` alone, so a device judged merely
+      unexceptional got a page where no card moved at all. Since the tier detection was
+      also downgrading capable desktops, this is what "the animations are missing"
+      actually looked like for anyone whose browser reported a slow connection.
+
+      Blur is the exception and stays behind `full`. It is by far the most expensive
+      thing here, and this is the tier that already said it cannot afford much.
+    */
+    [data-motion="reduced"] [data-stagger][data-depart] > * {
+      animation-name: scene-pass-lite;
     }
 
     /* The comparison bars draw as the card arrives, on their own timeline so they
        are still filling after the card has settled. */
-    [data-motion="full"] .metric-bar-fill,
-    [data-motion="reduced"] .metric-bar-fill,
-    [data-motion="full"] .pulse-row-bar .bar-fill,
-    [data-motion="reduced"] .pulse-row-bar .bar-fill {
+    :is([data-motion="full"], [data-motion="reduced"]) .metric-bar-fill,
+    :is([data-motion="full"], [data-motion="reduced"]) .pulse-row-bar .bar-fill {
       animation: bar-fill linear both;
       animation-timeline: view();
       animation-range: entry 15% cover 40%;
@@ -426,8 +478,7 @@
       the chart builds rather than appearing. The stagger is on the RANGE and not on a
       delay: a scroll-driven animation has no clock for a delay to be measured against.
     */
-    [data-motion="full"] .figure-bar-fill,
-    [data-motion="reduced"] .figure-bar-fill {
+    :is([data-motion="full"], [data-motion="reduced"]) .figure-bar-fill {
       animation: column-grow linear both;
       animation-timeline: view();
       animation-range: entry calc(14% + var(--col, 0) * 2%) cover calc(34% + var(--col, 0) * 2%);
@@ -574,5 +625,22 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* scene-pass without the blur, for the tier that cannot spend it. */
+@keyframes scene-pass-lite {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 3.5rem, 0) scale(0.95) rotate(2deg);
+  }
+  24%,
+  68% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, -2.5rem, 0) scale(0.97);
   }
 }

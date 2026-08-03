@@ -54,7 +54,7 @@ automatically:
 | Tier | Detected by | What runs |
 |---|---|---|
 | **Full** | default | Everything below |
-| **Reduced** | `deviceMemory < 4`, `hardwareConcurrency <= 4`, `saveData`, or `2g/3g` | No WebGL. Smooth scroll and reveals stay. |
+| **Reduced** | `deviceMemory < 4`, `hardwareConcurrency <= 4`, or `saveData` | No WebGL, no backdrop blur, no motion blur. **Every arrival still runs.** |
 | **Still** | `prefers-reduced-motion`, or Recruiter Mode | Nothing moves. Everything visible, instantly. |
 
 Detected once on load, written as `data-motion="full|reduced|still"` on `<html>` by the
@@ -62,6 +62,27 @@ existing pre-paint script, so CSS and JS both read one value and there is no fla
 
 **This is what lets the default be greedy.** It is not a compromise on the full
 experience; it is the reason the full experience can be uncompromising.
+
+**Two things about this went wrong and are worth not repeating.**
+
+`effectiveType` was in the detection list and has been removed. It measures the NETWORK,
+and everything it was switching off — scroll-driven animations, a shader — costs no
+bandwidth at all. Measured on a 16GB, 8-core desktop: the browser reported `3g`, the tier
+came out `reduced`, and the page lost every card arrival. Save-Data stays, because that is
+a person asking for less rather than a guess about their hardware.
+
+And `reduced` was not honouring the row above. The table has always said reveals stay, but
+every arrival rule was gated on `[data-motion="full"]` alone, so a device judged merely
+unexceptional got a page where nothing moved. The gates are now
+`:is([data-motion="full"], [data-motion="reduced"])` — identical specificity, since both
+arms are attribute selectors — with blur the single exception, because blur is the one
+thing that tier genuinely cannot afford.
+
+**A pinned scene needs its track's timeline, not its children's own.** `view()` measures
+an element against the viewport, and a sticky element stops moving relative to the
+viewport the moment it sticks, so its progress freezes and whatever it was animating is
+stranded. `.scene-track` names a timeline and its children scrub against `contain`, which
+for an element taller than the viewport is exactly the pinned period.
 
 ---
 

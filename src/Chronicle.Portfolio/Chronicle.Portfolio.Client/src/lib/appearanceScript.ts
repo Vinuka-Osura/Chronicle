@@ -80,10 +80,16 @@ export function applyMotionTier(): MotionTier {
  * Theme falls back to the OS preference when no cookie is set, so a first-time visitor
  * gets what their system already asked for rather than an arbitrary default.
  *
- * Device hints — `deviceMemory`, `hardwareConcurrency`, Save-Data, effective connection
- * type — are hints rather than truth, so the thresholds are generous: the cost of
- * over-delivering to a capable phone is a dropped frame, and the cost of
- * under-delivering is a site that looks broken.
+ * Device hints — `deviceMemory`, `hardwareConcurrency` and Save-Data — are hints rather
+ * than truth, so the thresholds are generous: the cost of over-delivering to a capable
+ * phone is a dropped frame, and the cost of under-delivering is a site that looks broken.
+ *
+ * **`effectiveType` used to be in that list and has been removed.** It measures the
+ * NETWORK, and the things it was switching off — scroll-driven animations and a shader —
+ * cost no bandwidth whatsoever. A 16GB, 8-core desktop on hotel wifi reports "3g" and was
+ * being handed the degraded site as a result; measured, that is exactly what happened
+ * here. Save-Data stays, because that one is a person explicitly asking for less rather
+ * than a guess about their hardware.
  */
 /*
   NOTE THE DOUBLE BACKSLASH in the cookie patterns below.
@@ -94,4 +100,4 @@ export function applyMotionTier(): MotionTier {
   because every later one is preceded by "; " and there is no `\s` left to match the
   space. Theme worked by luck of ordering; Recruiter Mode did not.
 */
-export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";if(cn.effectiveType&&/^(slow-)?2g$|^3g$/.test(cn.effectiveType))tier="reduced";d.dataset.motionBase=tier;if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){var f=document.documentElement.dataset;f.theme="light";f.recruiter="off";f.motionBase="still";f.motion="still"}})();`;
+export const appearanceScript = `(function(){try{var d=document.documentElement,c=document.cookie;var t=c.match(/(?:^|;\\s*)${THEME_COOKIE}=([^;]*)/);var m=t&&t[1];if(m!=="dark"&&m!=="light"){m=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}d.dataset.theme=m;d.style.colorScheme=m;var r=c.match(/(?:^|;\\s*)${RECRUITER_COOKIE}=([^;]*)/);var rm=r&&r[1]==="1";d.dataset.recruiter=rm?"on":"off";var n=navigator,cn=n.connection||{},tier="full";if(n.deviceMemory&&n.deviceMemory<4)tier="reduced";if(n.hardwareConcurrency&&n.hardwareConcurrency<=4)tier="reduced";if(cn.saveData)tier="reduced";d.dataset.motionBase=tier;if(rm||(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))tier="still";d.dataset.motion=tier}catch(e){var f=document.documentElement.dataset;f.theme="light";f.recruiter="off";f.motionBase="still";f.motion="still"}})();`;

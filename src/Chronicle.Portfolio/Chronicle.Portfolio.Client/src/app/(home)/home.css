@@ -448,7 +448,7 @@
       because the sticky child never moves relative to the viewport — a view
       timeline on it would never advance.
     */
-    [data-motion="full"] .hero-track {
+    :is([data-motion="full"], [data-motion="reduced"]) .hero-track {
       view-timeline-name: --hero-track;
     }
 
@@ -464,7 +464,7 @@
       than the rest inside it. Nothing can be forgotten, because there is only one
       animation deciding what is still visible.
     */
-    [data-motion="full"] .hero-pin .hero {
+    :is([data-motion="full"], [data-motion="reduced"]) .hero-pin .hero {
       animation: hero-depart linear both;
       animation-timeline: --hero-track;
       animation-range: contain 0% contain 100%;
@@ -473,7 +473,7 @@
 
     /* The title transformation, relative to a block that is already leaving. Origin
        top-left so it draws back toward the corner rather than collapsing inward. */
-    [data-motion="full"] .hero-pin .hero-headline {
+    :is([data-motion="full"], [data-motion="reduced"]) .hero-pin .hero-headline {
       animation: hero-title linear both;
       animation-timeline: --hero-track;
       animation-range: contain 0% contain 85%;
@@ -485,9 +485,9 @@
       settle is long — a big movement over a short range is what makes an
       entrance read as a jolt rather than as weight.
     */
-    [data-motion="full"] .scene,
-    [data-motion="full"] .scene-inner,
-    [data-motion="full"] .closing {
+    :is([data-motion="full"], [data-motion="reduced"]) .scene,
+    :is([data-motion="full"], [data-motion="reduced"]) .scene-inner,
+    :is([data-motion="full"], [data-motion="reduced"]) .closing {
       animation: scene-arrive linear both;
       animation-timeline: view();
       animation-range: entry 4% cover 38%;
