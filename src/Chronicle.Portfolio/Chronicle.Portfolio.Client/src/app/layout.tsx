@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Footer } from "@/components/Footer";
+import { ScrollReset } from "@/components/ScrollReset";
 import { SmoothScroll } from "@/components/SmoothScroll";
 import { StatusBar } from "@/components/StatusBar";
 import { WaterBackground } from "@/components/WaterBackground";
@@ -142,6 +144,14 @@ export default function RootLayout({
             is pure CSS, so nothing mutates the DOM React is in the middle of hydrating —
             which is what the old one did, and why the hero reported a mismatch. */}
         <SmoothScroll />
+
+        {/* Puts each new page at the top. Renders nothing, but reads usePathname, which
+            is runtime data — so it needs a boundary of its own or every route falls out
+            of the static shell. Nothing to match in the fallback, since it renders
+            nothing either way. */}
+        <Suspense fallback={null}>
+          <ScrollReset />
+        </Suspense>
       </body>
     </html>
   );

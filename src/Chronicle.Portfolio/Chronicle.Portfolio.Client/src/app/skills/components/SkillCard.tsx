@@ -28,7 +28,8 @@ function years(value: number): string {
 
 export function SkillCard({ skill }: { skill: Skill }) {
   return (
-    <article className="surface p-4">
+    /* skill-card is the hook the vortex looks for, as well as the style. */
+    <article className="skill-card surface p-4">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
         <h3 className="font-display font-semibold">{skill.name}</h3>
         <ProficiencyMeter rank={skill.proficiencyRank} label={skill.proficiency} />

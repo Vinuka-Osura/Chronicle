@@ -1,0 +1,88 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  Skills
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  The scene rhythm, the stagger and the weave come from `app/scenes.css`. What is
+  here is the opening, the grid, and the layering that lets the vortex canvas sit
+  between the water and the cards.
+*/
+
+@layer components {
+  /* ── The opening ─────────────────────────────────────────────────────────── */
+  .skills-open {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(52vh, 28rem);
+    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(4rem, 9vh, 7rem);
+  }
+
+  .skills-heading {
+    max-width: 18ch;
+    margin-top: clamp(1.25rem, 3.5vh, 2rem);
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 0.99;
+    letter-spacing: -0.035em;
+  }
+
+  .skills-lede {
+    --in-delay: 820ms;
+    max-width: 42rem;
+    margin-top: 1.5rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── Groups ──────────────────────────────────────────────────────────────── */
+  .skills-group {
+    /* Tighter than the standard scene rhythm. These are seven short sections in a
+       row rather than five long ones, and the full spacing would turn the page
+       into a corridor. */
+    margin-block: clamp(4rem, 9vh, 7rem);
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    /*
+      Above the vortex canvas.
+
+      The canvas is fixed at z-index 1, so the grid needs a stacking position of its
+      own or the particles would draw over the card text. Behind the cards is also
+      the right place for them aesthetically: the swarm should look like it is
+      delivering the card, not settling on top of it.
+    */
+    position: relative;
+    z-index: 2;
+  }
+
+  /*
+    The particle field.
+
+    Fixed and pointer-transparent, between the water (-2) and the content. It has no
+    opacity transition and needs none — every particle fades itself in and out along
+    its own path, so there is never a frame where the whole layer appears or leaves.
+  */
+  .vortex {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Nothing to draw, so nothing to lay out. */
+  [data-motion="reduced"] .vortex,
+  [data-motion="still"] .vortex {
+    display: none;
+  }
+}

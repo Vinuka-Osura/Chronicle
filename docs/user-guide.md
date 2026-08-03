@@ -52,9 +52,9 @@ Below it the page reads as five scenes, in this order:
 
 | Scene | What it is | Where the content comes from |
 |---|---|---|
-| **Introduction** | The positioning statement and three entry points. Holds still briefly while the headline draws back, then releases. | Fixed copy |
+| **Introduction** | The positioning statement and three entry points. Holds still briefly while the headline draws back, then releases — the one place on the site that does. | Fixed copy |
 | **Selected work** | The featured projects, as cards. | Projects marked *Featured* in the admin |
-| **Outcomes** | What the work actually did — "Statement p95: 2.4s to 40ms". Holds still while each figure resolves. | The **Metrics** field on each featured project |
+| **Outcomes** | What the work actually did — "Statement p95: 2.4s to 40ms". | The **Metrics** field on each featured project |
 | **By the numbers** | The work in aggregate: contributions, languages, streak, repositories, projects and skills, each with its own chart. | GitHub, plus your projects, skills and timeline |
 | **Range** | Strongest skills by category, and how many projects each was used on. | Skills, and the projects they are linked to |
 | **Get in touch** | A closing sign-off. | Fixed copy |
@@ -124,6 +124,16 @@ and roles that reference the skill, every time the page loads. A claim of two an
 years of PostgreSQL is just a number; two case studies and a job that used it is
 evidence. Because it is derived, the two can never drift apart. A skill with no work
 behind it says so plainly rather than hiding.
+
+**The cards assemble out of a particle field.** As each one comes into view a swarm
+spirals in and settles around its edge; scroll back up and the swarm flies apart again,
+because what drives it is the card's own position rather than a timer. The particles
+arrive from below when you are scrolling down and from above when you are scrolling up,
+so the field always feeds from the direction you are travelling.
+
+It is decoration on a page that is already finished: the cards arrive under their own
+rules whether or not the effect ever runs, so a device that cannot afford it — or has it
+switched off — loses the flourish and nothing else.
 
 **Working now.**
 
