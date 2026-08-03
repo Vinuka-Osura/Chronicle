@@ -89,46 +89,53 @@ export function Counter({
     };
 
     /*
-      TWO observers, because starting and resetting are not the same question.
+      ONE observer with several thresholds, and a position test in the callback.
 
-      **Start** when the figure reaches a band across the middle of the screen. Firing on
-      any intersection at all was the original bug: these figures sit inside a pinned
-      scene whose sticky content becomes geometrically visible at the top of a 240vh
-      track, a screen and a half before anyone has arrived to read it, so the count
-      reliably finished while the reader was still scrolling towards it — which is
-      indistinguishable from it never having run.
+      This has now been wrong twice in two different ways, and the shape of the fix is
+      the lesson. Firing on any intersection was the first bug: these figures sit inside
+      a pinned scene whose sticky content is geometrically visible a screen and a half
+      before anyone arrives to read it, so the count finished while the reader was still
+      scrolling towards it. Narrowing the trigger to a band across the middle fixed that
+      and broke something else — a *second* observer was then resetting the value at the
+      band's edge, so a card sitting perfectly readable near the top of the screen
+      displayed 0.
 
-      **Reset** only once the figure has genuinely left the viewport. Resetting at the
-      edge of the trigger band instead was the obvious shortcut and it is visibly wrong:
-      a card sitting perfectly readable near the top of the screen would show 0, because
-      it had scrolled out of the middle third. A figure that is on screen always reads
-      its real value.
+      A band alone is not enough either: `IntersectionObserver` reports state changes,
+      not every position, so a fast scroll can carry an element clean through a narrow
+      band between two callbacks and the count never fires at all. That is exactly what
+      a flick down the page produced.
+
+      So: watch the whole element, wake on several thresholds, and decide from its actual
+      position. It has arrived once its top is above 72% of the viewport — which is true
+      at some threshold crossing however fast the scroll — and it rearms only when it has
+      genuinely left, so returning plays it again.
     */
-    const arrive = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) run();
-      },
-      { rootMargin: "-38% 0px -38% 0px", threshold: 0 },
-    );
+    let ran = false;
 
-    const rearm = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting) continue;
-          // Off screen entirely: put it back to zero so returning plays it again.
-          cancelAnimationFrame(frame);
-          setShown(0);
+          if (!entry.isIntersecting) {
+            // Gone. Put it back to zero so coming back plays it again.
+            ran = false;
+            cancelAnimationFrame(frame);
+            setShown(0);
+            continue;
+          }
+
+          if (!ran && entry.boundingClientRect.top < window.innerHeight * 0.72) {
+            ran = true;
+            run();
+          }
         }
       },
-      { rootMargin: "80px", threshold: 0 },
+      { threshold: [0, 0.2, 0.5, 0.8, 1] },
     );
 
-    arrive.observe(element);
-    rearm.observe(element);
+    observer.observe(element);
 
     return () => {
-      arrive.disconnect();
-      rearm.disconnect();
+      observer.disconnect();
       cancelAnimationFrame(frame);
     };
   }, [value, duration, decimals]);

@@ -87,8 +87,25 @@
     claim — one is where you spent years, the other is an afternoon's exam.
   */
   .role {
+    position: relative;
     padding: clamp(1.5rem, 4vh, 2.25rem) 0;
-    border-top: 1px solid var(--color-rule);
+  }
+
+  /*
+    The rule as a pseudo-element rather than a border, so it can be drawn.
+
+    A border cannot be animated from nothing to full width without animating `width`,
+    which is a layout write; a positioned element can be scaled on the compositor.
+    The row slides in from the leading edge and its rule draws across ahead of it.
+  */
+  .role::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: var(--color-rule);
+    transform-origin: left center;
   }
 
   .role:last-child {

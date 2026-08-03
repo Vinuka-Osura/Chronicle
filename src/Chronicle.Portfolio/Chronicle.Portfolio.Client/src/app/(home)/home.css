@@ -490,7 +490,7 @@
     [data-motion="full"] .closing {
       animation: scene-arrive linear both;
       animation-timeline: view();
-      animation-range: entry 8% entry 78%;
+      animation-range: entry 4% cover 38%;
     }
   }
 }

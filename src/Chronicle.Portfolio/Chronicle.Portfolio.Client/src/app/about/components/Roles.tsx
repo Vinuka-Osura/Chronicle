@@ -60,9 +60,9 @@ export function Roles({ roles }: { roles: Experience[] }) {
         <span className="first-letter:uppercase">{heading}</span>
       </h2>
 
-      <ol className="roles" data-stagger>
+      <ol className="roles" data-stagger data-slide>
         {roles.map((role) => (
-          <li key={role.id} className="role">
+          <li key={role.id} className="role rule-draw">
               <div className="role-head">
                 <div>
                   <h3 className="role-title">{role.role}</h3>

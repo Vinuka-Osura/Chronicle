@@ -284,17 +284,28 @@
       or lose children without anything being rewired. A scroll-driven animation
       has no clock, so the offset is applied to the RANGE — there is nothing for a
       delay to be measured against.
+
+      **The end of every range is a `cover` percentage, never an `entry` one, and
+      that distinction is the difference between an animation you see and one you
+      do not.** The `entry` phase lasts only as long as the element's own height, so
+      `entry 12% entry 72%` finishes while a card is still a sliver at the bottom
+      edge of the screen — it plays entirely below where anyone is looking, and the
+      complaint it produced was that the animation "never happened". `cover` spans
+      the element's whole journey across the viewport, so the gesture lands around
+      the middle of the screen where the reader actually is. It is also what makes
+      the movement slow: a longer range is a slower animation, because the scroll
+      is the clock.
     */
     [data-motion="full"] [data-stagger] > * {
       animation: scene-arrive linear both;
       animation-timeline: view();
-      animation-range: entry 12% entry 72%;
+      animation-range: entry 5% cover 42%;
     }
 
-    [data-motion="full"] [data-stagger] > *:nth-child(2) { animation-range: entry 16% entry 76%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(3) { animation-range: entry 20% entry 80%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(4) { animation-range: entry 24% entry 84%; }
-    [data-motion="full"] [data-stagger] > *:nth-child(n + 5) { animation-range: entry 28% entry 88%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(2) { animation-range: entry 12% cover 49%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(3) { animation-range: entry 19% cover 56%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(4) { animation-range: entry 26% cover 63%; }
+    [data-motion="full"] [data-stagger] > *:nth-child(n + 5) { animation-range: entry 33% cover 70%; }
 
     /*
       Cards that also LEAVE.
@@ -332,16 +343,49 @@
     [data-motion="full"] [data-stagger][data-pop] > *,
     [data-motion="full"] .proof-grid > * {
       animation-name: card-pop;
-      animation-range: entry 18% entry 65%;
+      animation-range: entry 8% cover 44%;
     }
 
     [data-motion="full"] [data-stagger][data-pop] > *:nth-child(2),
-    [data-motion="full"] .proof-grid > *:nth-child(2) { animation-range: entry 22% entry 69%; }
+    [data-motion="full"] .proof-grid > *:nth-child(2) { animation-range: entry 15% cover 51%; }
     [data-motion="full"] [data-stagger][data-pop] > *:nth-child(3),
-    [data-motion="full"] .proof-grid > *:nth-child(3) { animation-range: entry 26% entry 73%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(4) { animation-range: entry 30% entry 77%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(5) { animation-range: entry 34% entry 81%; }
-    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(n + 6) { animation-range: entry 38% entry 85%; }
+    [data-motion="full"] .proof-grid > *:nth-child(3) { animation-range: entry 22% cover 58%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(4) { animation-range: entry 29% cover 65%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(5) { animation-range: entry 36% cover 72%; }
+    [data-motion="full"] [data-stagger][data-pop] > *:nth-child(n + 6) { animation-range: entry 43% cover 79%; }
+
+    /*
+      A row arriving from the side.
+
+      For list rows rather than cards — a ledger entry sliding in from the leading
+      edge, with its rule drawing across ahead of it. Cards are objects and arrive by
+      moving toward you; a row is a line of a document and arrives by being written.
+    */
+    [data-motion="full"] [data-stagger][data-slide] > * {
+      animation-name: slide-in;
+      animation-range: entry 5% cover 40%;
+    }
+
+    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(2) { animation-range: entry 10% cover 45%; }
+    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(3) { animation-range: entry 15% cover 50%; }
+    [data-motion="full"] [data-stagger][data-slide] > *:nth-child(n + 4) { animation-range: entry 20% cover 55%; }
+
+    /* The rule above each row draws across as the row arrives. */
+    [data-motion="full"] .rule-draw::before {
+      animation: rule-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 38%;
+    }
+
+    /*
+      Section eyebrows and headings arrive ahead of what they introduce, so a scene
+      announces itself rather than materialising all at once.
+    */
+    [data-motion="full"] .scene > .scene-eyebrow {
+      animation: eyebrow-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 26%;
+    }
 
     /*
       THE WEAVE.
@@ -374,7 +418,7 @@
     [data-motion="reduced"] .pulse-row-bar .bar-fill {
       animation: bar-fill linear both;
       animation-timeline: view();
-      animation-range: entry 30% cover 20%;
+      animation-range: entry 15% cover 40%;
     }
 
     /*
@@ -386,7 +430,7 @@
     [data-motion="reduced"] .figure-bar-fill {
       animation: column-grow linear both;
       animation-timeline: view();
-      animation-range: entry calc(32% + var(--col, 0) * 1.6%) cover calc(16% + var(--col, 0) * 1.6%);
+      animation-range: entry calc(14% + var(--col, 0) * 2%) cover calc(34% + var(--col, 0) * 2%);
       transform-origin: bottom;
     }
   }
@@ -486,6 +530,46 @@
   from {
     opacity: 0;
     transform: translate3d(0, 2.75rem, 0) rotate(1.6deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A line of a document being written, rather than an object arriving. */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-1.75rem, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/*
+  Transform and opacity, not letter-spacing.
+
+  Tightening the tracking would have been the nicer gesture and it is off the table:
+  `letter-spacing` is a layout property, so animating it reflows the label on every
+  frame of the scroll. The site's rule is transform and opacity only, and it exists
+  because the device that suffers is the mid-range phone nobody tests on.
+*/
+@keyframes eyebrow-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-0.75rem, 0, 0);
   }
   to {
     opacity: 1;

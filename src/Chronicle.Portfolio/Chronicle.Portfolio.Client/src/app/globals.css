@@ -508,7 +508,7 @@
       [data-motion="reduced"] [data-rise] {
         animation: rise linear both;
         animation-timeline: view();
-        animation-range: entry 5% entry 70%;
+        animation-range: entry 4% cover 40%;
       }
 
       /*
@@ -518,11 +518,11 @@
         rather than adding a delay. Capped at five: past that the offset is longer
         than the animation and the last item looks broken rather than choreographed.
       */
-      [data-motion="full"] [data-rise="1"] { animation-range: entry 8% entry 73%; }
-      [data-motion="full"] [data-rise="2"] { animation-range: entry 11% entry 76%; }
-      [data-motion="full"] [data-rise="3"] { animation-range: entry 14% entry 79%; }
-      [data-motion="full"] [data-rise="4"] { animation-range: entry 17% entry 82%; }
-      [data-motion="full"] [data-rise="5"] { animation-range: entry 20% entry 85%; }
+      [data-motion="full"] [data-rise="1"] { animation-range: entry 8% cover 44%; }
+      [data-motion="full"] [data-rise="2"] { animation-range: entry 12% cover 48%; }
+      [data-motion="full"] [data-rise="3"] { animation-range: entry 16% cover 52%; }
+      [data-motion="full"] [data-rise="4"] { animation-range: entry 20% cover 56%; }
+      [data-motion="full"] [data-rise="5"] { animation-range: entry 24% cover 60%; }
     }
   }
 }
@@ -1286,7 +1286,7 @@
       [data-motion="reduced"] .reveal-mask-in-view {
         animation: uncover linear both;
         animation-timeline: view();
-        animation-range: entry 10% entry 85%;
+        animation-range: entry 8% cover 46%;
       }
     }
   }
@@ -1678,14 +1678,14 @@
     [data-motion="reduced"] .figure-ring {
       animation: ring-fill linear both;
       animation-timeline: view();
-      animation-range: entry 25% cover 30%;
+      animation-range: entry 14% cover 42%;
     }
 
     [data-motion="full"] .figure-spark-line,
     [data-motion="reduced"] .figure-spark-line {
       animation: spark-draw linear both;
       animation-timeline: view();
-      animation-range: entry 20% cover 35%;
+      animation-range: entry 12% cover 46%;
     }
 
     [data-motion="full"] .figure-meter-step,
@@ -1694,7 +1694,7 @@
       animation-timeline: view();
       /* Each segment starts fractionally later than the one before, so the meter
          reads left to right instead of snapping on as a block. */
-      animation-range: entry calc(20% + var(--step) * 4%) entry calc(52% + var(--step) * 4%);
+      animation-range: entry calc(10% + var(--step) * 3%) cover calc(36% + var(--step) * 3%);
     }
 
     /* The share bars. scaleX, never width — width is a layout write, and a layout
@@ -1703,7 +1703,7 @@
     [data-motion="reduced"] .bar-fill {
       animation: bar-fill linear both;
       animation-timeline: view();
-      animation-range: entry 25% cover 25%;
+      animation-range: entry 14% cover 42%;
     }
   }
 }
