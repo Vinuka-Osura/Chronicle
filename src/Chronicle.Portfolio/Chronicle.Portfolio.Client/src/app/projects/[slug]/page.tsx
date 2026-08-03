@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft } from "@/components/Icon";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getProject } from "../api";
+import { getProject, getProjects } from "../api";
+import { CaseStudyNav } from "../components/CaseStudyNav";
 import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
 import { MetricCards } from "../components/MetricCards";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
 import { breadcrumbSchema, projectSchema } from "@/lib/structuredData";
+import "../projects.css";
 
 type Params = { slug: string };
 
@@ -101,7 +104,14 @@ function CaseStudySkeleton() {
 
 async function CaseStudy({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  const project = await getProject(slug);
+
+  /*
+    Both together rather than one after the other. The list is needed only for the
+    next/previous links at the very bottom, so awaiting it after the case study would
+    add its latency to a page that is otherwise ready — and both are `use cache`, so
+    after the first render this is two cache reads.
+  */
+  const [project, siblings] = await Promise.all([getProject(slug), getProjects()]);
 
   if (!project) {
     notFound();
@@ -135,8 +145,9 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
       />
 
       <nav className="mb-8">
-        <Link href="/projects" className="text-sm text-signal hover:underline">
-          â† All projects
+        <Link href="/projects" className="back-link">
+          <ArrowLeft />
+          All projects
         </Link>
       </nav>
 
@@ -207,6 +218,10 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
           </ul>
         </section>
       )}
+
+      {/* Where to go next. A case study that ends at a back link asks the reader to go
+          up a level and choose again, and most of them leave instead. */}
+      <CaseStudyNav projects={siblings} slug={slug} />
     </article>
   );
 }

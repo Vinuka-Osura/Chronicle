@@ -34,10 +34,11 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.HasIndex(p => p.Slug).IsUnique();
 
-        // Matches the default ordering in GetProjectsQueryHandler.
-        builder.HasIndex(p => new { p.Featured, p.StartDate })
-            .HasDatabaseName("IX_Projects_Featured_StartDate")
-            .IsDescending(false, true);
+        // Matches the default ordering in GetProjectsQueryHandler, which is now
+        // featured, then the editor's chosen order, then most recent.
+        builder.HasIndex(p => new { p.Featured, p.SortOrder, p.StartDate })
+            .HasDatabaseName("IX_Projects_Featured_SortOrder_StartDate")
+            .IsDescending(true, false, true);
 
         builder.HasMany(p => p.Screenshots)
             .WithOne(m => m.Project)

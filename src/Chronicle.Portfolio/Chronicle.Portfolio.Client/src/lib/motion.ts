@@ -35,12 +35,21 @@ export function useMotionAllowed(): boolean {
  */
 export const EASE_OUT_QUIET = [0.16, 1, 0.3, 1] as const;
 
-/** Small on purpose. Motion that travels far reads as a page still loading. */
-export const RISE = 8;
+/**
+ * How far a card travels as a filter changes.
+ *
+ * 8px was chosen when this only had to say "the page finished loading" and it is too
+ * quiet for what it does now: a filtered set changing under you is a real event, and at
+ * eight pixels it read as a flicker. Still small — motion that travels far reads as a
+ * page still loading — but far enough to be seen.
+ */
+export const RISE = 18;
 
 export const cardVariants = {
-  hidden: { opacity: 0, y: RISE },
-  visible: { opacity: 1, y: 0 },
+  // A shade smaller as well as lower, so an arriving card reads as coming forward
+  // rather than sliding along a track.
+  hidden: { opacity: 0, y: RISE, scale: 0.97 },
+  visible: { opacity: 1, y: 0, scale: 1 },
   /*
     Leaving cards shrink slightly as they fade.
 
@@ -63,6 +72,9 @@ export const cardVariants = {
  * forty, where the last lands seconds after the reader has moved on.
  */
 export function staggerFor(count: number): number {
-  const TOTAL_MS = 120;
-  return count > 0 ? Math.min(0.025, TOTAL_MS / 1000 / count) : 0;
+  // 120ms was tuned for an arrival nobody asked for. A set changing in response to a
+  // filter someone just typed is worth watching, so it gets a little longer — still
+  // under the threshold where a sequence stops reading as one movement.
+  const TOTAL_MS = 220;
+  return count > 0 ? Math.min(0.04, TOTAL_MS / 1000 / count) : 0;
 }

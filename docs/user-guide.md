@@ -198,20 +198,38 @@ than inventing a coincidence.
 
 ### Projects
 
-The catalogue, filterable by tag. Each project opens a **case study** rather than a
-description, following the same eight sections every time:
+The case studies, with a browser over them.
 
-1. What it is, in one line
-2. The problem
-3. The solution and the decisions behind it
-4. The tradeoffs
-5. Architecture
-6. Results
-7. What was learned
-8. Links — demo, source, docs, walkthrough
+**Search covers the technology, not just the title.** Someone looking for "Postgres"
+wants the projects that used it, and no title contains the word — matching titles alone
+would return nothing and read as "you have not done that", which is the opposite of true.
+Every word has to appear somewhere, in any order, so "postgres ledger" finds the ledger.
 
-Sections you leave empty simply do not appear. A small project shows three sections and
-still looks finished; a flagship shows all eight.
+Alongside it: **tag chips** with a count each, and a **sort** — Curated, Newest, Oldest.
+Curated is the order you set yourself.
+
+**You control the order.** Each project has a *Sort order* in the admin: lower comes
+first. Featured projects still lead, and within featured and within the rest your number
+decides, with the start date settling anything you have left equal. It used to be the
+last tiebreaker behind the date, which meant setting it did nothing unless two projects
+happened to share a start date — the field was there and the order it produced was still
+chronological.
+
+The filtered list animates: cards fade and contract as they leave, and the survivors slide
+into the gap rather than jumping. A count on screen says "3 of 4" so a filtered list never
+looks like a short list.
+
+**Each case study** carries the problem, the solution, the key decisions, the architecture
+(as prose and as a generated diagram), measured results with their caveats, lessons
+learned, screenshots, a walkthrough video and links out — every one of them optional, and
+absent rather than empty when you have not filled it in. At the bottom, the previous and
+next case study by name, so reading one leads to another.
+
+**Media before object storage exists.** Thumbnails, screenshots and the walkthrough video
+are stored as URLs, so anything reachable works today: put a file in the client's
+`public/` folder and enter `/media/whatever.png`, or paste a link to a video host. Nothing
+waits on a storage service being set up. Until you add one, project cards show a pattern
+generated from the project's own name, so a card without a picture still looks finished.
 
 **Working now.**
 

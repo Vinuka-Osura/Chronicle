@@ -32,11 +32,20 @@ public sealed class GetProjectsQueryHandler(IChronicleDbContext db)
         }
 
         return await query
-            // Featured first, then most recent. Matches the ordering index on
-            // (Featured, StartDate desc) in ProjectConfiguration.
+            /*
+              Featured first, then whatever order the editor set, then most recent.
+
+              SortOrder used to be the LAST tiebreaker, behind the start date — which
+              meant setting it in the admin did nothing at all unless two projects
+              happened to share a date. The field existed, the form existed, and the
+              order it produced was still chronological. It decides now, and the date
+              is what settles projects the editor has not ranked against each other.
+
+              Matches the index on (Featured desc, SortOrder, StartDate desc).
+            */
             .OrderByDescending(p => p.Featured)
-            .ThenByDescending(p => p.StartDate)
             .ThenBy(p => p.SortOrder)
+            .ThenByDescending(p => p.StartDate)
             .Select(p => new ProjectCardDto(
                 p.Slug,
                 p.Title,

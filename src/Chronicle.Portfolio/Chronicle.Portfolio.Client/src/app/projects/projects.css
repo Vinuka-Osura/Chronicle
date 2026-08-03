@@ -1,0 +1,354 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  Projects
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  The scene rhythm and the staggered arrivals come from `app/scenes.css`; the card
+  itself is in `globals.css`, because the Home page renders the same one. What is
+  here is the opening, the browser controls, and the case-study page.
+*/
+
+@layer components {
+  /* ── The opening ─────────────────────────────────────────────────────────── */
+  .projects-open {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(52vh, 28rem);
+    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(3rem, 7vh, 5rem);
+  }
+
+  .projects-heading {
+    max-width: 18ch;
+    margin-top: clamp(1.25rem, 3.5vh, 2rem);
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 0.99;
+    letter-spacing: -0.035em;
+  }
+
+  .projects-lede {
+    --in-delay: 820ms;
+    max-width: 42rem;
+    margin-top: 1.5rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .projects-scene {
+    margin-block: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  /* ── The browser ─────────────────────────────────────────────────────────── */
+  .browser {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .browser-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 18rem;
+  }
+
+  .browser-search-icon {
+    position: absolute;
+    left: 0.85rem;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--color-ink-faint);
+    pointer-events: none;
+  }
+
+  .browser-input {
+    width: 100%;
+    padding: 0.6rem 2.4rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+    font-size: 0.88rem;
+    color: var(--color-ink);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    transition: border-color var(--t-quick) var(--ease-move);
+  }
+
+  [data-motion="reduced"] .browser-input,
+  [data-motion="still"] .browser-input {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .browser-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .browser-input:focus {
+    border-color: var(--color-signal);
+    outline: none;
+  }
+
+  /* The browser's own clear button on a search input is unstyleable and appears in
+     only some of them, so this is the one everybody gets. */
+  .browser-input::-webkit-search-cancel-button {
+    display: none;
+  }
+
+  .browser-clear {
+    position: absolute;
+    right: 0.7rem;
+    display: grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 999px;
+    color: var(--color-ink-faint);
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .browser-clear:hover {
+    color: var(--color-ink);
+  }
+
+  .browser-clear .icon {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+
+  /* ── Sort ────────────────────────────────────────────────────────────────── */
+  .browser-sort {
+    display: flex;
+    padding: 3px;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+  }
+
+  [data-motion="reduced"] .browser-sort,
+  [data-motion="still"] .browser-sort {
+    background: var(--color-paper-solid);
+  }
+
+  .browser-sort-option {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-faint);
+    transition:
+      color var(--t-quick) var(--ease-move),
+      background-color var(--t-quick) var(--ease-move);
+  }
+
+  .browser-sort-option:hover {
+    color: var(--color-ink);
+  }
+
+  .browser-sort-option[aria-pressed="true"] {
+    background: var(--color-signal-soft);
+    color: var(--color-signal);
+  }
+
+  /* ── Tags ────────────────────────────────────────────────────────────────── */
+  .browser-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .browser-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.7rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: var(--color-ink-soft);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move),
+      background-color var(--t-quick) var(--ease-move);
+  }
+
+  .browser-chip:hover {
+    border-color: var(--color-ink-faint);
+    color: var(--color-ink);
+  }
+
+  .browser-chip[aria-pressed="true"] {
+    border-color: var(--color-signal);
+    background: var(--color-signal-soft);
+    color: var(--color-ink);
+  }
+
+  .browser-chip-count {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-ink-faint);
+  }
+
+  .browser-chip[aria-pressed="true"] .browser-chip-count {
+    color: var(--color-signal);
+  }
+
+  /* ── The count, and the empty state ──────────────────────────────────────── */
+  .browser-count {
+    margin: 1.1rem 0 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-faint);
+  }
+
+  .browser-count strong {
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .browser-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: clamp(2rem, 6vh, 3.5rem) 1.5rem;
+    border: 1px dashed var(--color-rule);
+    border-radius: 0.85rem;
+  }
+
+  .browser-empty-line {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .browser-reset {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    color: var(--color-signal);
+    border-bottom: 1px solid color-mix(in oklch, var(--color-signal) 35%, transparent);
+    transition: border-color var(--t-quick) var(--ease-move);
+  }
+
+  .browser-reset:hover {
+    border-color: var(--color-signal);
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1.15rem;
+  }
+
+  /* ── The case study ──────────────────────────────────────────────────────── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--color-signal);
+  }
+
+  .back-link .icon {
+    width: 0.9em;
+    height: 0.9em;
+    transition: transform var(--t-quick) var(--ease-move);
+  }
+
+  /* Moves the way it is pointing. The label already says where it goes; this says it
+     is a thing you can press. */
+  .back-link:hover .icon {
+    transform: translateX(-2px);
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── Next and previous ──────────────────────────────────────────────────── */
+  .case-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-top: clamp(3rem, 8vh, 5rem);
+    padding-top: clamp(1.5rem, 4vh, 2.25rem);
+    border-top: 1px solid var(--color-rule);
+  }
+
+  @media (width >= 40rem) {
+    .case-nav {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .case-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.75rem;
+    transition:
+      border-color var(--t-move) var(--ease-set),
+      transform var(--t-move) var(--ease-set);
+  }
+
+  .case-nav-link:hover {
+    border-color: color-mix(in oklch, var(--color-signal) 45%, var(--color-rule));
+    transform: translateY(-2px);
+  }
+
+  /* The "next" card aligns to the right edge, so the pair reads as a spread rather
+     than as two identical boxes. */
+  .case-nav-link.is-next {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .case-nav-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .case-nav-label .icon {
+    width: 0.85em;
+    height: 0.85em;
+    transition: transform var(--t-quick) var(--ease-move);
+  }
+
+  .case-nav-link.is-previous:hover .icon {
+    transform: translateX(-3px);
+  }
+
+  .case-nav-link.is-next:hover .icon {
+    transform: translateX(3px);
+  }
+
+  .case-nav-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+}

@@ -472,9 +472,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.HasIndex("Featured", "StartDate")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_Projects_Featured_StartDate");
+                    b.HasIndex("Featured", "SortOrder", "StartDate")
+                        .IsDescending(true, false, true)
+                        .HasDatabaseName("IX_Projects_Featured_SortOrder_StartDate");
 
                     b.ToTable("portfolio_projects", (string)null);
                 });
