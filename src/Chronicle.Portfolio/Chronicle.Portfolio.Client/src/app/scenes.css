@@ -355,27 +355,11 @@
     }
 
     /*
-      THE WEAVE.
-
-      Odd children drop in from above, even ones rise from below, each with a small
-      counter-rotation. In a row of three that reads exactly as asked: the outer two
-      come down, the middle one comes up.
-
-      It is parity rather than a fixed pattern because these grids are `auto-fit` —
-      the column count changes with the viewport, and a rule written for "the third
-      one" would be describing a layout that only exists at one width. Parity gives
-      the same alternation at two, three or four across.
-
-      The rotation is under two degrees on purpose. Past about three a card stops
-      looking like it is settling and starts looking like it is falling over.
+      There is no alternating "weave" any more. Cards arriving from opposite
+      directions in the same row read as busy rather than as choreographed — every
+      row became two competing movements instead of one. One direction for
+      everything: the stagger is what makes a row feel sequenced, not the axis.
     */
-    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-weave] > *:nth-child(odd) {
-      animation-name: weave-down;
-    }
-
-    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger][data-weave] > *:nth-child(even) {
-      animation-name: weave-up;
-    }
 
     /* The comparison bars draw as the card arrives, on their own timeline so they
        are still filling after the card has settled. */

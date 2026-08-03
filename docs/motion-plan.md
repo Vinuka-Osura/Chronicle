@@ -78,11 +78,13 @@ unexceptional got a page where nothing moved. The gates are now
 arms are attribute selectors — with blur the single exception, because blur is the one
 thing that tier genuinely cannot afford.
 
-**A pinned scene needs its track's timeline, not its children's own.** `view()` measures
-an element against the viewport, and a sticky element stops moving relative to the
-viewport the moment it sticks, so its progress freezes and whatever it was animating is
-stranded. `.scene-track` names a timeline and its children scrub against `contain`, which
-for an element taller than the viewport is exactly the pinned period.
+**A pinned scene freezes its children's timelines**, and this is worth keeping in mind
+before pinning anything again. `view()` measures an element against the viewport, and a
+sticky element stops moving relative to the viewport the moment it sticks — so progress
+halts and whatever it was animating is stranded wherever it got to. The fix is for the
+track to name a timeline and its children to scrub against `contain`, which for an
+element taller than the viewport is exactly the pinned period. The code for that went
+with the Outcomes scene when it was unpinned; it is in git history.
 
 ---
 
@@ -111,9 +113,11 @@ precisely the property GSAP was being brought in to provide. They also run on th
 compositor at no main-thread cost, which matters here more than on most sites, because
 the water simulation already has the GPU and the main thread should stay out of the way.
 
-The Home page's two pinned scenes, the hero's title transformation, the staggered
-arrivals, the bar fills, the drawn sparkline and the ring are all built this way, in
-`src/app/(home)/home.css`. Where `animation-timeline` is unsupported the page is static
+The hero's pin and title transformation, the staggered arrivals, the bar fills, the
+drawn sparkline and the ring are all built this way. **The hero is the only thing on the
+site that pins** — the Outcomes scene did, and holding a reader still in front of three
+figures they could already read spent a screen and a half of scroll on nothing, which is
+the failure this technique is best known for. Where `animation-timeline` is unsupported the page is static
 and completely readable, which is the correct failure mode and needs no second code path.
 
 The one thing CSS cannot animate is *content*, so a number counting to its value is
@@ -122,8 +126,7 @@ JavaScript — `src/components/Figure.tsx`. Everything else is declarative.
 ### Where the shared vocabulary lives
 
 `src/app/scenes.css`, imported by `globals.css`, and it holds anything more than one
-route needs: the scene rhythm, the pinning mechanism, the staggered arrivals and the
-figure primitives. A page's own furniture stays beside the page — the Home hero and
+route needs: the scene rhythm, the staggered arrivals and the figure primitives. A page's own furniture stays beside the page — the Home hero and
 pulse cards in `(home)/home.css`, the roles ledger in `about/about.css`.
 
 It was promoted out of the Home stylesheet the moment About needed the same classes. A
@@ -137,12 +140,21 @@ because it makes one page quietly load-bearing for another.
 | Rise and settle | `[data-stagger]` | Sections, prose, list rows |
 | Rise, hold, sink | `data-depart` | Project cards, which leave as well as arrive |
 | Pop from behind | `data-pop` | Readings — metric and pulse cards |
-| The weave | `data-weave` | Grids where a row should not arrive as a queue |
+| Slide from the edge | `data-slide` | List rows — a line of a document being written |
 
-The weave alternates by `nth-child` parity: odd children drop from above, even ones rise
-from below, each with a counter-rotation under two degrees. Parity rather than a fixed
-pattern because these grids are `auto-fit` — a rule written for "the third one" describes
-a layout that exists at exactly one viewport width.
+**There was a fourth, and it is gone.** `data-weave` alternated arrival direction by
+`nth-child` parity, so in a row of three the outer two dropped from above and the middle
+rose from below. It was asked for and then withdrawn on sight: two opposite movements in
+one row read as busy rather than as choreographed. One direction for everything — the
+stagger is what makes a row feel sequenced, not the axis.
+
+**And a particle field, also gone.** Skill cards were meant to assemble out of fragments
+of themselves, the way presentation software does it to a picture. That needs the card as
+a bitmap, and these are live text over a `backdrop-filter`: rasterising the DOM cannot
+capture the backdrop at all, and the alternative is duplicating every card's markup once
+per fragment. What was built instead — a swarm converging *around* each card — is a
+different effect wearing the same name, and it read as noise. Removed rather than kept as
+a near-miss.
 
 ### One constraint that is easy to trip over
 

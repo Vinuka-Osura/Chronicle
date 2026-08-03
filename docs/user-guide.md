@@ -125,15 +125,16 @@ years of PostgreSQL is just a number; two case studies and a job that used it is
 evidence. Because it is derived, the two can never drift apart. A skill with no work
 behind it says so plainly rather than hiding.
 
-**The cards assemble out of a particle field.** As each one comes into view a swarm
-spirals in and settles around its edge; scroll back up and the swarm flies apart again,
-because what drives it is the card's own position rather than a timer. The particles
-arrive from below when you are scrolling down and from above when you are scrolling up,
-so the field always feeds from the direction you are travelling.
+The page opens with four counted figures — skills tracked, domains, the deepest one in
+years, and how many distinct projects and roles back them up. Each group is headed with
+its own count and its strongest entry, and the fullest groups come first, so the page
+opens on its best material rather than on whatever the alphabet decided.
 
-It is decoration on a page that is already finished: the cards arrive under their own
-rules whether or not the effect ever runs, so a device that cannot afford it — or has it
-switched off — loses the flourish and nothing else.
+Each card names its proficiency level rather than only plotting it, shows its years
+against the deepest skill on the page, and splits the evidence into projects and roles —
+"used on four things" was hiding the more useful "two shipped projects and two jobs".
+Projects link to their case study; roles are shown dashed, because they are a fact rather
+than a destination.
 
 **Working now.**
 

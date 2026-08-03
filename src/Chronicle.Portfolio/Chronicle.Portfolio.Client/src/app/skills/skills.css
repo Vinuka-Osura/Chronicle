@@ -3,9 +3,14 @@
   Skills
   ═══════════════════════════════════════════════════════════════════════════════
 
-  The scene rhythm, the stagger and the weave come from `app/scenes.css`. What is
-  here is the opening, the grid, and the layering that lets the vortex canvas sit
-  between the water and the cards.
+  The scene rhythm and the staggered arrivals come from `app/scenes.css`. What is
+  here is the opening, the summary band, and the card.
+
+  There is no particle field. It was tried and removed: what was wanted was the card
+  itself fragmenting and reassembling, and that needs the card as a bitmap — which
+  cannot be done for live text over a backdrop-filter without either rasterising the
+  DOM or duplicating every card's markup once per fragment. A swarm of dots AROUND
+  the card is a different effect wearing the same name, and it read as noise.
 */
 
 @layer components {
@@ -15,7 +20,7 @@
     flex-direction: column;
     justify-content: center;
     min-height: min(52vh, 28rem);
-    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(4rem, 9vh, 7rem);
+    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(3rem, 7vh, 5rem);
   }
 
   .skills-heading {
@@ -38,51 +43,265 @@
     text-wrap: pretty;
   }
 
+  /* ── The summary band ────────────────────────────────────────────────────── */
+  .skills-summary-scene {
+    /* Sits close under the opening: it is the second half of the headline, not a
+       section in its own right. */
+    margin-block: clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .skills-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    /* One-pixel gaps over the rule colour draw every divider at once, rather than a
+       border per cell that doubles wherever two meet. */
+    background: var(--color-rule);
+    border-block: 1px solid var(--color-rule);
+  }
+
+  .skills-figure {
+    padding: 1.1rem 1.15rem;
+    background: var(--color-paper-solid);
+  }
+
+  .skills-figure dt {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .skills-figure dd {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 1.2rem + 1.2vw, 2.2rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .skills-figure-unit {
+    font-size: 0.36em;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--color-ink-soft);
+  }
+
   /* ── Groups ──────────────────────────────────────────────────────────────── */
   .skills-group {
-    /* Tighter than the standard scene rhythm. These are seven short sections in a
-       row rather than five long ones, and the full spacing would turn the page
-       into a corridor. */
-    margin-block: clamp(4rem, 9vh, 7rem);
+    /* Tighter than the standard scene rhythm — these are several short sections in a
+       row rather than a few long ones, and full spacing turns the page into a
+       corridor. */
+    margin-block: clamp(3.5rem, 8vh, 6rem);
+  }
+
+  .skills-group-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.4rem 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .skills-group-head .scene-eyebrow {
+    margin-bottom: 0;
+  }
+
+  .skills-group-count {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-faint);
   }
 
   .skills-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: 1rem;
     margin-top: 1.5rem;
-    /*
-      Above the vortex canvas.
+  }
 
-      The canvas is fixed at z-index 1, so the grid needs a stacking position of its
-      own or the particles would draw over the card text. Behind the cards is also
-      the right place for them aesthetically: the swarm should look like it is
-      delivering the card, not settling on top of it.
-    */
-    position: relative;
-    z-index: 2;
+  /* ── The card ────────────────────────────────────────────────────────────── */
+  .skill-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.15rem 1.2rem 1.05rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.75rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  [data-motion="reduced"] .skill-card,
+  [data-motion="still"] .skill-card {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .skill-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .skill-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  /* The level, named. Four dots out of five is a position on a scale nobody has been
+     shown; the word is the scale. */
+  .skill-level {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+  }
+
+  .skill-depth {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.7rem;
+  }
+
+  .skill-meter {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .skill-meter > span {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--color-rule);
+  }
+
+  .skill-meter > span.is-on {
+    background: var(--color-signal);
+  }
+
+  .skill-years {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-soft);
   }
 
   /*
-    The particle field.
+    Years, against the deepest skill on the page.
 
-    Fixed and pointer-transparent, between the water (-2) and the content. It has no
-    opacity transition and needs none — every particle fades itself in and out along
-    its own path, so there is never a frame where the whole layer appears or leaves.
+    Allowed because every value is in the same unit — which is the only test that
+    matters for whether a bar may exist. No track behind it: a full-width track would
+    imply a 100% reference, and the reference here is "the longest one", not a
+    ceiling anybody has defined.
   */
-  .vortex {
-    position: fixed;
-    inset: 0;
-    z-index: 1;
+  .skill-bar {
+    display: block;
+    height: 3px;
+    margin-top: 0.55rem;
+  }
+
+  .skill-bar-length {
+    display: block;
+    height: 100%;
+  }
+
+  .skill-bar-length .bar-fill {
     display: block;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    border-radius: 0 999px 999px 0;
+    background: color-mix(in oklch, var(--color-signal) 55%, transparent);
+    transform-origin: left center;
   }
 
-  /* Nothing to draw, so nothing to lay out. */
-  [data-motion="reduced"] .vortex,
-  [data-motion="still"] .vortex {
-    display: none;
+  /* ── Evidence ────────────────────────────────────────────────────────────── */
+  .skill-usage {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .skill-usage-label {
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .skill-chip {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.3rem;
+    font-size: 0.73rem;
+    line-height: 1.35;
+    color: var(--color-ink-soft);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .skill-chip.is-link:hover {
+    border-color: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  /* A role is not a link anywhere, so it should not look like one waiting to be
+     clicked. Dashed says "this is a fact, not a destination". */
+  .skill-chip.is-role {
+    border-style: dashed;
+    color: var(--color-ink-faint);
+  }
+
+  .skill-unused {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--color-rule);
+    font-size: 0.75rem;
+    font-style: italic;
+    color: var(--color-ink-faint);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* The years bars fill as their card arrives. */
+    :is([data-motion="full"], [data-motion="reduced"]) .skill-bar-length .bar-fill {
+      animation: bar-fill linear both;
+      animation-timeline: view();
+      animation-range: entry 14% cover 42%;
+    }
   }
 }

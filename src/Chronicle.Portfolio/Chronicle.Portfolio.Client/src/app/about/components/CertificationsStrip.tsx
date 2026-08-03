@@ -25,7 +25,7 @@ export function CertificationsStrip({ items }: { items: Certification[] }) {
         The ones with a record somebody else keeps.
       </h2>
 
-      <ul className="cert-grid rm-grid" data-stagger data-weave>
+      <ul className="cert-grid rm-grid" data-stagger>
         {items.map((cert) => {
           const body = (
             <>

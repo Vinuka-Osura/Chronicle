@@ -1,74 +1,117 @@
 import Link from "next/link";
 import type { Skill } from "@/lib/types";
 
-/** Five dots rather than a bar: a discrete scale should not look continuous. */
-function ProficiencyMeter({ rank, label }: { rank: number; label: string }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1"
-      role="img"
-      aria-label={`Proficiency: ${label}, ${rank} of 5`}
-    >
-      {[1, 2, 3, 4, 5].map((step) => (
-        <span
-          key={step}
-          aria-hidden
-          className={`size-1.5 rounded-full ${step <= rank ? "bg-signal" : "bg-rule"}`}
-        />
-      ))}
-    </span>
-  );
-}
-
 function years(value: number): string {
   // 3.0 should read "3 years", not "3.0 years".
   const rounded = Number.isInteger(value) ? value.toString() : value.toFixed(1);
   return `${rounded} ${value === 1 ? "year" : "years"}`;
 }
 
-export function SkillCard({ skill }: { skill: Skill }) {
+/** Five steps rather than a bar: a named scale should not look continuous. */
+function ProficiencyMeter({ rank, label }: { rank: number; label: string }) {
   return (
-    /* skill-card is the hook the vortex looks for, as well as the style. */
-    <article className="skill-card surface p-4">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-        <h3 className="font-display font-semibold">{skill.name}</h3>
-        <ProficiencyMeter rank={skill.proficiencyRank} label={skill.proficiency} />
+    <span
+      className="skill-meter"
+      role="img"
+      aria-label={`Proficiency: ${label}, ${rank} of 5`}
+    >
+      {[1, 2, 3, 4, 5].map((step) => (
+        <span key={step} aria-hidden className={step <= rank ? "is-on" : ""} />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * One skill, with the evidence for it.
+ *
+ * The previous card put the years, the meter and one undifferentiated list of "used in"
+ * chips in a row and left it there. Three changes, all of them showing something that
+ * was already in the data and was not being said:
+ *
+ *   - The proficiency level is NAMED, not just plotted. Four dots out of five is a
+ *     position on a scale nobody has been shown; "Advanced" is the scale.
+ *   - Years get a bar measured against the deepest skill on the page. Every skill is in
+ *     the same unit, so that comparison is real — which is the whole test for whether a
+ *     bar is allowed to exist.
+ *   - The usage is SPLIT. `usedIn` already distinguishes a project from a role and the
+ *     card rendered both identically, so "used on four things" was hiding the more
+ *     interesting "two shipped projects and two jobs".
+ */
+export function SkillCard({ skill, deepest }: { skill: Skill; deepest: number }) {
+  const projects = skill.usedIn.filter((usage) => usage.kind === "project");
+  const roles = skill.usedIn.filter((usage) => usage.kind === "experience");
+
+  // Floored, so the shallowest skill is a visible bar rather than a hairline that
+  // reads as a rendering failure.
+  const share = deepest > 0 ? Math.max(0.08, skill.yearsExperience / deepest) : 0;
+
+  return (
+    <article className="skill-card">
+      <div className="skill-head">
+        <h3 className="skill-name">{skill.name}</h3>
+        <span className="skill-level">{skill.proficiency}</span>
       </div>
 
-      <p className="mb-3 font-mono text-xs text-ink-faint">{years(skill.yearsExperience)}</p>
+      <div className="skill-depth">
+        <ProficiencyMeter rank={skill.proficiencyRank} label={skill.proficiency} />
+        <span className="skill-years">{years(skill.yearsExperience)}</span>
+      </div>
+
+      {/* Outer span carries the real length so it is correct without JavaScript; the
+          inner one is what scales, because animating width is a layout write. */}
+      <span className="skill-bar" aria-hidden>
+        <span className="skill-bar-length" style={{ width: `${share * 100}%` }}>
+          <span className="bar-fill" />
+        </span>
+      </span>
 
       {/*
-        The point of the page. These are not typed in anywhere - they are worked out
+        The point of the page. These are not typed in anywhere — they are worked out
         from the projects and roles that reference this skill, so the claim and the
         evidence cannot drift apart.
       */}
       {skill.usedIn.length > 0 ? (
-        <div>
-          <p className="mb-1.5 font-mono text-[0.65rem] tracking-[0.14em] text-ink-faint uppercase">
-            Used in
-          </p>
-          <ul className="flex flex-wrap gap-1.5">
-            {skill.usedIn.map((usage) => (
-              <li key={`${usage.kind}-${usage.title}`}>
-                {usage.slug ? (
-                  <Link
-                    href={`/projects/${usage.slug}`}
-                    className="inline-block rounded border border-rule px-1.5 py-0.5 text-xs text-ink-soft transition-colors hover:border-signal hover:text-ink"
-                  >
-                    {usage.title}
-                  </Link>
-                ) : (
-                  <span className="inline-block rounded border border-dashed border-rule px-1.5 py-0.5 text-xs text-ink-faint">
-                    {usage.title}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+        <div className="skill-usage">
+          {projects.length > 0 && (
+            <div className="skill-usage-group">
+              <p className="skill-usage-label">
+                {projects.length} {projects.length === 1 ? "project" : "projects"}
+              </p>
+              <ul className="skill-chips">
+                {projects.map((usage) => (
+                  <li key={`p-${usage.title}`}>
+                    {usage.slug ? (
+                      <Link href={`/projects/${usage.slug}`} className="skill-chip is-link">
+                        {usage.title}
+                      </Link>
+                    ) : (
+                      <span className="skill-chip">{usage.title}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {roles.length > 0 && (
+            <div className="skill-usage-group">
+              <p className="skill-usage-label">
+                {roles.length} {roles.length === 1 ? "role" : "roles"}
+              </p>
+              <ul className="skill-chips">
+                {roles.map((usage) => (
+                  <li key={`r-${usage.title}`}>
+                    <span className="skill-chip is-role">{usage.title}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       ) : (
         // Honest rather than hidden: a skill with nothing behind it says so.
-        <p className="text-xs text-ink-faint italic">Not yet used in published work.</p>
+        <p className="skill-unused">Not yet used in published work.</p>
       )}
     </article>
   );

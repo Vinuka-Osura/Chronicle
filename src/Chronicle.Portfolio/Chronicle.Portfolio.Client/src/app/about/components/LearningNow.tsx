@@ -28,8 +28,7 @@ export function LearningNow({ items }: { items: LearningItem[] }) {
         What I am currently bad at, and getting less bad at.
       </h2>
 
-      {/* The weave: odd cards drop from above, even ones rise from below. */}
-      <div className="learning-grid" data-stagger data-weave>
+      <div className="learning-grid" data-stagger>
         {shown.map((item) => (
           <article key={item.topic} className="learning-card">
             <p className="learning-status">
