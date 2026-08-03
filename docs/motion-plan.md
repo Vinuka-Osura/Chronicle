@@ -98,6 +98,40 @@ and completely readable, which is the correct failure mode and needs no second c
 The one thing CSS cannot animate is *content*, so a number counting to its value is
 JavaScript — `src/components/Figure.tsx`. Everything else is declarative.
 
+### Where the shared vocabulary lives
+
+`src/app/scenes.css`, imported by `globals.css`, and it holds anything more than one
+route needs: the scene rhythm, the pinning mechanism, the staggered arrivals and the
+figure primitives. A page's own furniture stays beside the page — the Home hero and
+pulse cards in `(home)/home.css`, the roles ledger in `about/about.css`.
+
+It was promoted out of the Home stylesheet the moment About needed the same classes. A
+second route importing a first route's stylesheet is worse than promoting the rules,
+because it makes one page quietly load-bearing for another.
+
+**Four arrival gestures, and the distinction between them is the point:**
+
+| Gesture | Marked with | Used for |
+|---|---|---|
+| Rise and settle | `[data-stagger]` | Sections, prose, list rows |
+| Rise, hold, sink | `data-depart` | Project cards, which leave as well as arrive |
+| Pop from behind | `data-pop` | Readings — metric and pulse cards |
+| The weave | `data-weave` | Grids where a row should not arrive as a queue |
+
+The weave alternates by `nth-child` parity: odd children drop from above, even ones rise
+from below, each with a counter-rotation under two degrees. Parity rather than a fixed
+pattern because these grids are `auto-fit` — a rule written for "the third one" describes
+a layout that exists at exactly one viewport width.
+
+### One constraint that is easy to trip over
+
+**Never read the clock in a Server Component.** Cache Components forbids it, and it
+throws at render rather than at build. A relative timestamp — "3 days ago" — needs
+`Date.now()` and is therefore unavailable server-side; use an absolute date, or take the
+server's own date from the timeline endpoint, which returns `today` for exactly this
+reason. This has now been hit twice: once visibly on About, and once latently on the Home
+repository list, where it would only have surfaced when the list stopped being empty.
+
 ---
 
 ## 5. The motion vocabulary

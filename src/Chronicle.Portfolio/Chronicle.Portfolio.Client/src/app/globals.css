@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* The scene rhythm, the pinning mechanism, the staggered arrivals and the figure
+   primitives — everything more than one route needs. Promoted out of the Home
+   stylesheet when About came to need the same vocabulary. */
+@import "./scenes.css";
+
 /*
   Enables `dark:` utilities for the few cases a token swap cannot express - a shadow
   that needs a different spread, say. Tailwind v4 has no tailwind.config.ts, so the

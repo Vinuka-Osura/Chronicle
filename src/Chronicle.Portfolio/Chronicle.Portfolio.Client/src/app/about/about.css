@@ -1,0 +1,367 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  About
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  The scene rhythm, the staggered arrivals and the weave all come from
+  `app/scenes.css`. What is here is only what About itself is made of.
+
+  No pinned scene on this page, deliberately. Pinning is worth its cost when a
+  section has something to reveal in sequence; About is prose and a list of facts,
+  and holding a reader still to read a paragraph they could already see is the
+  version of this technique that gives it a bad name.
+*/
+
+@layer components {
+  /* ── The opening ─────────────────────────────────────────────────────────── */
+  .about-open {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(62vh, 34rem);
+    margin-block: clamp(2rem, 6vh, 4rem) clamp(5rem, 10vh, 8rem);
+  }
+
+  .about-heading {
+    max-width: 20ch;
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    /* Tighter than the body scale: display sizes need negative tracking and a
+       line-height under 1 to read as a mass rather than as separate lines. */
+    line-height: 0.99;
+    letter-spacing: -0.035em;
+  }
+
+  .about-lede {
+    --in-delay: 820ms;
+    /* A measure, not a container. Around 65 characters is where prose stops being
+       comfortable, and it is the easiest good decision to forget to make. */
+    max-width: 42rem;
+    margin-top: 1.75rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── The story ───────────────────────────────────────────────────────────── */
+  .story {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 40rem;
+    margin-top: clamp(2rem, 5vh, 3rem);
+    font-size: var(--text-lede);
+    line-height: 1.7;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /*
+    The pull quote. One sentence lifted out of the middle of the prose, where it was
+    doing the most work and getting the least attention.
+  */
+  .story-pull {
+    padding-left: clamp(1rem, 3vw, 1.75rem);
+    border-left: 2px solid var(--color-signal);
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 1rem + 0.8vw, 1.5rem);
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  /* ── Roles ───────────────────────────────────────────────────────────────── */
+  .roles {
+    display: flex;
+    flex-direction: column;
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  /*
+    A ledger, not cards. Four roles as cards would carry the same visual weight as
+    four certifications further down the page, and they are not the same kind of
+    claim — one is where you spent years, the other is an afternoon's exam.
+  */
+  .role {
+    padding: clamp(1.5rem, 4vh, 2.25rem) 0;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .role:last-child {
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .role-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+  }
+
+  .role-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 1rem + 0.7vw, 1.45rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .role-company {
+    margin-top: 0.15rem;
+    font-size: 0.92rem;
+    color: var(--color-signal);
+  }
+
+  .role-when {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-align: right;
+    color: var(--color-ink-faint);
+  }
+
+  .role-length {
+    color: var(--color-ink-soft);
+  }
+
+  .role-summary {
+    max-width: 44rem;
+    margin-top: 0.9rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .role-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-width: 44rem;
+    margin-top: 1rem;
+  }
+
+  .role-highlights > li {
+    position: relative;
+    padding-left: 1.1rem;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+  }
+
+  /* A rule rather than a bullet. A dash reads as a note; a disc reads as a form. */
+  .role-highlights > li::before {
+    content: "";
+    position: absolute;
+    top: 0.75em;
+    left: 0;
+    width: 0.55rem;
+    height: 1px;
+    background: var(--color-signal);
+  }
+
+  .role-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--color-ink-faint);
+  }
+
+  .role-stack > li::after {
+    content: "·";
+    margin-left: 0.75rem;
+    color: var(--color-rule);
+  }
+
+  .role-stack > li:last-child::after {
+    content: none;
+  }
+
+  /* ── Learning ────────────────────────────────────────────────────────────── */
+  .learning-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  .learning-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.3rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.85rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  [data-motion="reduced"] .learning-card,
+  [data-motion="still"] .learning-card {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .learning-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .learning-topic {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .learning-note {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .learning-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
+  }
+
+  .learning-track {
+    display: block;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    /* The unfilled remainder, so a quarter of the way through reads as a measured
+       quarter rather than as a short bar floating on nothing. */
+    background: color-mix(in oklch, var(--color-ink) 10%, transparent);
+    overflow: hidden;
+  }
+
+  /* Outer span holds the real width so it is correct without JavaScript; the inner
+     one is what scales, because animating width is a layout write per frame. */
+  .learning-fill {
+    display: block;
+    height: 100%;
+  }
+
+  .learning-fill .bar-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-signal);
+    transform-origin: left center;
+  }
+
+  .learning-percent {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-soft);
+  }
+
+  .learning-link {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    color: var(--color-signal);
+  }
+
+  .learning-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ── Certifications ──────────────────────────────────────────────────────── */
+  .cert-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  .cert-card {
+    position: relative;
+    padding: 1.2rem 1.3rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.85rem;
+    background: var(--color-paper-raised);
+    box-shadow: var(--shadow-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    transition:
+      transform var(--t-move) var(--ease-set),
+      border-color var(--t-move) var(--ease-set),
+      box-shadow var(--t-move) var(--ease-set);
+  }
+
+  [data-motion="reduced"] .cert-card,
+  [data-motion="still"] .cert-card {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .cert-card:has(.cert-link:hover),
+  .cert-card:focus-within {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklch, var(--color-signal) 45%, var(--color-rule));
+    box-shadow: var(--shadow-lifted);
+  }
+
+  /* Covers the card, so the whole thing is the target while the accessible name
+     stays the certification itself. */
+  .cert-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+
+  .cert-name {
+    display: block;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-ink);
+  }
+
+  .cert-issuer {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.82rem;
+    color: var(--color-ink-soft);
+  }
+
+  .cert-verify {
+    display: inline-block;
+    margin-top: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-signal);
+  }
+}

@@ -77,15 +77,21 @@ function techBreadth(projects: ProjectCard[]) {
   };
 }
 
-/** How long ago, in the coarsest unit that is still true. */
-function since(iso: string): string {
-  const then = new Date(iso).getTime();
-  const days = Math.floor((Date.now() - then) / 86_400_000);
-  if (days < 1) return "today";
-  if (days === 1) return "yesterday";
-  if (days < 30) return `${days}d ago`;
-  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
-  return `${Math.floor(days / 365)}y ago`;
+/*
+  When a repository was last pushed, as a month.
+
+  Relative time — "3d ago" — would be nicer and is not available: working it out needs
+  the current clock, and reading the clock in a server component is what Cache
+  Components forbids. This is a latent version of the error the About page threw, and it
+  would only have surfaced here once the repository list stopped being empty. An
+  absolute month is honest, cacheable, and cannot go stale in a misleading direction.
+*/
+function pushed(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 /**
@@ -234,7 +240,7 @@ export function Pulse({
                 <a href={repo.url} target="_blank" rel="noreferrer" className="pulse-repo">
                   <span className="pulse-repo-name">{repo.name}</span>
                   {repo.language && <span className="pulse-repo-lang">{repo.language}</span>}
-                  <span className="pulse-repo-when">{since(repo.pushedAt)}</span>
+                  <span className="pulse-repo-when">{pushed(repo.pushedAt)}</span>
                 </a>
               </li>
             ))}

@@ -83,13 +83,35 @@ are, and offers the way back to the top. It stands aside when the full footer ar
 
 ### About
 
-The narrative: who you are, how you got here, what you care about building. A
-**certifications strip** sits inline beneath it, each credential linking out to its
-verifiable record, so recognitions live alongside the story rather than on a page nobody
-visits. Credentials without a verifiable link render plainly rather than as a dead link.
+Five sections, in this order:
+
+| Section | What it is | Where the content comes from |
+|---|---|---|
+| **Opening** | The one-sentence version, set large. | Fixed copy |
+| **The story** | How you got here, with the strongest sentence pulled out as a quote. | Fixed copy |
+| **Where** | Every role: title, employer, dates, what you did, the stack. | Your experience entries |
+| **Learning** | What you are working on now, with how far along each one is. | Learning items in the CMS |
+| **Credentials** | Certifications, each linking to its verifiable record. | Certifications in the CMS |
+
+**About used to say where none of the work happened.** The roles existed only on the
+résumé and the timeline, which is the first thing most people read an About page to find
+out — so they are here too, drawn from the same rows rather than typed out again. Add a
+role in the admin and it appears in all three places at once.
+
+The heading over that section counts itself: "two roles, one company" is worked out from
+the entries rather than written down, so it cannot quietly become wrong the day you add
+the third.
+
+*Learning* is the section that costs something to publish — a list of what you are
+currently bad at is a harder claim to fake than a list of what you are good at. Each item
+shows its progress where you have set one; an item with no percentage shows its status
+and no bar, because a missing measurement should look missing rather than look like zero.
+
+Credentials without a verifiable link render plainly rather than as a dead link.
 
 **Working now.** The prose still lives in the code rather than the CMS — it changes
-about once a year, so it did not earn a screen.
+about once a year, so it did not earn a screen. Everything else on the page is content
+you can edit.
 
 ### Skills
 
