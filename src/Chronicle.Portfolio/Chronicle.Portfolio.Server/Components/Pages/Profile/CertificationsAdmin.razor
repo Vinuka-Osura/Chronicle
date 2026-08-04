@@ -3,12 +3,15 @@
 @rendermode InteractiveServer
 
 @using Chronicle.Application.Common.Exceptions
+@using Chronicle.Application.Common.Interfaces
+@using Chronicle.Domain.Enums
 @using Chronicle.Application.Features.Certifications.Commands.DeleteCertification
 @using Chronicle.Application.Features.Certifications.Commands.SaveCertification
 @using Chronicle.Application.Features.Certifications.Queries.GetCertificationsForAdmin
 @using Chronicle.Portfolio.Server.Components.Shared
 @using MediatR
 @inject ISender Sender
+@inject ICredentialLinkReader LinkReader
 
 <PageTitle>Certifications - Chronicle admin</PageTitle>
 
@@ -43,8 +46,32 @@
                 </div>
 
                 <div class="field">
+                    <label for="kind">Kind</label>
+                    <InputSelect id="kind" @bind-Value="editing.Kind">
+                        <option value="@CredentialKind.Certification">Certification</option>
+                        <option value="@CredentialKind.AppliedSkill">Applied Skill</option>
+                        <option value="@CredentialKind.Badge">Badge</option>
+                        <option value="@CredentialKind.Training">Training</option>
+                    </InputSelect>
+                    <p class="field-help">
+                        Certifications and Applied Skills reach the résumé; badges and
+                        training do not. An invigilated exam and a module you clicked
+                        through should not carry the same weight.
+                    </p>
+                </div>
+
+                <div class="field">
                     <label for="issued">Issued</label>
                     <InputDate id="issued" @bind-Value="editing.IssueDate" />
+                </div>
+
+                <div class="field">
+                    <label for="expires">Expires <span class="optional">optional</span></label>
+                    <InputDate id="expires" @bind-Value="editing.ExpiryDate" />
+                    <p class="field-help">
+                        Leave blank for credentials that do not lapse. Set it and the site
+                        marks it expired on the day rather than passing it off as current.
+                    </p>
                 </div>
 
                 <div class="field">
@@ -55,16 +82,36 @@
 
             <div class="field">
                 <label for="credential">Credential URL <span class="optional">optional</span></label>
-                <InputText id="credential" @bind-Value="editing.CredentialUrl" />
+                <div class="field-with-action">
+                    <InputText id="credential" @bind-Value="editing.CredentialUrl" />
+                    <button type="button" class="button-quiet" disabled="@reading" @onclick="ReadLinkAsync">
+                        @(reading ? "Reading…" : "Read from link")
+                    </button>
+                </div>
                 <p class="field-help">
-                    Where someone can verify it. Full http(s) address.
-                    A credential nobody can check is worth less than one they can.
+                    Where someone can verify it. Full https address. A credential nobody can
+                    check is worth less than one they can.
                 </p>
+                <p class="field-help">
+                    <strong>Read from link</strong> fetches the page's own title and badge
+                    image and fills the two fields below. It works for a Microsoft Learn
+                    share URL — both the <code>/api/credentials/share/</code> and
+                    <code>/api/achievements/share/</code> kinds — and for Credly. Other hosts
+                    are refused on purpose, because this fetches whatever address is typed.
+                </p>
+                @if (linkNote is not null)
+                {
+                    <p class="field-help"><strong>@linkNote</strong></p>
+                }
             </div>
 
             <div class="field">
                 <label for="logo">Logo URL <span class="optional">optional</span></label>
                 <InputText id="logo" @bind-Value="editing.LogoUrl" />
+                @if (!string.IsNullOrWhiteSpace(editing.LogoUrl))
+                {
+                    <img src="@editing.LogoUrl" alt="" class="badge-preview" />
+                }
             </div>
 
             <div class="field">
@@ -145,6 +192,8 @@ else
     private Form? editing;
     private Guid? confirming;
     private bool saving;
+    private bool reading;
+    private string? linkNote;
     private IDictionary<string, string[]>? errors;
     private string? message;
 
@@ -153,7 +202,9 @@ else
         public Guid? Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Issuer { get; set; } = string.Empty;
+        public CredentialKind Kind { get; set; } = CredentialKind.Certification;
         public DateTime IssueDate { get; set; } = DateTime.Today;
+        public DateTime? ExpiryDate { get; set; }
         public string? CredentialUrl { get; set; }
         public string? LogoUrl { get; set; }
         public int SortOrder { get; set; }
@@ -161,6 +212,59 @@ else
     }
 
     protected override Task OnInitializedAsync() => LoadAsync();
+
+    /// <summary>
+    /// Fills the name and badge image from the credential link's own Open Graph tags.
+    /// </summary>
+    /// <remarks>
+    /// Resolved here, at edit time, and stored — never fetched while a page renders. That
+    /// keeps the public site working when Microsoft is unreachable, keeps an outbound
+    /// request behind authentication, and means the badge survives the issuer changing
+    /// anything later.
+    /// <para>
+    /// The name is only filled when the field is blank. Overwriting something already typed
+    /// would be the wrong kind of helpful.
+    /// </para>
+    /// </remarks>
+    private async Task ReadLinkAsync()
+    {
+        if (editing is null || string.IsNullOrWhiteSpace(editing.CredentialUrl))
+        {
+            linkNote = "Paste the share URL first.";
+            return;
+        }
+
+        reading = true;
+        linkNote = null;
+
+        try
+        {
+            var link = await LinkReader.ReadAsync(editing.CredentialUrl);
+
+            if (link is null)
+            {
+                linkNote = "Nothing readable there. Check the address, and note that only "
+                    + "known credential issuers are fetched.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(editing.Name) && link.Title is { Length: > 0 })
+            {
+                editing.Name = link.Title;
+            }
+
+            if (link.ImageUrl is { Length: > 0 })
+            {
+                editing.LogoUrl = link.ImageUrl;
+            }
+
+            linkNote = link.Title is { Length: > 0 } ? $"Read: {link.Title}" : "Read the badge image.";
+        }
+        finally
+        {
+            reading = false;
+        }
+    }
 
     private async Task LoadAsync() => rows = await Sender.Send(new GetCertificationsForAdminQuery());
 
@@ -184,6 +288,8 @@ else
             IssueDate = row.IssueDate.ToDateTime(TimeOnly.MinValue),
             CredentialUrl = row.CredentialUrl,
             LogoUrl = row.LogoUrl,
+            Kind = row.Kind,
+            ExpiryDate = row.ExpiryDate?.ToDateTime(TimeOnly.MinValue),
             SortOrder = row.SortOrder,
             Skills = string.Join(", ", row.Skills)
         };
@@ -211,7 +317,9 @@ else
                 editing.Id,
                 editing.Name,
                 editing.Issuer,
+                editing.Kind,
                 DateOnly.FromDateTime(editing.IssueDate),
+                editing.ExpiryDate is { } expiry ? DateOnly.FromDateTime(expiry) : null,
                 editing.CredentialUrl,
                 editing.LogoUrl,
                 editing.SortOrder,

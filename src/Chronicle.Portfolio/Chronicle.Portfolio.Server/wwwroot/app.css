@@ -376,6 +376,17 @@ a:hover { text-decoration: underline; }
 .field-head { align-items: center; display: flex; gap: 0.75rem; justify-content: space-between; }
 .field-head label, .field-head .label-like { margin-bottom: 0; }
 .field-row { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+
+/* An input with a button that acts on what is in it — "Read from link" beside the
+   credential URL. The input takes the room; the button stays its own width. */
+.field-with-action { align-items: stretch; display: flex; gap: 0.5rem; }
+.field-with-action input { flex: 1; min-width: 0; }
+.field-with-action button { flex-shrink: 0; white-space: nowrap; }
+
+/* Proof the badge URL resolves to a picture, shown at the size it is actually used.
+   A broken image here is the point: better to see it now than on the public page. */
+.badge-preview { border: 1px solid var(--rule); border-radius: 6px; display: block;
+  height: 4rem; margin-top: 0.5rem; object-fit: contain; padding: 0.25rem; width: 4rem; }
 .field-row .field { flex: 1 1 12rem; }
 
 .field-inline { align-items: center; display: grid; gap: 0 0.5rem; grid-template-columns: auto 1fr; }

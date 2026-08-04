@@ -1,6 +1,7 @@
 using Chronicle.Application.Common.Exceptions;
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Domain.Entities;
+using Chronicle.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,9 @@ public sealed record AdminCertificationRow(
     Guid Id,
     string Name,
     string Issuer,
+    CredentialKind Kind,
     DateOnly IssueDate,
+    DateOnly? ExpiryDate,
     string? CredentialUrl,
     string? LogoUrl,
     int SortOrder,
@@ -34,7 +37,9 @@ public sealed class GetCertificationsForAdminQueryHandler(IChronicleDbContext db
                 c.Id,
                 c.Name,
                 c.Issuer,
+                c.Kind,
                 c.IssueDate,
+                c.ExpiryDate,
                 c.CredentialUrl,
                 c.LogoUrl,
                 c.SortOrder,

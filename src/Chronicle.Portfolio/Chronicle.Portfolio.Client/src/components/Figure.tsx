@@ -44,7 +44,9 @@ function motionAllowed() {
 export function Counter({
   value,
   decimals = 0,
-  duration = 1400,
+  // Short enough to be over before the figure is being read, long enough to be seen
+  // happening. Past about 1.2s it stops reading as arrival and starts reading as loading.
+  duration = 1000,
   className = "",
 }: {
   value: number;
@@ -91,45 +93,59 @@ export function Counter({
     /*
       ONE observer with several thresholds, and a position test in the callback.
 
-      This has now been wrong twice in two different ways, and the shape of the fix is
-      the lesson. Firing on any intersection was the first bug: these figures sit inside
-      a pinned scene whose sticky content is geometrically visible a screen and a half
-      before anyone arrives to read it, so the count finished while the reader was still
-      scrolling towards it. Narrowing the trigger to a band across the middle fixed that
-      and broke something else — a *second* observer was then resetting the value at the
-      band's edge, so a card sitting perfectly readable near the top of the screen
-      displayed 0.
+      This has now been wrong three times, and each fix is a line here.
 
-      A band alone is not enough either: `IntersectionObserver` reports state changes,
-      not every position, so a fast scroll can carry an element clean through a narrow
-      band between two callbacks and the count never fires at all. That is exactly what
-      a flick down the page produced.
+      1. Firing on any intersection finished the count while the reader was still
+         scrolling towards it.
+      2. Narrowing to a band, with a second observer resetting at the band's edge, left a
+         card sitting perfectly readable near the top of the screen showing 0.
+      3. **Resetting to zero on any non-intersection zeroed every counter on mount.**
+         `IntersectionObserver` delivers a first callback immediately on `observe()`, and
+         for anything below the fold that callback says `isIntersecting: false`. So the
+         value the server rendered was wiped before the reader ever reached it, and the
+         only way to populate it was to scroll past and come back. That directly
+         contradicts the rule at the top of this file: a statistic reading 0 without
+         JavaScript is not a subtle animation, it is a false claim — and this made it read
+         0 *with* JavaScript.
 
-      So: watch the whole element, wake on several thresholds, and decide from its actual
-      position. It has arrived once its top is above 72% of the viewport — which is true
-      at some threshold crossing however fast the scroll — and it rearms only when it has
-      genuinely left, so returning plays it again.
+      The rules that fall out:
+
+      - **Never zero a counter that has not already played.** `ran` gates the reset, so the
+        first callback cannot touch the server-rendered value.
+      - Reset only on a *full* exit (`intersectionRatio === 0`), never on a partial one, so
+        a figure clipped by the header keeps its value.
+      - Trigger as soon as the element is meaningfully on screen rather than at a band in
+        the middle, so the count is **finished by the time the reader's eye arrives** —
+        which is the whole point of it and was the remaining complaint.
+      - A band alone was never enough anyway: the observer reports state changes, not
+        positions, so a fast scroll can carry an element between two callbacks. Several
+        thresholds plus a position test survives that.
     */
     let ran = false;
 
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (!entry.isIntersecting) {
-            // Gone. Put it back to zero so coming back plays it again.
-            ran = false;
-            cancelAnimationFrame(frame);
-            setShown(0);
+          if (entry.intersectionRatio === 0) {
+            // Genuinely gone. Rearm so returning replays it — but only if it has already
+            // played, or this is the mount callback wiping a value nobody has seen yet.
+            if (ran) {
+              ran = false;
+              cancelAnimationFrame(frame);
+              setShown(0);
+            }
             continue;
           }
 
-          if (!ran && entry.boundingClientRect.top < window.innerHeight * 0.72) {
+          // Anywhere on screen at all, top edge above the fold. Generous on purpose: it
+          // must be done counting before it is being read, not while.
+          if (!ran && entry.boundingClientRect.top < window.innerHeight * 0.95) {
             ran = true;
             run();
           }
         }
       },
-      { threshold: [0, 0.2, 0.5, 0.8, 1] },
+      { threshold: [0, 0.01, 0.2, 0.5, 0.8, 1] },
     );
 
     observer.observe(element);

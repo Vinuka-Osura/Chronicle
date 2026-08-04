@@ -137,6 +137,41 @@ export function XMark(props: IconProps) {
   );
 }
 
+export function StackOverflowMark(props: IconProps) {
+  return (
+    <Mark {...props}>
+      <path d="M17.36 20.2v-5.38h1.79V22H3v-7.18h1.8v5.38h12.56Z" />
+      <path d="m6.77 14.32.35-1.76 8.78 1.84-.36 1.76-8.77-1.84Zm1.16-4.21.74-1.62 8.14 3.78-.75 1.62-8.13-3.78Zm2.26-3.99 1.15-1.38 6.9 5.76-1.15 1.37-6.9-5.75Zm4.46-4.26 5.35 7.2-1.44 1.07-5.35-7.2 1.44-1.07ZM6.6 18.41v-1.8h8.95v1.8H6.6Z" />
+    </Mark>
+  );
+}
+
+export function DockerMark(props: IconProps) {
+  return (
+    <Mark {...props}>
+      <path d="M22.5 9.9c-.6-.4-2-.55-3.05-.35-.14-1-.7-1.87-1.7-2.65l-.57-.4-.38.6c-.5.75-.7 1.8-.63 2.75.05.35.17.97.53 1.5-.36.2-1.07.46-2.02.44H1.28l-.05.28c-.17 1-.17 4.12 1.84 6.5 1.53 1.82 3.82 2.73 6.82 2.73 6.5 0 11.3-3 13.55-8.42.88.02 2.78 0 3.75-1.87.03-.05.1-.18.28-.55l.1-.2-.55-.37-2.62-.99v.2Z" />
+      <path d="M3.9 8.36h2.6v2.6H3.9v-2.6Zm3.2 0h2.6v2.6H7.1v-2.6Zm3.2 0h2.6v2.6h-2.6v-2.6Zm3.2 0h2.6v2.6h-2.6v-2.6ZM7.1 5.2h2.6v2.6H7.1V5.2Zm3.2 0h2.6v2.6h-2.6V5.2Zm3.2 0h2.6v2.6h-2.6V5.2Zm0-3.2h2.6v2.6h-2.6V2ZM3.9 11.5h2.6v2.6H3.9v-2.6Z" />
+    </Mark>
+  );
+}
+
+export function MediumMark(props: IconProps) {
+  return (
+    <Mark {...props}>
+      <path d="M13.54 12c0 3.75-3.02 6.79-6.77 6.79S0 15.75 0 12s3.02-6.79 6.77-6.79S13.54 8.25 13.54 12Zm7.42 0c0 3.53-1.51 6.39-3.38 6.39s-3.38-2.86-3.38-6.39 1.51-6.39 3.38-6.39S20.96 8.47 20.96 12ZM24 12c0 3.16-.53 5.73-1.19 5.73s-1.19-2.57-1.19-5.73.53-5.73 1.19-5.73S24 8.84 24 12Z" />
+    </Mark>
+  );
+}
+
+/** Microsoft's four squares. Used for a Learn credential, which has no mark of its own. */
+export function MicrosoftMark(props: IconProps) {
+  return (
+    <Mark {...props}>
+      <path d="M3 3h8.5v8.5H3V3Zm9.5 0H21v8.5h-8.5V3ZM3 12.5h8.5V21H3v-8.5Zm9.5 0H21V21h-8.5v-8.5Z" />
+    </Mark>
+  );
+}
+
 export function Download(props: IconProps) {
   return (
     <Svg {...props}>

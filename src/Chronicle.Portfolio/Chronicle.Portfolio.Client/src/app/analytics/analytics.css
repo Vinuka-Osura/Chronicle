@@ -82,6 +82,72 @@
     color: var(--color-ink-faint);
   }
 
+  /* ── Section header: what it is, and where it came from ──────────────────── */
+  .scene-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /*
+    Provenance, stated in the header of every section.
+
+    This exists because the page failed a plain test: a reader could not tell which
+    service any figure came from. Eight sections wearing identical eyebrows read as one
+    undifferentiated wall — and "reputation" means something entirely different depending
+    on whether Stack Overflow issued it or the site invented it. On a page whose whole
+    argument is that the numbers are real, saying where each came from is content.
+  */
+  .source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.28rem 0.65rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+    white-space: nowrap;
+  }
+
+  [data-motion="reduced"] .source-tag,
+  [data-motion="still"] .source-tag {
+    background: var(--color-paper-solid);
+  }
+
+  .source-tag-mark {
+    display: grid;
+    place-items: center;
+    color: var(--color-ink);
+  }
+
+  .source-tag-mark .icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .source-tag-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  /* The host, so "where did this come from" has a literal answer rather than a logo the
+     reader is assumed to recognise. */
+  .source-tag-host {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-ink-faint);
+  }
+
+  @media (width < 30rem) {
+    .source-tag-host {
+      display: none;
+    }
+  }
+
   /* ── Chart chrome, shared by every figure on the page ────────────────────── */
   .chart {
     margin-top: clamp(1.5rem, 4vh, 2.5rem);
@@ -922,7 +988,7 @@
     :is([data-motion="full"], [data-motion="reduced"]) [data-stagger-bars] .week-bar-fill {
       animation: bar-grow linear both;
       animation-timeline: view();
-      animation-range: entry 20% cover 55%;
+      animation-range: entry 10% cover 42%;
       animation-delay: calc(var(--i) * -0.4ms);
     }
 
@@ -931,7 +997,7 @@
       animation-timeline: view();
       /* The polyline carries pathLength="1" as an attribute, so one unit of dash is the
          whole line however many weeks it spans. */
-      animation-range: entry 35% cover 70%;
+      animation-range: entry 20% cover 48%;
       stroke-dasharray: 1;
     }
 
@@ -939,13 +1005,13 @@
     :is([data-motion="full"], [data-motion="reduced"]) .years-fill {
       animation: fill-x linear both;
       animation-timeline: view();
-      animation-range: entry 25% cover 58%;
+      animation-range: entry 12% cover 44%;
     }
 
     :is([data-motion="full"], [data-motion="reduced"]) .weekdays-fill {
       animation: bar-grow linear both;
       animation-timeline: view();
-      animation-range: entry 25% cover 60%;
+      animation-range: entry 12% cover 45%;
     }
   }
 }

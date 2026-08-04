@@ -162,6 +162,14 @@ public static class DependencyInjection
         AddProvider<MediumProvider, MediumFeed>(services, "https://medium.com/");
 
         services.AddScoped(typeof(IRemoteStats<>), typeof(CachedRemote<>));
+
+        // No base address: this one is given a whole URL by the admin, and the allowlist
+        // inside it is what decides whether that URL is ever requested.
+        services.AddHttpClient<ICredentialLinkReader, OpenGraphCredentialReader>(client =>
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Chronicle-Portfolio/1.0");
+            client.Timeout = TimeSpan.FromSeconds(10);
+        });
     }
 
     private static void AddProvider<TProvider, TPayload>(

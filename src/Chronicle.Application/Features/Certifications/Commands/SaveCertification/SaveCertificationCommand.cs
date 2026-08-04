@@ -2,6 +2,7 @@ using Chronicle.Application.Common.Content;
 using Chronicle.Application.Common.Exceptions;
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Domain.Entities;
+using Chronicle.Domain.Enums;
 using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
@@ -18,7 +19,9 @@ public sealed record SaveCertificationCommand(
     Guid? Id,
     string Name,
     string Issuer,
+    CredentialKind Kind,
     DateOnly IssueDate,
+    DateOnly? ExpiryDate,
     string? CredentialUrl,
     string? LogoUrl,
     int SortOrder,
@@ -85,7 +88,9 @@ public sealed class SaveCertificationCommandHandler(
 
         certification.Name = request.Name.Trim();
         certification.Issuer = request.Issuer.Trim();
+        certification.Kind = request.Kind;
         certification.IssueDate = request.IssueDate;
+        certification.ExpiryDate = request.ExpiryDate;
         certification.CredentialUrl = Blank(request.CredentialUrl);
         certification.LogoUrl = Blank(request.LogoUrl);
         certification.SortOrder = request.SortOrder;

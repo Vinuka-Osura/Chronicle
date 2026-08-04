@@ -10,6 +10,7 @@ import { Credentials } from "./components/Credentials";
 import { LanguageShare } from "./components/LanguageShare";
 import { AllTime, OpenSourceParticipation, WeekdayRhythm } from "./components/Participation";
 import { DockerImages, ExternalArticles } from "./components/Published";
+import { SourceTag } from "./components/SourceTag";
 import { StackOverflow } from "./components/StackOverflow";
 import { StatTiles } from "./components/StatTiles";
 import { WorkOverTime } from "./components/WorkOverTime";
@@ -51,7 +52,10 @@ export default async function AnalyticsPage() {
           unreachable costs exactly the GitHub sections and nothing else on the page. */}
       {stats.isLive && (
         <section className="scene" data-scene="Headline" aria-labelledby="headline-heading">
-          <p className="scene-eyebrow">The last twelve months</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">The last twelve months</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="headline-heading" className="scene-heading">
             What the year actually contained.
           </h2>
@@ -62,7 +66,10 @@ export default async function AnalyticsPage() {
 
       {stats.weekly.length > 0 && (
         <section className="scene" data-scene="Over time" aria-labelledby="overtime-heading">
-          <p className="scene-eyebrow">Shape of the year</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Shape of the year</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="overtime-heading" className="scene-heading">
             Work is not evenly spread, and pretending otherwise helps nobody.
           </h2>
@@ -72,7 +79,10 @@ export default async function AnalyticsPage() {
 
       {breakdown && (
         <section className="scene" data-scene="Mix" aria-labelledby="mix-heading">
-          <p className="scene-eyebrow">What it was made of</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">What it was made of</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="mix-heading" className="scene-heading">
             A year of commits and a year of code review are not the same year.
           </h2>
@@ -91,7 +101,10 @@ export default async function AnalyticsPage() {
 
       {stats.calendarDays > 0 && (
         <section className="scene" data-scene="Rhythm" aria-labelledby="rhythm-heading">
-          <p className="scene-eyebrow">Rhythm</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Rhythm</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="rhythm-heading" className="scene-heading">
             Consistency, with the quiet stretches left in.
           </h2>
@@ -107,7 +120,10 @@ export default async function AnalyticsPage() {
           data-scene="Open source"
           aria-labelledby="participation-heading"
         >
-          <p className="scene-eyebrow">Other people&rsquo;s projects</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Other people&rsquo;s projects</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="participation-heading" className="scene-heading">
             Changes somebody else decided were worth keeping.
           </h2>
@@ -121,7 +137,10 @@ export default async function AnalyticsPage() {
 
       {stats.languages.length > 0 && (
         <section className="scene" data-scene="Languages" aria-labelledby="languages-heading">
-          <p className="scene-eyebrow">Spread</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Spread</p>
+            <SourceTag source="github" />
+          </div>
           <h2 id="languages-heading" className="scene-heading">
             What the code is written in.
           </h2>
@@ -132,7 +151,10 @@ export default async function AnalyticsPage() {
 
       {external.stackOverflow && (
         <section className="scene" data-scene="Answers" aria-labelledby="so-heading">
-          <p className="scene-eyebrow">Being useful to strangers</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Being useful to strangers</p>
+            <SourceTag source="stackoverflow" />
+          </div>
           <h2 id="so-heading" className="scene-heading">
             Reputation is what other people thought was worth an upvote.
           </h2>
@@ -147,7 +169,10 @@ export default async function AnalyticsPage() {
 
       {external.badges.length > 0 && (
         <section className="scene" data-scene="Credentials" aria-labelledby="credentials-heading">
-          <p className="scene-eyebrow">Credentials</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Credentials</p>
+            <SourceTag source="credentials" />
+          </div>
           <h2 id="credentials-heading" className="scene-heading">
             Exams somebody else set and somebody else marked.
           </h2>
@@ -162,7 +187,10 @@ export default async function AnalyticsPage() {
 
       {external.dockerHub && (
         <section className="scene" data-scene="Images" aria-labelledby="docker-heading">
-          <p className="scene-eyebrow">Published</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Published</p>
+            <SourceTag source="docker" />
+          </div>
           <h2 id="docker-heading" className="scene-heading">
             Container images other people can pull.
           </h2>
@@ -172,7 +200,10 @@ export default async function AnalyticsPage() {
 
       {external.articles.length > 0 && (
         <section className="scene" data-scene="Elsewhere" aria-labelledby="articles-heading">
-          <p className="scene-eyebrow">Written elsewhere</p>
+          <div className="scene-head">
+            <p className="scene-eyebrow">Written elsewhere</p>
+            <SourceTag source="medium" />
+          </div>
           <h2 id="articles-heading" className="scene-heading">
             Articles published somewhere that is not this site.
           </h2>
