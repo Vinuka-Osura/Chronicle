@@ -19,7 +19,8 @@ public sealed class GetExternalStatsQueryHandler(
     IRemoteStats<CredlyBadges> credly,
     IRemoteStats<DockerHubStats> dockerHub,
     IRemoteStats<MediumFeed> medium,
-    IChronicleDbContext db) : IRequestHandler<GetExternalStatsQuery, ExternalStatsDto>
+    IChronicleDbContext db,
+    IDateTimeProvider clock) : IRequestHandler<GetExternalStatsQuery, ExternalStatsDto>
 {
     public async Task<ExternalStatsDto> Handle(
         GetExternalStatsQuery request,
@@ -61,7 +62,9 @@ public sealed class GetExternalStatsQueryHandler(
                     article.Url,
                     DateOnly.FromDateTime(article.PublishedAt.UtcDateTime),
                     article.Summary,
-                    article.Tags))]);
+                    article.Tags,
+                    article.ImageUrl))],
+            Today: DateOnly.FromDateTime(clock.UtcNow.UtcDateTime));
     }
 
     private static StackOverflowDto? Map(StackOverflowStats? stats)

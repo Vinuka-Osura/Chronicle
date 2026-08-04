@@ -28,7 +28,9 @@ public sealed class GetPostsQueryHandler(IChronicleDbContext db)
                 p.Excerpt,
                 p.ReadingTimeMinutes,
                 p.PublishedAt,
-                p.Tags.OrderBy(t => t.Name).Select(t => t.Name).ToList()))
+                p.Tags.OrderBy(t => t.Name).Select(t => t.Name).ToList(),
+                p.ExternalUrl,
+                p.CoverImageUrl))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

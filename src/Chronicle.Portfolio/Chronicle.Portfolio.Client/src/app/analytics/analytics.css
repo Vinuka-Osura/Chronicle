@@ -87,9 +87,22 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem 1.5rem;
-    margin-bottom: 0.25rem;
+    gap: 0.5rem 1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  /* The hero channel's rule, reused so a section header and the page header read as
+     the same instrument legend. It collapses to nothing when the row wraps on a
+     narrow screen, which is why the tag does not need a fallback separator. */
+  .scene-head-rule {
+    flex: 1;
+    min-width: 1.5rem;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-rule),
+      color-mix(in oklch, var(--color-rule) 20%, transparent)
+    );
   }
 
   /*
@@ -807,179 +820,14 @@
     height: 0.85em;
   }
 
-  /* ── Credentials ─────────────────────────────────────────────────────────── */
-  .credentials {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-    gap: 1rem;
-    list-style: none;
-  }
 
-  .credential-body {
-    display: flex;
-    gap: 0.9rem;
-    align-items: flex-start;
-    padding-top: 1.15rem;
-  }
-
-  .credential-image {
-    flex-shrink: 0;
-    width: 3.25rem;
-    height: 3.25rem;
-    object-fit: contain;
-  }
-
-  .credential-image.is-placeholder {
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--color-rule);
-    border-radius: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: var(--color-ink-faint);
-  }
-
-  .credential-name {
-    font-size: 0.92rem;
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--color-ink);
-  }
-
-  .credential-issuer {
-    margin-top: 0.15rem;
-    font-size: 0.8rem;
-    color: var(--color-ink-soft);
-  }
-
-  .credential-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.05em;
-    color: var(--color-ink-faint);
-  }
-
-  /* Verifiable is a fact about the credential, so it is stated in words. The colour is
-     an accent on a label, not the label itself. */
-  .credential-source {
-    padding: 0.1rem 0.4rem;
-    border-radius: 0.25rem;
-    background: var(--color-signal-soft);
-    color: var(--color-signal);
-  }
-
-  .credential-expires {
-    color: var(--color-ink-soft);
-  }
-
-  .credential-expired {
-    color: var(--color-alert);
-  }
-
-  /* Demoted, not removed. It still happened; it is simply no longer current. */
-  .credential.is-expired {
-    opacity: 0.62;
-  }
-
-  .credential.is-expired:hover {
-    opacity: 1;
-  }
-
-  .credential-icon {
-    width: 0.75rem;
-    height: 0.75rem;
-    margin-left: auto;
-  }
-
-  /* ── Published: Docker images and outside articles ───────────────────────── */
-  .published-summary {
-    margin-bottom: 1.1rem;
-    font-size: 0.9rem;
-    color: var(--color-ink-soft);
-  }
-
-  .published-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-    list-style: none;
-  }
-
-  .published-item {
-    padding-bottom: 0.9rem;
-    border-bottom: 1px solid var(--color-rule);
-  }
-
-  .published-item:last-child {
-    padding-bottom: 0;
-    border-bottom: 0;
-  }
-
-  .published-name {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    color: var(--color-ink);
-    transition: color var(--t-quick) var(--ease-move);
-  }
-
-  .published-name:hover {
-    color: var(--color-signal);
-  }
-
-  .published-icon {
-    width: 0.75rem;
-    height: 0.75rem;
-    color: var(--color-ink-faint);
-  }
-
-  .published-description {
-    max-width: 46rem;
-    margin-top: 0.3rem;
-    font-size: 0.84rem;
-    line-height: 1.55;
-    color: var(--color-ink-soft);
-    text-wrap: pretty;
-  }
-
-  .published-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.65rem;
-    margin-top: 0.45rem;
-    font-family: var(--font-mono);
-    font-size: 0.64rem;
-    letter-spacing: 0.05em;
-    color: var(--color-ink-faint);
-  }
-
-  .published-figure {
-    color: var(--color-signal);
-  }
-
-  .published-tag {
-    padding: 0.1rem 0.4rem;
-    border: 1px solid var(--color-rule);
-    border-radius: 0.25rem;
-  }
-}
 
 /*
   ── The arrivals ────────────────────────────────────────────────────────────
   Scroll-driven, so a chart draws as the reader reaches it and undraws on the way
   back up. Gated on the motion tier exactly like `scenes.css`.
-*/
+*/}
+
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     /* Each weekly bar grows from the axis, a beat after the one to its left. The

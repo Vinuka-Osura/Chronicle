@@ -13,7 +13,12 @@ public sealed class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.Property(p => p.Title).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Excerpt).IsRequired().HasMaxLength(300);
+        // Required, but empty is legitimate: a row that only points at an article published
+        // elsewhere has no body of its own to store.
         builder.Property(p => p.BodyMarkdown).IsRequired();
+
+        builder.Property(p => p.ExternalUrl).HasMaxLength(500);
+        builder.Property(p => p.CoverImageUrl).HasMaxLength(500);
 
         builder.HasIndex(p => p.Slug).IsUnique();
 

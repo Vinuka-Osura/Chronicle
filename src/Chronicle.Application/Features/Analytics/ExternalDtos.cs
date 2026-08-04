@@ -14,11 +14,21 @@ namespace Chronicle.Application.Features.Analytics;
 /// false claim.
 /// </para>
 /// </remarks>
+/// <param name="Today">
+/// The server's date, so a credential's expiry can be compared against something.
+/// </param>
+/// <remarks>
+/// Carried on the payload rather than read where it is needed, because the client is a
+/// Next.js Server Component under Cache Components and **may not read the clock at all** —
+/// doing so throws at render. The server's date is the right answer anyway: it is the date
+/// the rest of this payload was gathered against.
+/// </remarks>
 public sealed record ExternalStatsDto(
     StackOverflowDto? StackOverflow,
     IReadOnlyList<CredentialBadgeDto> Badges,
     DockerHubDto? DockerHub,
-    IReadOnlyList<ArticleLinkDto> Articles);
+    IReadOnlyList<ArticleLinkDto> Articles,
+    DateOnly Today);
 
 /// <param name="AcceptedRate">
 /// Accepted over answered, or null when it could not be counted exactly. One of only three
@@ -75,4 +85,5 @@ public sealed record ArticleLinkDto(
     string Url,
     DateOnly PublishedAt,
     string? Summary,
-    IReadOnlyList<string> Tags);
+    IReadOnlyList<string> Tags,
+    string? ImageUrl);

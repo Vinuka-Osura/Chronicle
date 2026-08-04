@@ -235,9 +235,49 @@ generated from the project's own name, so a card without a picture still looks f
 
 ### Knowledge Core
 
-Two things on one page: **articles** you have written, tag-filterable and showing
-reading time, and a **learning board** of what you are studying right now, each with an
-honest progress state — Exploring, Learning or Comfortable.
+**Everything on this page is evidence of knowing something, at different strengths.**
+That is the whole organising idea, and the four sections run from strongest to most
+honest:
+
+| Section | The claim it makes |
+|---|---|
+| **Articles** | I understood it well enough to explain it in public |
+| **Credentials** | Somebody else set an exam and marked it |
+| **Images** | I published something anyone can pull |
+| **Learning** | I do not know it yet, and here is how far I have got |
+
+The last one is the one that costs something to publish, and it is the reason the page
+works: a list of what you are currently bad at is a harder claim to fake than a list of
+what you are good at.
+
+**Credentials, container images and outside articles used to live on Analytics.** They
+moved here because Analytics claims, in its own opening line, to show work *measured*
+rather than claimed — and a certificate is a claim with provenance, not a measurement.
+Analytics kept the counts; this page has the things themselves.
+
+Any section with nothing in it does not render at all. A heading over an empty space
+reads as neglect.
+
+#### Articles
+
+**Articles here are ones published somewhere else** — on Medium, fetched automatically
+from your feed, or anywhere at all by adding the link in the CMS. Fill in *Article URL* on
+an article and it becomes a preview card that opens the real thing rather than a page on
+this site; leave it blank and the article is hosted here as before, with its own address
+and full text.
+
+That is how anything on LinkedIn gets here. LinkedIn publishes no feed and no public
+article API, so it cannot be fetched the way Medium can — you paste the link and a cover
+image, and it renders identically to one that arrived on its own.
+
+**Search reads the whole article, not just the title.** Titles count most, then the
+summary, then the body — so an article *about* a subject comes above one that mentions it
+once in passing. It also understands word endings: searching "ledgers" finds "ledger".
+
+**Search reaches articles hosted here only**, and the count line says so while you are
+searching. An article on Medium leaves only its title and a two-line summary in the
+database, so there is no body to search; quietly dropping those from a result set would
+teach the reader they do not exist.
 
 **Search reads the whole article, not just the title.** Titles count most, then the
 summary, then the body — so an article *about* a subject comes above one that mentions
@@ -262,9 +302,46 @@ Drafts never appear. An article is invisible to the public site until you publis
 
 ### Engineering Analytics
 
-Real activity from GitHub rather than claims about it: contributions over the last year,
-public repositories, current and longest streak, a day-by-day contribution grid, and the
-language mix by volume of code.
+**This page answers "how much". Everything it shows is a measurement.** Its opening line
+claims the work is measured rather than claimed, and the page is now held to that: the
+credentials, the container images and the outside articles moved to Knowledge, because a
+list of certificates is a claim with provenance rather than something measured. What stays
+here is the counting.
+
+Real activity from GitHub rather than claims about it:
+
+- **Contribution mix** — the year's commits, pull requests, reviews and issues, shown
+  separately. A year of commits and a year of code review describe very different
+  engineers and one headline number cannot tell them apart. These four add up to the
+  total, which is why they are the one thing on the page drawn as proportions.
+- **The year week by week**, with a four-week trailing mean drawn over the bars rather
+  than instead of them, so the smoothing cannot hide a week it disagrees with.
+- **Every year on GitHub**, with the current one hatched and labelled "to date" — eleven
+  months against twelve full ones would otherwise read as a decline.
+- **Rhythm** — the day grid, the share of days with anything on them, and the longest
+  streak *beside the longest gap*. A page showing only the best run is selecting its own
+  evidence.
+- **Which days the work happens on**, as an average per weekday rather than a total: a
+  year holds 53 of one weekday and 52 of the rest, and totals would read that rounding
+  artefact as a preference.
+- **Open-source participation** — repositories you do not own where a maintainer merged
+  your work. The one figure on the page a third party controls.
+- **Stack Overflow** — reputation, badge counts, top tags, and the accepted-answer rate.
+- **Output** — how many articles, images, image pulls and credentials exist, as counts
+  only. The things themselves are on Knowledge.
+
+**Private work is acknowledged without disclosing any of it.** Most professional output
+lives in repositories nobody outside the company can open, so a portfolio built only on
+public activity understates you by design. GitHub will report a *count* of private
+contributions — no repository name, no commit message, no employer — but only if you turn
+on **Settings → Public profile → Include private contributions on my profile**. Until you
+do, that panel does not appear at all, because an empty one would read as "no private
+work" when it usually means the setting is off.
+
+**Only three figures on the whole page are drawn as a proportion**, and each has a real
+denominator: the contribution mix, the share of active days, and the accepted-answer rate.
+Everything else is a bare count and gets a counter. A bar over a number with no denominator
+invents a comparison the data cannot make.
 
 **Your browser never talks to GitHub.** The server fetches these every few hours and
 keeps the result in one row of the database; every visitor reads that row. Three things
@@ -436,8 +513,18 @@ milestones, learning, roadmap, status).
 
 #### Articles
 
-Title, slug, excerpt, tags, body, and a published switch.
+Title, slug, excerpt, tags, body, a published switch, and — optionally — a link to
+somewhere else.
 
+- **Fill in *Article URL* and the entry becomes a link rather than a page.** The Knowledge
+  list shows a preview card that opens the real article, the body is ignored, and there is
+  nothing to read at `/knowledge/{slug}`. This is how anything published on LinkedIn gets
+  onto the site: LinkedIn has no feed to read, so you paste the address by hand. Medium
+  articles arrive on their own and need no entry here at all.
+- **A cover image is worth setting on those.** A card that sends someone off the site has
+  to earn the click, and a title on its own does not.
+- **The body is only required when there is no external URL.** A pointer has no body of
+  its own to store.
 - **The slug is suggested from the title, and stops the moment you edit it yourself.**
   It is the article's address, so changing it later breaks any link anyone has shared.
 - **Preview** renders the Markdown. Raw HTML is stripped in the preview *and* on the
@@ -575,6 +662,35 @@ the skills page, so AZ-204 can point at both "Azure" and "C#".
 
 Add the verification URL where you have one. A credential nobody can check is worth less
 than one they can.
+
+**Kind decides how much room it gets, and whether it reaches your CV:**
+
+| Kind | Example | Where it appears |
+|---|---|---|
+| Certification | AZ-900, CKAD | Everywhere, including the résumé |
+| Applied Skill | Microsoft Applied Skills | Everywhere, including the résumé |
+| Badge | A Microsoft Learn or Credly skill badge | Knowledge and About, **not** the résumé |
+| Training | A completed module, course or learning path | Knowledge and About, **not** the résumé |
+
+An invigilated exam and a module you clicked through are not the same claim, and a CV that
+lists them together invites the reader to discount both.
+
+**Set *Expires* on anything that lapses** — most Microsoft certifications renew annually.
+Leave it blank for the ones that do not. Once the date passes, every page marks the
+credential expired and dims it rather than quietly presenting it as current, which on a CV
+is the worst place for a false claim.
+
+**"Read from link" fills the name and badge image for you.** Paste a Microsoft Learn share
+URL — either the `/api/credentials/share/` or `/api/achievements/share/` kind — or a Credly
+badge address, and press it. The page's own title and artwork are read once and saved, so
+the site never depends on the issuer being reachable afterwards. Only known credential
+issuers are fetched; anything else is refused, because this follows whatever address is
+typed into it.
+
+**Credly badges appear on their own** if a Credly username is set on the Profile screen.
+Where a badge matches a credential you have entered, yours wins on every fact and Credly
+contributes only the picture — so nothing on the site can change because a third party
+changed something. Badges Credly knows about and you have not entered are added to the end.
 
 #### Timeline — eras and milestones
 

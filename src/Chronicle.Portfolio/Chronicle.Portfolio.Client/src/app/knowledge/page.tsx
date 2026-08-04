@@ -1,24 +1,58 @@
 import type { Metadata } from "next";
 import { Acquire } from "@/components/Acquire";
 import { SetLines } from "@/components/SetLines";
+import { SourceTag } from "@/app/analytics/components/SourceTag";
+import { getExternalStats } from "@/app/analytics/api";
 import { getLearningItems, getPosts } from "./api";
 import { ArticleList } from "./components/ArticleList";
+import { Credentials } from "./components/Credentials";
 import { LearningBoard } from "./components/LearningBoard";
+import { DockerImages } from "./components/Published";
 import "./knowledge.css";
 
 export const metadata: Metadata = {
   title: "Knowledge",
   description:
-    "Technical write-ups, and an honest view of what is currently being learned — including the topics barely started.",
+    "Articles published elsewhere, credentials somebody else issued, images anyone can pull, and an honest view of what is still being learned.",
 };
 
-export default async function KnowledgePage() {
-  // Independent of each other, so they are fetched together rather than in sequence.
-  const [posts, learning] = await Promise.all([getPosts(), getLearningItems()]);
+/*
+  ─────────────────────────────────────────────────────────────────────────────────
+  Everything on this page is evidence of knowing something, at different strengths.
 
-  // Counted rather than written, so the opening cannot go stale the day one is added.
-  const topics = new Set(posts.flatMap((post) => post.tags)).size;
-  const minutes = posts.reduce((total, post) => total + post.readingTimeMinutes, 0);
+    Articles     — I understood it well enough to explain it in public
+    Credentials  — somebody else set an exam and marked it
+    Images       — I published something people can pull
+    Learning     — I do not know it yet, and here is how far I have got
+
+  That frame is why the credentials sit here rather than on Analytics. Analytics
+  answers "how much"; this page answers "and here it is". The Analytics hero claims
+  the work is "measured rather than claimed" — a list of certificates is a claim
+  with provenance, not a measurement, and it was quietly making that sentence false.
+
+  The learning board's argument is untouched by the company: a page that shows both
+  an invigilated exam and a topic at 15% is making a stronger point than either
+  alone, not a weaker one.
+  ─────────────────────────────────────────────────────────────────────────────────
+*/
+export default async function KnowledgePage() {
+  // Independent of each other, and independently failable — a broken Medium feed must
+  // not cost the learning board.
+  const [posts, learning, external] = await Promise.all([
+    getPosts(),
+    getLearningItems(),
+    getExternalStats(),
+  ]);
+
+  const articles = external.articles;
+  const totalArticles = posts.length + articles.length;
+  const credentials = external.badges;
+
+  const anything =
+    totalArticles > 0 ||
+    credentials.length > 0 ||
+    external.dockerHub !== null ||
+    learning.length > 0;
 
   return (
     <>
@@ -31,49 +65,90 @@ export default async function KnowledgePage() {
           <Acquire text="KNOWLEDGE" className="hero-channel-label" delay={120} />
           <span className="hero-channel-rule" aria-hidden />
           <Acquire
-            text={`${posts.length} WRITTEN · ${learning.length} IN PROGRESS`}
+            text={`${totalArticles} WRITTEN · ${credentials.length} EARNED · ${learning.length} IN PROGRESS`}
             className="hero-channel-label"
             delay={220}
           />
         </div>
 
         <SetLines as="h1" className="knowledge-heading" delay={320} id="knowledge-heading">
-          What I have worked out, and what I am still working out.
+          What I know, and what there is to show for it.
         </SetLines>
 
         <p className="knowledge-lede reveal-mask">
-          The second half is the more useful one. A learning board that lists only finished
-          topics is a skills list wearing a disguise, so the ones barely started are here
-          too, with how far along they actually are.
-          {minutes > 0 && ` ${minutes} minutes of reading across ${topics} topics.`}
+          Four kinds of evidence, in descending order of how much anyone else had to agree
+          with me. The last one is the useful one: a board of what I am still working out
+          says more than a list of things I claim to know.
         </p>
       </section>
 
-      {posts.length === 0 && learning.length === 0 ? (
+      {!anything ? (
         <p className="knowledge-empty">
-          Nothing here yet. Articles and learning items are served from the API, so they
-          appear as soon as they exist in the CMS — no rebuild required.
+          Nothing here yet. Articles, credentials and learning items are served from the
+          API, so they appear as soon as they exist — no rebuild required.
         </p>
       ) : (
         <>
-          {posts.length > 0 && (
+          {totalArticles > 0 && (
             <section className="scene" data-scene="Articles" aria-labelledby="articles-heading">
-              <p className="scene-eyebrow">Written down</p>
+              <div className="scene-head">
+                <p className="scene-eyebrow">Written down</p>
+                {articles.length > 0 && <SourceTag source="medium" />}
+              </div>
               <h2 id="articles-heading" className="scene-heading">
                 Problems worth explaining properly.
               </h2>
               <p className="knowledge-sub rm-compact">
                 Mostly ledgers, correctness, and the things that turned out harder than they
-                looked. Search reads the full text of every article, not just the titles.
+                looked. Anything published elsewhere links out to where it lives.
               </p>
 
-              <ArticleList posts={posts} />
+              <ArticleList posts={posts} external={articles} />
+            </section>
+          )}
+
+          {credentials.length > 0 && (
+            <section
+              className="scene"
+              data-scene="Credentials"
+              aria-labelledby="credentials-heading"
+            >
+              <div className="scene-head">
+                <p className="scene-eyebrow">Marked by somebody else</p>
+                <SourceTag source="credentials" />
+              </div>
+              <h2 id="credentials-heading" className="scene-heading">
+                Exams somebody else set and somebody else marked.
+              </h2>
+              <p className="knowledge-sub rm-compact">
+                Merged from the CMS and from Credly, with the source shown so a line typed in
+                by hand is distinguishable from one a third party will confirm. Anything past
+                its renewal date says so rather than quietly passing as current.
+              </p>
+
+              <Credentials badges={credentials} today={external.today} />
+            </section>
+          )}
+
+          {external.dockerHub && (
+            <section className="scene" data-scene="Images" aria-labelledby="docker-heading">
+              <div className="scene-head">
+                <p className="scene-eyebrow">Published</p>
+                <SourceTag source="docker" />
+              </div>
+              <h2 id="docker-heading" className="scene-heading">
+                Container images other people can pull.
+              </h2>
+
+              <DockerImages docker={external.dockerHub} />
             </section>
           )}
 
           {learning.length > 0 && (
             <section className="scene" data-scene="Learning" aria-labelledby="learning-heading">
-              <p className="scene-eyebrow">Still working out</p>
+              <div className="scene-head">
+                <p className="scene-eyebrow">Still working out</p>
+              </div>
               <h2 id="learning-heading" className="scene-heading">
                 Where things actually stand.
               </h2>

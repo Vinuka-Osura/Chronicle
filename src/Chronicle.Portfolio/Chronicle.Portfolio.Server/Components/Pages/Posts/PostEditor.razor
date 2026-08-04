@@ -90,6 +90,35 @@ else
             </p>
         </div>
 
+        <div class="field-group">
+            <h2>Published elsewhere <span class="optional">optional</span></h2>
+            <p class="muted">
+                Fill these in and the article becomes a <strong>link</strong> rather than a
+                page: the Knowledge list shows a preview card that opens the real thing, the
+                body below is ignored, and there is nothing to read at
+                <code>/knowledge/@form.Slug</code>. This is how anything on LinkedIn gets
+                here — LinkedIn publishes no feed, so it cannot be fetched the way Medium is.
+            </p>
+
+            <div class="field">
+                <label for="external">Article URL</label>
+                <InputText id="external" @bind-Value="form.ExternalUrl" placeholder="https://www.linkedin.com/pulse/..." />
+            </div>
+
+            <div class="field">
+                <label for="cover">Cover image URL</label>
+                <InputText id="cover" @bind-Value="form.CoverImageUrl" />
+                <p class="field-help">
+                    A card that sends someone off the site has to earn the click, and a title
+                    on its own does not.
+                </p>
+                @if (!string.IsNullOrWhiteSpace(form.CoverImageUrl))
+                {
+                    <img src="@form.CoverImageUrl" alt="" class="cover-preview" />
+                }
+            </div>
+        </div>
+
         <div class="field field-inline">
             <InputCheckbox id="published" @bind-Value="form.IsPublished" />
             <label for="published">Published</label>
@@ -135,6 +164,8 @@ else
         public string Excerpt { get; set; } = string.Empty;
         public string BodyMarkdown { get; set; } = string.Empty;
         public bool IsPublished { get; set; }
+        public string? ExternalUrl { get; set; }
+        public string? CoverImageUrl { get; set; }
         public string Tags { get; set; } = string.Empty;
     }
 
@@ -151,6 +182,8 @@ else
             form.Excerpt = post.Excerpt;
             form.BodyMarkdown = post.BodyMarkdown;
             form.IsPublished = post.IsPublished;
+            form.ExternalUrl = post.ExternalUrl;
+            form.CoverImageUrl = post.CoverImageUrl;
             form.Tags = string.Join(", ", post.Tags);
             publishedAt = post.PublishedAt;
 
@@ -192,7 +225,9 @@ else
                 form.Excerpt.Trim(),
                 form.BodyMarkdown,
                 form.IsPublished,
-                SplitTags(form.Tags)));
+                SplitTags(form.Tags),
+                form.ExternalUrl,
+                form.CoverImageUrl));
 
             Id = id;
             slugEdited = true;

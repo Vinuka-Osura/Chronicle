@@ -372,6 +372,22 @@
     color: var(--color-ink-soft);
   }
 
+  .cert-expired {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    color: var(--color-alert);
+  }
+
+  /* Demoted, not hidden. The credential was real; it is simply no longer current. */
+  .cert-card.is-expired {
+    opacity: 0.62;
+  }
+
+  .cert-card.is-expired:hover {
+    opacity: 1;
+  }
+
   .cert-verify {
     display: inline-block;
     margin-top: 0.85rem;

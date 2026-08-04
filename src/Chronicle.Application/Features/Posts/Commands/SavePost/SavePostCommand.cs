@@ -19,7 +19,10 @@ public sealed record SavePostCommand(
     string Excerpt,
     string BodyMarkdown,
     bool IsPublished,
-    IReadOnlyList<string> Tags) : IRequest<Guid>;
+    IReadOnlyList<string> Tags,
+    /// <summary>Set when the article lives elsewhere; the card then links out.</summary>
+    string? ExternalUrl,
+    string? CoverImageUrl) : IRequest<Guid>;
 
 public sealed class SavePostCommandValidator : AbstractValidator<SavePostCommand>
 {
@@ -36,8 +39,25 @@ public sealed class SavePostCommandValidator : AbstractValidator<SavePostCommand
             .WithMessage("Use lowercase letters, numbers and single hyphens, e.g. 'why-i-stopped-using-automapper'.");
 
         RuleFor(c => c.Excerpt).NotEmpty().MaximumLength(400);
-        RuleFor(c => c.BodyMarkdown).NotEmpty();
+
+        // A row that points at an article published elsewhere has no body of its own, so
+        // the body is required only when there is nothing to point at.
+        RuleFor(c => c.BodyMarkdown)
+            .NotEmpty()
+            .When(c => string.IsNullOrWhiteSpace(c.ExternalUrl))
+            .WithMessage("An article hosted here needs a body. Add a link if it lives somewhere else.");
+
+        RuleFor(c => c.ExternalUrl).MaximumLength(500)
+            .Must(BeAbsoluteHttpsUrl).WithMessage("The article link needs the full https:// address.");
+
+        RuleFor(c => c.CoverImageUrl).MaximumLength(500)
+            .Must(BeAbsoluteHttpsUrl).WithMessage("The image link needs the full https:// address.");
 
         RuleForEach(c => c.Tags).NotEmpty().MaximumLength(60);
     }
+
+    private static bool BeAbsoluteHttpsUrl(string? value)
+        => string.IsNullOrWhiteSpace(value)
+            || (Uri.TryCreate(value, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps));
 }

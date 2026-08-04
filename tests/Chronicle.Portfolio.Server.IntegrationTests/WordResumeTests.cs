@@ -79,7 +79,15 @@ public class WordResumeTests
                 new SkillDto("Docker", SkillCategory.DevOps, 4m, ProficiencyLevel.Advanced, 4, []),
             ]),
         ],
-        [new CertificationDto("CKAD", "The Linux Foundation", new DateOnly(2025, 6, 1), null, null)]);
+        [new CertificationDto(
+            "CKAD",
+            "The Linux Foundation",
+            CredentialKind.Certification,
+            new DateOnly(2025, 6, 1),
+            ExpiryDate: null,
+            IsExpired: false,
+            CredentialUrl: null,
+            LogoUrl: null)]);
 
     /// <summary>Reads a part out of the package, so a test can assert on real bytes.</summary>
     private static string Part(byte[] docx, string path)

@@ -1,4 +1,6 @@
 using System.Globalization;
+using System.Net;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Chronicle.Application.Common.Models;
 using Chronicle.Domain.Entities;
@@ -22,7 +24,7 @@ namespace Chronicle.Infrastructure.Services.Remote;
 /// the document whole is the right trade.
 /// </para>
 /// </remarks>
-public sealed class MediumProvider(HttpClient http) : IRemoteStatsProvider<MediumFeed>
+public sealed partial class MediumProvider(HttpClient http) : IRemoteStatsProvider<MediumFeed>
 {
     public string Name => "medium";
 
@@ -75,6 +77,7 @@ public sealed class MediumProvider(HttpClient http) : IRemoteStatsProvider<Mediu
                 Url: StripQuery(link.Trim()),
                 PublishedAt: ParseDate((string?)item.Element("pubDate")),
                 Summary: Summarise(item),
+                ImageUrl: FirstImage(item),
                 Tags: [.. item.Elements("category")
                     .Select(c => ((string?)c ?? string.Empty).Trim())
                     .Where(c => c.Length > 0)]));
@@ -113,6 +116,46 @@ public sealed class MediumProvider(HttpClient http) : IRemoteStatsProvider<Mediu
 
         return text.Length <= 220 ? text : $"{text[..219].TrimEnd()}…";
     }
+
+    /// <summary>
+    /// The article's own picture, taken from the first image in its body.
+    /// </summary>
+    /// <remarks>
+    /// RSS has no field for a cover image and Medium sends none, but the full article HTML
+    /// is already in <c>content:encoded</c> — which this class parses anyway for the
+    /// summary. So the picture costs no extra request and no extra parse pass; it is
+    /// simply the first <c>&lt;img&gt;</c> Medium chose to put at the top of the piece.
+    /// <para>
+    /// Data URIs are skipped: Medium occasionally inlines a tiny placeholder ahead of the
+    /// real image, and a 40-byte grey square is worse than no picture at all.
+    /// </para>
+    /// </remarks>
+    private static string? FirstImage(XElement item)
+    {
+        var html = (string?)item.Element(Content + "encoded")
+            ?? (string?)item.Element("description");
+
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return null;
+        }
+
+        foreach (Match match in ImagePattern().Matches(html))
+        {
+            var src = WebUtility.HtmlDecode(match.Groups["src"].Value).Trim();
+
+            if (src.Length > 0 && src.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                return src;
+            }
+        }
+
+        return null;
+    }
+
+    [GeneratedRegex("""<img[^>]+?src=["'](?<src>[^"']+)["']""",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ImagePattern();
 
     private static string StripQuery(string url)
     {

@@ -33,11 +33,22 @@ export function CertificationsStrip({ items }: { items: Certification[] }) {
               <span className="cert-issuer">
                 {cert.issuer} &middot; {issued(cert.issueDate)}
               </span>
+              {/*
+                A credential that lapsed last March, shown as though it were current, is a
+                false claim made silently — and the one nobody notices until a recruiter
+                checks. Marked rather than removed: it still happened.
+              */}
+              {cert.isExpired && cert.expiryDate && (
+                <span className="cert-expired">Expired {issued(cert.expiryDate)}</span>
+              )}
             </>
           );
 
           return (
-            <li key={`${cert.issuer}-${cert.name}`} className="cert-card">
+            <li
+              key={`${cert.issuer}-${cert.name}`}
+              className={`cert-card${cert.isExpired ? " is-expired" : ""}`}
+            >
               {cert.credentialUrl ? (
                 <a
                   href={cert.credentialUrl}

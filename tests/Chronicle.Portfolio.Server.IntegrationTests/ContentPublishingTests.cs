@@ -48,7 +48,7 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
             "Explicit projection reads worse for ten lines and better for ten thousand.",
             "The case against convention-based mapping in a read-heavy application.",
             IsPublished: true,
-            ["EF Core", "Architecture"]));
+            ["EF Core", "Architecture"], ExternalUrl: null, CoverImageUrl: null));
 
         // No delay, no cache-buster. If eviction did not happen this still returns the
         // empty list, which is exactly what an editor would see.
@@ -82,13 +82,13 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
 
         var id = await SendAsync(new SavePostCommand(
             null, "Temporary", "temporary", "An excerpt.", "A body long enough to count.",
-            IsPublished: true, []));
+            IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null));
 
         (await client.GetFromJsonAsync<List<PostRow>>("/api/posts")).ShouldNotBeNull().Count.ShouldBe(1);
 
         await SendAsync(new SavePostCommand(
             id, "Temporary", "temporary", "An excerpt.", "A body long enough to count.",
-            IsPublished: false, []));
+            IsPublished: false, [], ExternalUrl: null, CoverImageUrl: null));
 
         (await client.GetFromJsonAsync<List<PostRow>>("/api/posts")).ShouldNotBeNull().ShouldBeEmpty();
 
@@ -107,12 +107,12 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
     {
         await SendAsync(new SavePostCommand(
             null, "First", "shared-slug", "An excerpt.", "A body long enough to count.",
-            IsPublished: true, []));
+            IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null));
 
         var failure = await Should.ThrowAsync<ValidationException>(() => SendAsync(
             new SavePostCommand(
                 null, "Second", "shared-slug", "An excerpt.", "A body long enough to count.",
-                IsPublished: true, [])));
+                IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null)));
 
         failure.Errors.ShouldContainKey(nameof(SavePostCommand.Slug));
     }
@@ -122,12 +122,12 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
     {
         var id = await SendAsync(new SavePostCommand(
             null, "First", "keeps-its-slug", "An excerpt.", "A body long enough to count.",
-            IsPublished: true, []));
+            IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null));
 
         // Saving the same article again with its own slug must not read as a duplicate.
         await SendAsync(new SavePostCommand(
             id, "First, edited", "keeps-its-slug", "An excerpt.", "A longer body now.",
-            IsPublished: true, []));
+            IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null));
 
         await host.ScopedAsync(async services =>
         {
@@ -146,11 +146,11 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
     {
         await SendAsync(new SavePostCommand(
             null, "First", "first", "An excerpt.", "A body long enough to count.",
-            IsPublished: true, ["EF Core"]));
+            IsPublished: true, ["EF Core"], ExternalUrl: null, CoverImageUrl: null));
 
         await SendAsync(new SavePostCommand(
             null, "Second", "second", "An excerpt.", "A body long enough to count.",
-            IsPublished: true, ["ef core"]));
+            IsPublished: true, ["ef core"], ExternalUrl: null, CoverImageUrl: null));
 
         await host.ScopedAsync(async services =>
         {
@@ -234,7 +234,7 @@ public class ContentPublishingTests(ChronicleTestHost host) : IAsyncLifetime
     public async Task Reading_time_is_derived_from_the_body_and_never_zero()
     {
         await SendAsync(new SavePostCommand(
-            null, "Short", "short", "An excerpt.", "Three words only.", IsPublished: true, []));
+            null, "Short", "short", "An excerpt.", "Three words only.", IsPublished: true, [], ExternalUrl: null, CoverImageUrl: null));
 
         await host.ScopedAsync(async services =>
             (await ChronicleTestHost.DbContext(services).Posts.SingleAsync()).ReadingTimeMinutes.ShouldBe(1));

@@ -111,10 +111,18 @@ export interface SkillGroup {
   skills: Skill[];
 }
 
+export type CredentialKind = "Certification" | "AppliedSkill" | "Badge" | "Training";
+
 export interface Certification {
   name: string;
   issuer: string;
+  /** Only Certification and AppliedSkill reach the résumé. */
+  kind: CredentialKind;
   issueDate: IsoDate;
+  /** Null for credentials that do not lapse. */
+  expiryDate: IsoDate | null;
+  /** Decided by the server, which owns a clock a Server Component is not allowed to read. */
+  isExpired: boolean;
   credentialUrl: string | null;
   logoUrl: string | null;
 }
@@ -145,6 +153,13 @@ export interface PostCard {
   readingTimeMinutes: number;
   publishedAt: IsoDateTime | null;
   tags: string[];
+  /**
+   * Set when the article lives somewhere else — the card links out, there is nothing to
+   * read at `/knowledge/{slug}`, and `readingTimeMinutes` is meaningless because there is
+   * no body here to have measured. Entered by hand for publishers with no feed.
+   */
+  externalUrl: string | null;
+  coverImageUrl: string | null;
 }
 
 export interface PostDetail extends PostCard {
@@ -272,6 +287,11 @@ export interface ExternalStats {
   badges: CredentialBadge[];
   dockerHub: DockerHubStats | null;
   articles: ArticleLink[];
+  /**
+   * The server's date, for comparing a credential's expiry against. Carried on the payload
+   * because a Server Component may not read the clock under Cache Components — it throws.
+   */
+  today: IsoDate;
 }
 
 export interface StackOverflowStats {
@@ -330,6 +350,8 @@ export interface ArticleLink {
   publishedAt: IsoDate;
   summary: string | null;
   tags: string[];
+  /** The article's own picture, lifted from the first image in the feed's body HTML. */
+  imageUrl: string | null;
 }
 
 export interface SiteStatus {

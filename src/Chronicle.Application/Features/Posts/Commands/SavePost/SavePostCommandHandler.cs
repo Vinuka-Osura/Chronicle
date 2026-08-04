@@ -57,6 +57,8 @@ public sealed class SavePostCommandHandler(
         post.BodyMarkdown = request.BodyMarkdown;
         post.IsPublished = request.IsPublished;
         post.ReadingTimeMinutes = ReadingTime(request.BodyMarkdown);
+        post.ExternalUrl = Blank(request.ExternalUrl);
+        post.CoverImageUrl = Blank(request.CoverImageUrl);
 
         // PublishedAt records when it first went public and is then left alone.
         // Re-dating it on every save would reorder the archive whenever a typo was
@@ -94,4 +96,8 @@ public sealed class SavePostCommandHandler(
 
         return Math.Max(1, (int)Math.Ceiling(words / (double)WordsPerMinute));
     }
+
+    /// <summary>Empty and whitespace both mean "not set", so both become null.</summary>
+    private static string? Blank(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

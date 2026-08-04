@@ -84,7 +84,7 @@ public class ArticleSearchTests(ChronicleTestHost host) : IAsyncLifetime
             "Not published yet.",
             "This draft is about a ledger and should stay invisible.",
             IsPublished: false,
-            []));
+            [], ExternalUrl: null, CoverImageUrl: null));
 
         var results = await SearchAsync("ledger");
 
@@ -165,7 +165,7 @@ public class ArticleSearchTests(ChronicleTestHost host) : IAsyncLifetime
             "A double entry journal is append-only, so every balance stays reproducible. "
             + "Periodic snapshots keep reads bounded as the ledger grows.",
             IsPublished: true,
-            ["Architecture"]));
+            ["Architecture"], ExternalUrl: null, CoverImageUrl: null));
 
         await SendAsync(new SavePostCommand(
             null,
@@ -175,7 +175,7 @@ public class ArticleSearchTests(ChronicleTestHost host) : IAsyncLifetime
             "Reconciliation is really a search problem. An audit of the differences is "
             + "usually more useful than the totals.",
             IsPublished: true,
-            ["Data"]));
+            ["Data"], ExternalUrl: null, CoverImageUrl: null));
 
         await SendAsync(new SavePostCommand(
             null,
@@ -185,7 +185,7 @@ public class ArticleSearchTests(ChronicleTestHost host) : IAsyncLifetime
             "Audit rows outlive the tables they describe, so a migration has to carry the "
             + "audit forward rather than rebuild it.",
             IsPublished: true,
-            ["Data"]));
+            ["Data"], ExternalUrl: null, CoverImageUrl: null));
     }
 
     private Task<IReadOnlyList<PostCardDto>> SearchAsync(string term) =>

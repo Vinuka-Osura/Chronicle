@@ -102,7 +102,8 @@ public sealed record MediumArticle(
     string Url,
     DateTimeOffset PublishedAt,
     string? Summary,
-    IReadOnlyList<string>? Tags = null)
+    IReadOnlyList<string>? Tags = null,
+    string? ImageUrl = null)
 {
     public IReadOnlyList<string> Tags { get; init; } = Tags ?? [];
 }

@@ -32,12 +32,23 @@
 
   .scene-heading {
     max-width: 22ch;
+    /* A heading with no bottom margin puts a figure hard against its own descenders.
+       Set here rather than on the one section where it was noticed, because every
+       scene on the site had the same gap and none of them wanted it. */
+    margin-bottom: clamp(1.25rem, 3vh, 2rem);
     font-family: var(--font-display);
     font-size: var(--text-title);
     font-weight: 600;
     line-height: 1.12;
     letter-spacing: -0.028em;
     text-wrap: balance;
+  }
+
+  /* A sub-line under the heading supplies its own spacing, so the heading gives its
+     margin back rather than the two of them stacking. */
+  .scene-heading + .analytics-sub,
+  .scene-heading + .knowledge-sub {
+    margin-top: calc(clamp(1.25rem, 3vh, 2rem) * -0.55);
   }
 
   .scene-more {

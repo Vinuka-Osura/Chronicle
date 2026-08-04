@@ -36,7 +36,14 @@ public sealed class GetResumeQueryHandler(ISender sender, IChronicleDbContext db
         var roles = await sender.Send(new GetExperienceQuery(), cancellationToken).ConfigureAwait(false);
         var projects = await sender.Send(new GetProjectsQuery(), cancellationToken).ConfigureAwait(false);
         var skills = await sender.Send(new GetSkillsQuery(), cancellationToken).ConfigureAwait(false);
-        var certifications = await sender.Send(new GetCertificationsQuery(), cancellationToken).ConfigureAwait(false);
+        var allCredentials = await sender.Send(new GetCertificationsQuery(), cancellationToken).ConfigureAwait(false);
+
+        // Certifications and Applied Skills only. A badge for finishing a module and an
+        // invigilated exam are not the same claim, and a CV that lists them together
+        // invites the reader to discount both.
+        var certifications = allCredentials
+            .Where(c => c.Kind is CredentialKind.Certification or CredentialKind.AppliedSkill)
+            .ToList();
 
         var education = await db.Milestones
             .AsNoTracking()

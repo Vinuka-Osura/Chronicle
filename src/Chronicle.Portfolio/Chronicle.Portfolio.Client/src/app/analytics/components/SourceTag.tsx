@@ -32,12 +32,18 @@ export function SourceTag({ source }: { source: SourceKey }) {
   const { label, Icon, host } = SOURCES[source];
 
   return (
-    <p className="source-tag">
-      <span className="source-tag-mark" aria-hidden>
-        <Icon />
-      </span>
-      <span className="source-tag-label">{label}</span>
-      {host && <span className="source-tag-host">{host}</span>}
-    </p>
+    <>
+      {/* The same rule the hero channel draws between its two labels. Without it the
+          eyebrow and the tag are two things at opposite ends of empty space; with it
+          they read as one instrument legend spanning the section. */}
+      <span className="scene-head-rule" aria-hidden />
+      <p className="source-tag">
+        <span className="source-tag-mark" aria-hidden>
+          <Icon />
+        </span>
+        <span className="source-tag-label">{label}</span>
+        {host && <span className="source-tag-host">{host}</span>}
+      </p>
+    </>
   );
 }

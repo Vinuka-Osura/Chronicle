@@ -16,6 +16,8 @@ public sealed record PostEditModel(
     string Excerpt,
     string BodyMarkdown,
     bool IsPublished,
+    string? ExternalUrl,
+    string? CoverImageUrl,
     DateTimeOffset? PublishedAt,
     IReadOnlyList<string> Tags);
 
@@ -36,6 +38,8 @@ public sealed class GetPostForEditQueryHandler(IChronicleDbContext db)
                 p.Excerpt,
                 p.BodyMarkdown,
                 p.IsPublished,
+                p.ExternalUrl,
+                p.CoverImageUrl,
                 p.PublishedAt,
                 p.Tags.Select(t => t.Name).OrderBy(name => name).ToList()))
             .FirstOrDefaultAsync(cancellationToken)

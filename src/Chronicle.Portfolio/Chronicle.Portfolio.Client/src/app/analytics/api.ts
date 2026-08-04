@@ -51,6 +51,9 @@ const NOTHING_EXTERNAL: ExternalStats = {
   badges: [],
   dockerHub: null,
   articles: [],
+  // The epoch rather than today's date: this fallback is only reached when the API is
+  // unreachable, and there is nothing here whose expiry it could be compared against.
+  today: "1970-01-01",
 };
 
 /**

@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { Acquire } from "@/components/Acquire";
 import { Counter, Ring } from "@/components/Figure";
 import { SetLines } from "@/components/SetLines";
-import type { GitHubStats } from "@/lib/types";
+import Link from "next/link";
+import type { ExternalStats, GitHubStats } from "@/lib/types";
 import { getExternalStats, getGitHubStats } from "./api";
 import { ContributionHeatmap } from "./components/ContributionHeatmap";
 import { ContributionMix, PrivateWork } from "./components/ContributionMix";
-import { Credentials } from "./components/Credentials";
 import { LanguageShare } from "./components/LanguageShare";
 import { AllTime, OpenSourceParticipation, WeekdayRhythm } from "./components/Participation";
-import { DockerImages, ExternalArticles } from "./components/Published";
 import { SourceTag } from "./components/SourceTag";
 import { StackOverflow } from "./components/StackOverflow";
 import { StatTiles } from "./components/StatTiles";
@@ -167,53 +166,7 @@ export default async function AnalyticsPage() {
         </section>
       )}
 
-      {external.badges.length > 0 && (
-        <section className="scene" data-scene="Credentials" aria-labelledby="credentials-heading">
-          <div className="scene-head">
-            <p className="scene-eyebrow">Credentials</p>
-            <SourceTag source="credentials" />
-          </div>
-          <h2 id="credentials-heading" className="scene-heading">
-            Exams somebody else set and somebody else marked.
-          </h2>
-          <p className="analytics-sub rm-compact">
-            Merged from the CMS and from Credly, with the source shown so a line typed in by
-            hand is distinguishable from one a third party will confirm. Anything past its
-            renewal date says so rather than quietly passing as current.
-          </p>
-          <Credentials badges={external.badges} today={serverToday(stats)} />
-        </section>
-      )}
-
-      {external.dockerHub && (
-        <section className="scene" data-scene="Images" aria-labelledby="docker-heading">
-          <div className="scene-head">
-            <p className="scene-eyebrow">Published</p>
-            <SourceTag source="docker" />
-          </div>
-          <h2 id="docker-heading" className="scene-heading">
-            Container images other people can pull.
-          </h2>
-          <DockerImages docker={external.dockerHub} />
-        </section>
-      )}
-
-      {external.articles.length > 0 && (
-        <section className="scene" data-scene="Elsewhere" aria-labelledby="articles-heading">
-          <div className="scene-head">
-            <p className="scene-eyebrow">Written elsewhere</p>
-            <SourceTag source="medium" />
-          </div>
-          <h2 id="articles-heading" className="scene-heading">
-            Articles published somewhere that is not this site.
-          </h2>
-          <p className="analytics-sub rm-compact">
-            Titles, dates and tags. Claps and views are not available through anything
-            public, so there is no engagement figure here rather than an invented one.
-          </p>
-          <ExternalArticles articles={external.articles} />
-        </section>
-      )}
+      <Output external={external} />
 
       <Provenance stats={stats} />
     </>
@@ -221,13 +174,75 @@ export default async function AnalyticsPage() {
 }
 
 /**
- * The server's date as an ISO day, for comparing an expiry against.
+ * How much was published, as counts — and nothing else.
  *
- * From the payload, never `new Date()` — a Server Component may not read the clock under
- * Cache Components, and this is the date the data was actually gathered against anyway.
+ * The credentials, the images and the articles themselves moved to Knowledge, and this is
+ * what belongs here instead. The distinction is the page's own claim: the hero says the
+ * work is **measured** rather than claimed, and a list of certificates is a claim with
+ * provenance, not a measurement. Three sections of them were quietly making that sentence
+ * false.
+ *
+ * Counters, never bars. A pull count has no ceiling and an article count has no
+ * denominator, so there is nothing here a proportional form could honestly assert.
  */
-function serverToday(stats: GitHubStats): string {
-  return stats.fetchedAt.slice(0, 10);
+function Output({ external }: { external: ExternalStats }) {
+  const tiles = [
+    external.articles.length > 0 && {
+      label: "Articles published",
+      value: external.articles.length,
+      note: "Written for somewhere that is not this site",
+    },
+    external.dockerHub && {
+      label: "Images published",
+      value: external.dockerHub.repositories,
+      note: "Public container images anyone can pull",
+    },
+    external.dockerHub &&
+      external.dockerHub.totalPulls > 0 && {
+        label: "Image pulls",
+        value: external.dockerHub.totalPulls,
+        note: "Across every published image, all time",
+      },
+    external.badges.length > 0 && {
+      label: "Credentials held",
+      value: external.badges.length,
+      note: "Certifications, Applied Skills, badges and training",
+    },
+  ].filter((tile): tile is { label: string; value: number; note: string } => Boolean(tile));
+
+  if (tiles.length === 0) return null;
+
+  return (
+    <section className="scene" data-scene="Output" aria-labelledby="output-heading">
+      <div className="scene-head">
+        <p className="scene-eyebrow">Output</p>
+      </div>
+      <h2 id="output-heading" className="scene-heading">
+        What came out of it.
+      </h2>
+      <p className="analytics-sub rm-compact">
+        The counts only. The articles, images and credentials themselves are on{" "}
+        <Link href="/knowledge" className="analytics-link">
+          Knowledge
+        </Link>{" "}
+        — this page is for what can be measured.
+      </p>
+
+      <dl className="rm-grid grid grid-cols-2 gap-3 lg:grid-cols-4" data-stagger data-pop>
+        {tiles.map((tile) => (
+          <div key={tile.label} className="surface px-4 py-3.5">
+            <dt className="font-mono text-[0.65rem] tracking-[0.12em] text-ink-faint uppercase">
+              {tile.label}
+            </dt>
+            <dd className="mt-1.5 font-display text-3xl font-semibold text-ink">
+              <Counter value={tile.value} />
+            </dd>
+            <p className="rm-hide mt-1 text-xs text-ink-soft">{tile.note}</p>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 /**
