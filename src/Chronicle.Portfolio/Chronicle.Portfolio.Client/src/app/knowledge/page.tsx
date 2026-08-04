@@ -8,6 +8,7 @@ import { ArticleList } from "./components/ArticleList";
 import { Credentials } from "./components/Credentials";
 import { LearningBoard } from "./components/LearningBoard";
 import { DockerImages } from "./components/Published";
+import { SectionGuide, type GuideEntry } from "./components/SectionGuide";
 import "./knowledge.css";
 
 export const metadata: Metadata = {
@@ -54,6 +55,23 @@ export default async function KnowledgePage() {
     external.dockerHub !== null ||
     learning.length > 0;
 
+  // Same order as the sections themselves, and derived from the same conditions — so the
+  // guide cannot list a section that did not render, or miss one that did.
+  const guide: GuideEntry[] = [
+    ...(credentials.length > 0
+      ? [{ id: "credentials", label: "Certifications", count: credentials.length }]
+      : []),
+    ...(totalArticles > 0
+      ? [{ id: "articles", label: "Articles", count: totalArticles }]
+      : []),
+    ...(external.dockerHub
+      ? [{ id: "images", label: "Images", count: external.dockerHub.repositories }]
+      : []),
+    ...(learning.length > 0
+      ? [{ id: "learning", label: "Learning", count: learning.length }]
+      : []),
+  ];
+
   return (
     <>
       <section
@@ -89,26 +107,21 @@ export default async function KnowledgePage() {
         </p>
       ) : (
         <>
-          {totalArticles > 0 && (
-            <section className="scene" data-scene="Articles" aria-labelledby="articles-heading">
-              <div className="scene-head">
-                <p className="scene-eyebrow">Written down</p>
-                {articles.length > 0 && <SourceTag source="medium" />}
-              </div>
-              <h2 id="articles-heading" className="scene-heading">
-                Problems worth explaining properly.
-              </h2>
-              <p className="knowledge-sub rm-compact">
-                Mostly ledgers, correctness, and the things that turned out harder than they
-                looked. Anything published elsewhere links out to where it lives.
-              </p>
+          {/* Built from what actually rendered, so it can never offer a destination that
+              is not there. */}
+          <SectionGuide entries={guide} />
 
-              <ArticleList posts={posts} external={articles} />
-            </section>
-          )}
+          {/*
+            Credentials first, ahead of everything the site says about itself.
 
+            This is the only section on the page whose contents somebody else issued and
+            a stranger can verify in one click. Ordering by strength of evidence rather
+            than by how much there is of it puts the hardest-to-fake claim where a
+            recruiter looks first.
+          */}
           {credentials.length > 0 && (
             <section
+              id="credentials"
               className="scene"
               data-scene="Credentials"
               aria-labelledby="credentials-heading"
@@ -130,8 +143,36 @@ export default async function KnowledgePage() {
             </section>
           )}
 
+          {totalArticles > 0 && (
+            <section
+              id="articles"
+              className="scene"
+              data-scene="Articles"
+              aria-labelledby="articles-heading"
+            >
+              <div className="scene-head">
+                <p className="scene-eyebrow">Written down</p>
+                {articles.length > 0 && <SourceTag source="medium" />}
+              </div>
+              <h2 id="articles-heading" className="scene-heading">
+                Problems worth explaining properly.
+              </h2>
+              <p className="knowledge-sub rm-compact">
+                Mostly ledgers, correctness, and the things that turned out harder than they
+                looked. Anything published elsewhere links out to where it lives.
+              </p>
+
+              <ArticleList posts={posts} external={articles} />
+            </section>
+          )}
+
           {external.dockerHub && (
-            <section className="scene" data-scene="Images" aria-labelledby="docker-heading">
+            <section
+              id="images"
+              className="scene"
+              data-scene="Images"
+              aria-labelledby="docker-heading"
+            >
               <div className="scene-head">
                 <p className="scene-eyebrow">Published</p>
                 <SourceTag source="docker" />
@@ -145,7 +186,12 @@ export default async function KnowledgePage() {
           )}
 
           {learning.length > 0 && (
-            <section className="scene" data-scene="Learning" aria-labelledby="learning-heading">
+            <section
+              id="learning"
+              className="scene"
+              data-scene="Learning"
+              aria-labelledby="learning-heading"
+            >
               <div className="scene-head">
                 <p className="scene-eyebrow">Still working out</p>
               </div>

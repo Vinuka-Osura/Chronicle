@@ -57,6 +57,78 @@
     color: var(--color-ink-soft);
   }
 
+  /* ── The section guide ───────────────────────────────────────────────────── */
+
+  /*
+    Sticky under the header, so it is still reachable four screens down — which is the
+    only position that makes it a guide rather than a table of contents nobody scrolls
+    back up to. It sits above the water canvas on its own background, because a row of
+    small type over a moving surface is the one place legibility loses.
+  */
+  .guide {
+    position: sticky;
+    top: 4.25rem;
+    z-index: 5;
+    margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+    padding-block: 0.6rem;
+    background: var(--color-paper-solid);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .guide-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+  }
+
+  .guide-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+    transition:
+      color var(--t-quick) var(--ease-move),
+      border-color var(--t-quick) var(--ease-move),
+      background-color var(--t-quick) var(--ease-move);
+  }
+
+  .guide-link:hover {
+    border-color: var(--color-ink-faint);
+    color: var(--color-ink);
+  }
+
+  /* The section being read. Not colour alone — the border and the weight change too, so
+     it survives a colour-blind reader and a forced-colours mode. */
+  .guide-link[aria-current="true"] {
+    border-color: var(--color-signal);
+    background: var(--color-signal-soft);
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+
+  .guide-count {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-faint);
+  }
+
+  .guide-link[aria-current="true"] .guide-count {
+    color: var(--color-signal);
+  }
+
+  /* The header the sticky guide sits under, plus room to breathe. Without it a jumped-to
+     heading lands beneath both. */
+  .scene[id] {
+    scroll-margin-top: 8rem;
+  }
+
   /* ── Articles ────────────────────────────────────────────────────────────── */
 
   /* Wraps only the controls. The grid is left out on purpose — its cards are

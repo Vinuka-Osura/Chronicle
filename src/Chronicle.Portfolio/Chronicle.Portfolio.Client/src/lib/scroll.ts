@@ -32,6 +32,35 @@ export function scrollToTop() {
 }
 
 /**
+ * Scrolls a section into view, honouring inertial scroll when it is running.
+ *
+ * A plain `<a href="#id">` cannot be used for this. Lenis holds its own target position,
+ * so the browser's native jump lands and is then animated straight back — the same
+ * failure `resetScroll` exists for. Going through the instance is the only way both the
+ * inertial and the plain path behave.
+ *
+ * The offset clears the fixed header, which would otherwise cover the heading the reader
+ * just asked to see.
+ */
+export function scrollToId(id: string) {
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  const HEADER = 96;
+
+  if (active) {
+    active.scrollTo(target, { offset: -HEADER, duration: 1 });
+    return;
+  }
+
+  const abrupt = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({
+    top: target.getBoundingClientRect().top + window.scrollY - HEADER,
+    behavior: abrupt ? "auto" : "smooth",
+  });
+}
+
+/**
  * Jumps to the top with no animation. For arriving at a new page.
  *
  * Next resets the scroll position itself on a client-side navigation, and with Lenis
