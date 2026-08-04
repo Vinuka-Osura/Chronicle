@@ -21,6 +21,9 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
         builder.Property(p => p.LinkedInUrl).HasMaxLength(300);
         builder.Property(p => p.GitHubUrl).HasMaxLength(300);
         builder.Property(p => p.WebsiteUrl).HasMaxLength(300);
+        builder.Property(p => p.FacebookUrl).HasMaxLength(300);
+        builder.Property(p => p.InstagramUrl).HasMaxLength(300);
+        builder.Property(p => p.XUrl).HasMaxLength(300);
         builder.Property(p => p.Availability).HasMaxLength(300);
 
         // Handles on other platforms. Short by nature — these are usernames, not URLs, so

@@ -17,4 +17,14 @@ public sealed record ProfileDto(
     string? LinkedInUrl,
     string? GitHubUrl,
     string? WebsiteUrl,
-    string? Availability);
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? XUrl,
+    string? Availability,
+    // Handles, not links. Public identifiers, so carrying them on the public DTO costs
+    // nothing and lets the admin screen read back what it wrote.
+    string? GitHubUsername,
+    string? StackOverflowUserId,
+    string? CredlyUsername,
+    string? DockerHubUsername,
+    string? MediumUsername);

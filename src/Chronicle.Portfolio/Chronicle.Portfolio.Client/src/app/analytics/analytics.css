@@ -586,6 +586,327 @@
     height: 0.8rem;
     margin-left: auto;
   }
+
+  /* ── Stack Overflow ──────────────────────────────────────────────────────── */
+  .so {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .so-figures {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  @media (width >= 44rem) {
+    .so-figures {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 3rem;
+    }
+  }
+
+  .so-value {
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 7vw, 3.4rem);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+
+  .so-label {
+    margin-top: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .so-note {
+    max-width: 30rem;
+    margin-top: 0.4rem;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .so-rate {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .so-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  /*
+    Three counts, never a total.
+
+    Gold, silver and bronze are not interchangeable, so adding them produces a number
+    that means nothing. The colours are decoration on top of a visible label, never the
+    thing carrying the identity.
+  */
+  .so-badge {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+  }
+
+  .so-badge dt {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .so-badge dd {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .so-badge.is-gold {
+    border-color: color-mix(in oklch, #d4a017 55%, var(--color-rule));
+  }
+
+  .so-badge.is-silver {
+    border-color: color-mix(in oklch, #9aa3ad 55%, var(--color-rule));
+  }
+
+  .so-badge.is-bronze {
+    border-color: color-mix(in oklch, #b07d4a 55%, var(--color-rule));
+  }
+
+  .so-tags-label {
+    margin-bottom: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .so-tags ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    list-style: none;
+  }
+
+  .so-tag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.28rem 0.7rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-ink-soft);
+  }
+
+  .so-tag-score {
+    font-size: 0.62rem;
+    color: var(--color-ink-faint);
+  }
+
+  .so-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--color-signal);
+  }
+
+  .so-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .so-link .icon {
+    width: 0.85em;
+    height: 0.85em;
+  }
+
+  /* ── Credentials ─────────────────────────────────────────────────────────── */
+  .credentials {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1rem;
+    list-style: none;
+  }
+
+  .credential-body {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding-top: 1.15rem;
+  }
+
+  .credential-image {
+    flex-shrink: 0;
+    width: 3.25rem;
+    height: 3.25rem;
+    object-fit: contain;
+  }
+
+  .credential-image.is-placeholder {
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-ink-faint);
+  }
+
+  .credential-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-ink);
+  }
+
+  .credential-issuer {
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+    color: var(--color-ink-soft);
+  }
+
+  .credential-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-faint);
+  }
+
+  /* Verifiable is a fact about the credential, so it is stated in words. The colour is
+     an accent on a label, not the label itself. */
+  .credential-source {
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    background: var(--color-signal-soft);
+    color: var(--color-signal);
+  }
+
+  .credential-expires {
+    color: var(--color-ink-soft);
+  }
+
+  .credential-expired {
+    color: var(--color-alert);
+  }
+
+  /* Demoted, not removed. It still happened; it is simply no longer current. */
+  .credential.is-expired {
+    opacity: 0.62;
+  }
+
+  .credential.is-expired:hover {
+    opacity: 1;
+  }
+
+  .credential-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-left: auto;
+  }
+
+  /* ── Published: Docker images and outside articles ───────────────────────── */
+  .published-summary {
+    margin-bottom: 1.1rem;
+    font-size: 0.9rem;
+    color: var(--color-ink-soft);
+  }
+
+  .published-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    list-style: none;
+  }
+
+  .published-item {
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .published-item:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .published-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .published-name:hover {
+    color: var(--color-signal);
+  }
+
+  .published-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+    color: var(--color-ink-faint);
+  }
+
+  .published-description {
+    max-width: 46rem;
+    margin-top: 0.3rem;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .published-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-faint);
+  }
+
+  .published-figure {
+    color: var(--color-signal);
+  }
+
+  .published-tag {
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.25rem;
+  }
 }
 
 /*

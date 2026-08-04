@@ -223,7 +223,17 @@ export interface Profile {
   linkedInUrl: string | null;
   gitHubUrl: string | null;
   websiteUrl: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  /** Formerly Twitter. */
+  xUrl: string | null;
   availability: string | null;
+  /** Handles, not links — what the Analytics page fetches with. Blank means never called. */
+  gitHubUsername: string | null;
+  stackOverflowUserId: string | null;
+  credlyUsername: string | null;
+  dockerHubUsername: string | null;
+  mediumUsername: string | null;
 }
 
 /** A qualification, lifted from the timeline's education milestones. */
@@ -248,6 +258,78 @@ export interface Resume {
   projects: ProjectCard[];
   skills: SkillGroup[];
   certifications: Certification[];
+}
+
+/**
+ * The non-GitHub half of Analytics.
+ *
+ * Every member means the same thing when null or empty: **that service is not set up, or
+ * has nothing to show, so its section does not render.** A section that appears with a
+ * zero in it reads as "this person has none", which is a different and usually false claim.
+ */
+export interface ExternalStats {
+  stackOverflow: StackOverflowStats | null;
+  badges: CredentialBadge[];
+  dockerHub: DockerHubStats | null;
+  articles: ArticleLink[];
+}
+
+export interface StackOverflowStats {
+  displayName: string;
+  profileUrl: string;
+  reputation: number;
+  answers: number;
+  questions: number;
+  /** Accepted over answered, or null when it could not be counted. One of three figures on
+   *  the page with a real denominator, and so one of three allowed a ring. */
+  acceptedRate: number | null;
+  goldBadges: number;
+  silverBadges: number;
+  bronzeBadges: number;
+  memberSince: IsoDate;
+  topTags: TagScore[];
+}
+
+export interface TagScore {
+  name: string;
+  score: number;
+  posts: number;
+}
+
+/** A credential badge, from Credly or from the CMS. `source` is "cms" or "credly". */
+export interface CredentialBadge {
+  name: string;
+  issuer: string;
+  url: string | null;
+  imageUrl: string | null;
+  issuedAt: IsoDate | null;
+  expiresAt: IsoDate | null;
+  source: string;
+}
+
+export interface DockerHubStats {
+  username: string;
+  repositories: number;
+  totalPulls: number;
+  images: DockerImage[];
+}
+
+export interface DockerImage {
+  name: string;
+  description: string | null;
+  pulls: number;
+  stars: number;
+  lastUpdated: IsoDate;
+  url: string;
+}
+
+/** An article published somewhere that is not this site. */
+export interface ArticleLink {
+  title: string;
+  url: string;
+  publishedAt: IsoDate;
+  summary: string | null;
+  tags: string[];
 }
 
 export interface SiteStatus {

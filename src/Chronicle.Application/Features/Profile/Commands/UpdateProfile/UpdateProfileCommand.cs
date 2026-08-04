@@ -17,7 +17,15 @@ public sealed record UpdateProfileCommand(
     string? LinkedInUrl,
     string? GitHubUrl,
     string? WebsiteUrl,
-    string? Availability) : IRequest;
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? XUrl,
+    string? Availability,
+    string? GitHubUsername,
+    string? StackOverflowUserId,
+    string? CredlyUsername,
+    string? DockerHubUsername,
+    string? MediumUsername) : IRequest;
 
 public sealed class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
 {
@@ -55,6 +63,15 @@ public sealed class UpdateProfileCommandValidator : AbstractValidator<UpdateProf
 
         RuleFor(c => c.WebsiteUrl).MaximumLength(300)
             .Must(BeAbsoluteHttpUrl).WithMessage("The website link needs the full https:// address.");
+
+        RuleFor(c => c.FacebookUrl).MaximumLength(300)
+            .Must(BeAbsoluteHttpUrl).WithMessage("The Facebook link needs the full https:// address.");
+
+        RuleFor(c => c.InstagramUrl).MaximumLength(300)
+            .Must(BeAbsoluteHttpUrl).WithMessage("The Instagram link needs the full https:// address.");
+
+        RuleFor(c => c.XUrl).MaximumLength(300)
+            .Must(BeAbsoluteHttpUrl).WithMessage("The X link needs the full https:// address.");
     }
 
     private static bool BeAbsoluteHttpUrl(string? value)
@@ -93,7 +110,18 @@ public sealed class UpdateProfileCommandHandler(
         profile.LinkedInUrl = Clean(request.LinkedInUrl);
         profile.GitHubUrl = Clean(request.GitHubUrl);
         profile.WebsiteUrl = Clean(request.WebsiteUrl);
+        profile.FacebookUrl = Clean(request.FacebookUrl);
+        profile.InstagramUrl = Clean(request.InstagramUrl);
+        profile.XUrl = Clean(request.XUrl);
         profile.Availability = Clean(request.Availability);
+
+        // A handle pasted as a URL or with a leading @ is the commonest way this is got
+        // wrong, and it fails as a silent 404 from the provider rather than as a save error.
+        profile.GitHubUsername = Handle(request.GitHubUsername);
+        profile.StackOverflowUserId = Handle(request.StackOverflowUserId);
+        profile.CredlyUsername = Handle(request.CredlyUsername);
+        profile.DockerHubUsername = Handle(request.DockerHubUsername);
+        profile.MediumUsername = Handle(request.MediumUsername);
 
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         await cache.EvictAsync(cancellationToken, CacheTags.Profile).ConfigureAwait(false);
@@ -102,4 +130,31 @@ public sealed class UpdateProfileCommandHandler(
     /// <summary>Empty and whitespace both mean "not set", so both become null.</summary>
     private static string? Clean(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// A platform handle, salvaged from the two ways people usually enter one.
+    /// </summary>
+    /// <remarks>
+    /// Pasting the whole profile URL and keeping the leading <c>@</c> are both extremely
+    /// common, and neither fails loudly — the provider simply requests a nonexistent user,
+    /// gets a 404, and that service's section quietly never appears. Trimming here is far
+    /// cheaper than the support question it prevents.
+    /// </remarks>
+    private static string? Handle(string? value)
+    {
+        var text = Clean(value);
+        if (text is null)
+        {
+            return null;
+        }
+
+        // The last non-empty path segment of a URL is the handle in every platform here.
+        if (Uri.TryCreate(text, UriKind.Absolute, out var uri))
+        {
+            text = uri.Segments.Select(s => s.Trim('/'))
+                .LastOrDefault(s => s.Length > 0) ?? text;
+        }
+
+        return text.TrimStart('@').Trim() is { Length: > 0 } handle ? handle : null;
+    }
 }

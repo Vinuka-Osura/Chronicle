@@ -114,6 +114,65 @@ else
                 <label for="website">Website <span class="optional">optional</span></label>
                 <InputText id="website" @bind-Value="form.WebsiteUrl" placeholder="https://..." />
             </div>
+
+            <div class="field">
+                <label for="facebook">Facebook <span class="optional">optional</span></label>
+                <InputText id="facebook" @bind-Value="form.FacebookUrl" placeholder="https://www.facebook.com/..." />
+            </div>
+
+            <div class="field">
+                <label for="instagram">Instagram <span class="optional">optional</span></label>
+                <InputText id="instagram" @bind-Value="form.InstagramUrl" placeholder="https://www.instagram.com/..." />
+            </div>
+
+            <div class="field">
+                <label for="x">X <span class="optional">optional</span></label>
+                <InputText id="x" @bind-Value="form.XUrl" placeholder="https://x.com/..." />
+            </div>
+        </section>
+
+        <section class="field-group">
+            <h2>Analytics handles</h2>
+            <p class="muted">
+                Usernames, not URLs, and not links — these are what the Analytics page fetches
+                with. Each one left blank means that service is never called and its section
+                does not appear at all, so clearing a handle is how you remove a section.
+            </p>
+
+            <div class="field">
+                <label for="gh-user">GitHub username</label>
+                <InputText id="gh-user" @bind-Value="form.GitHubUsername" placeholder="Vinuka-Osura" />
+                <p class="field-help">
+                    The login, not the profile URL. The access token stays in server
+                    configuration — a token in the database travels with every backup of it.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="so-user">Stack Overflow user id</label>
+                <InputText id="so-user" @bind-Value="form.StackOverflowUserId" placeholder="23785133" />
+                <p class="field-help">The number in your profile URL, not your display name.</p>
+            </div>
+
+            <div class="field">
+                <label for="credly-user">Credly username</label>
+                <InputText id="credly-user" @bind-Value="form.CredlyUsername" />
+                <p class="field-help">
+                    The profile must be public, or the badge feed answers with nothing.
+                    Credentials you enter below always show regardless.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="docker-user">Docker Hub username</label>
+                <InputText id="docker-user" @bind-Value="form.DockerHubUsername" />
+            </div>
+
+            <div class="field">
+                <label for="medium-user">Medium username</label>
+                <InputText id="medium-user" @bind-Value="form.MediumUsername" placeholder="vinukaosura" />
+                <p class="field-help">Without the @@. Read from the public RSS feed.</p>
+            </div>
         </section>
 
         <section class="field-group">
@@ -171,7 +230,15 @@ else
         public string? LinkedInUrl { get; set; }
         public string? GitHubUrl { get; set; }
         public string? WebsiteUrl { get; set; }
+        public string? FacebookUrl { get; set; }
+        public string? InstagramUrl { get; set; }
+        public string? XUrl { get; set; }
         public string? Availability { get; set; }
+        public string? GitHubUsername { get; set; }
+        public string? StackOverflowUserId { get; set; }
+        public string? CredlyUsername { get; set; }
+        public string? DockerHubUsername { get; set; }
+        public string? MediumUsername { get; set; }
     }
 
     protected override async Task OnInitializedAsync()
@@ -191,7 +258,15 @@ else
             form.LinkedInUrl = profile.LinkedInUrl;
             form.GitHubUrl = profile.GitHubUrl;
             form.WebsiteUrl = profile.WebsiteUrl;
+            form.FacebookUrl = profile.FacebookUrl;
+            form.InstagramUrl = profile.InstagramUrl;
+            form.XUrl = profile.XUrl;
             form.Availability = profile.Availability;
+            form.GitHubUsername = profile.GitHubUsername;
+            form.StackOverflowUserId = profile.StackOverflowUserId;
+            form.CredlyUsername = profile.CredlyUsername;
+            form.DockerHubUsername = profile.DockerHubUsername;
+            form.MediumUsername = profile.MediumUsername;
         }
 
         loading = false;
@@ -216,7 +291,15 @@ else
                 form.LinkedInUrl,
                 form.GitHubUrl,
                 form.WebsiteUrl,
-                form.Availability));
+                form.FacebookUrl,
+                form.InstagramUrl,
+                form.XUrl,
+                form.Availability,
+                form.GitHubUsername,
+                form.StackOverflowUserId,
+                form.CredlyUsername,
+                form.DockerHubUsername,
+                form.MediumUsername));
 
             message = "Saved.";
             savedUrl = PublicSite.Absolute("/resume");

@@ -559,6 +559,11 @@ internal static partial class SampleContent
             LinkedInUrl = "https://www.linkedin.com/in/example",
             GitHubUrl = "https://github.com/example",
             WebsiteUrl = null,
+            // Two of the five social links, on purpose: the Contact page renders only the
+            // rows that are set, and seeding all of them would hide the fact that it does.
+            XUrl = "https://x.com/example",
+            InstagramUrl = null,
+            FacebookUrl = null,
             Availability = "Open to senior backend roles, one month's notice.",
         });
     }

@@ -61,6 +61,20 @@ public class Profile : AuditableEntity
 
     public string? WebsiteUrl { get; set; }
 
+    // ── Social ──────────────────────────────────────────────────────────────────
+    //
+    // Full URLs rather than handles, unlike the analytics fields below. Nothing fetches
+    // these — they are links a reader clicks — so storing the address means a platform
+    // changing its URL shape costs an edit rather than a deployment. Each renders only
+    // when set; an empty social row is worse than a short one.
+
+    public string? FacebookUrl { get; set; }
+
+    public string? InstagramUrl { get; set; }
+
+    /// <summary>Formerly Twitter. The column is named for the platform as it is now.</summary>
+    public string? XUrl { get; set; }
+
     /// <summary>
     /// Optional closing section of the CV — availability, work authorisation, a note about
     /// relocation. Rendered only when set, because an empty heading reads as an omission.

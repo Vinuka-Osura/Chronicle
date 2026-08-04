@@ -1,6 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { requestOr } from "@/lib/http";
-import type { GitHubStats } from "@/lib/types";
+import type { ExternalStats, GitHubStats } from "@/lib/types";
 
 const NOT_CONNECTED: GitHubStats = {
   isLive: false,
@@ -43,4 +43,30 @@ export async function getGitHubStats(): Promise<GitHubStats> {
   cacheLife("minutes");
 
   return requestOr<GitHubStats>("/api/github/stats", NOT_CONNECTED);
+}
+
+/** Nothing configured and nothing to show are the same thing here, and both render nothing. */
+const NOTHING_EXTERNAL: ExternalStats = {
+  stackOverflow: null,
+  badges: [],
+  dockerHub: null,
+  articles: [],
+};
+
+/**
+ * Stack Overflow, credentials, Docker Hub and Medium, in one call.
+ *
+ * Separate from `getGitHubStats` rather than merged into it, because the two fail
+ * independently: GitHub being unreachable must not blank the credentials, and a broken
+ * Medium feed must not cost the contribution graph. Tagged separately for the same reason.
+ *
+ * `hours`, not `minutes`: unlike the GitHub figures, none of this claims to be recent —
+ * a badge earned last March is not more true for being fetched a minute ago.
+ */
+export async function getExternalStats(): Promise<ExternalStats> {
+  "use cache";
+  cacheTag("external-stats", "certifications");
+  cacheLife("hours");
+
+  return requestOr<ExternalStats>("/api/external/stats", NOTHING_EXTERNAL);
 }

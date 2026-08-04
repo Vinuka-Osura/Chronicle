@@ -103,7 +103,12 @@ public sealed class GitHubService(
             await StoreAsync(cache, fresh, cancellationToken).ConfigureAwait(false);
             return fresh;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        // KeyNotFoundException belongs here with JsonException: both mean "GitHub's payload
+        // was not the shape we expected", and the only thing that separates them is whether
+        // the reading code used GetProperty or a parser. One of them escaping cost the
+        // whole Analytics page a 500 over an absent `commits` array.
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException
+            or JsonException or KeyNotFoundException)
         {
             GitHubLog.RefreshFailed(logger, ex);
             return cached ?? GitHubStats.Empty(now);
@@ -550,22 +555,53 @@ public sealed class GitHubService(
                 cancellationToken: cancellationToken)
             .ConfigureAwait(false);
 
+        if (document.RootElement.ValueKind is not JsonValueKind.Array)
+        {
+            return null;
+        }
+
         foreach (var evt in document.RootElement.EnumerateArray())
         {
-            if (evt.GetProperty("type").GetString() != "PushEvent")
-            {
-                continue;
-            }
+            /*
+              Every lookup here is a Try, and that is the point rather than defensiveness
+              for its own sake.
 
-            var commits = evt.GetProperty("payload").GetProperty("commits");
-            if (commits.GetArrayLength() == 0)
+              This previously used GetProperty throughout and threw KeyNotFoundException on
+              a PushEvent whose payload carried no `commits` array — which GitHub does emit.
+              The exception was not in GetStatsAsync's catch filter, so it escaped the whole
+              refresh and the endpoint answered 500. The last commit is a decoration on the
+              status strip; the contribution calendar is the page. A missing optional field
+              must never be able to take the mandatory ones down with it.
+            */
+            if (!evt.TryGetProperty("type", out var type)
+                || type.GetString() != "PushEvent"
+                || !evt.TryGetProperty("payload", out var payload)
+                || !payload.TryGetProperty("commits", out var commits)
+                || commits.ValueKind is not JsonValueKind.Array
+                || commits.GetArrayLength() == 0)
             {
                 continue;
             }
 
             // A push carries its commits oldest-first, so the newest is the last one.
-            var message = commits[commits.GetArrayLength() - 1].GetProperty("message").GetString();
+            if (!commits[commits.GetArrayLength() - 1].TryGetProperty("message", out var messageElement))
+            {
+                continue;
+            }
+
+            var message = messageElement.GetString();
             if (string.IsNullOrWhiteSpace(message))
+            {
+                continue;
+            }
+
+            var repo = evt.TryGetProperty("repo", out var repoElement)
+                && repoElement.TryGetProperty("name", out var repoName)
+                    ? repoName.GetString()
+                    : null;
+
+            if (!evt.TryGetProperty("created_at", out var created)
+                || !created.TryGetDateTimeOffset(out var when))
             {
                 continue;
             }
@@ -575,8 +611,8 @@ public sealed class GitHubService(
                 // The events feed names repositories "owner/repo". The owner is always
                 // the profile being displayed, so repeating it in the status strip adds
                 // length without adding information.
-                WithoutOwner(evt.GetProperty("repo").GetProperty("name").GetString()),
-                evt.GetProperty("created_at").GetDateTimeOffset());
+                WithoutOwner(repo),
+                when);
         }
 
         return null;

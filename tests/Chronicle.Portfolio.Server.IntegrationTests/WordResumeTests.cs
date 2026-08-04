@@ -41,7 +41,15 @@ public class WordResumeTests
             "https://www.linkedin.com/in/example",
             "https://github.com/example",
             null,
-            "Available at one month's notice."),
+            null,
+            null,
+            null,
+            "Available at one month's notice.",
+            null,
+            null,
+            null,
+            null,
+            null),
         [
             new ExperienceDto(
                 Guid.NewGuid(),

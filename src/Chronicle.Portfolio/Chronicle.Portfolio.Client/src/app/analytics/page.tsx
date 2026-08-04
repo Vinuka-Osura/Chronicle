@@ -3,11 +3,14 @@ import { Acquire } from "@/components/Acquire";
 import { Counter, Ring } from "@/components/Figure";
 import { SetLines } from "@/components/SetLines";
 import type { GitHubStats } from "@/lib/types";
-import { getGitHubStats } from "./api";
+import { getExternalStats, getGitHubStats } from "./api";
 import { ContributionHeatmap } from "./components/ContributionHeatmap";
 import { ContributionMix, PrivateWork } from "./components/ContributionMix";
+import { Credentials } from "./components/Credentials";
 import { LanguageShare } from "./components/LanguageShare";
 import { AllTime, OpenSourceParticipation, WeekdayRhythm } from "./components/Participation";
+import { DockerImages, ExternalArticles } from "./components/Published";
+import { StackOverflow } from "./components/StackOverflow";
 import { StatTiles } from "./components/StatTiles";
 import { WorkOverTime } from "./components/WorkOverTime";
 import "./analytics.css";
@@ -19,9 +22,17 @@ export const metadata: Metadata = {
 };
 
 export default async function AnalyticsPage() {
-  const stats = await getGitHubStats();
+  // Fetched together, but they fail independently — GitHub being unreachable must not
+  // blank the credentials, and a broken Medium feed must not cost the contribution graph.
+  const [stats, external] = await Promise.all([getGitHubStats(), getExternalStats()]);
 
-  if (!stats.isLive) {
+  const hasExternal =
+    external.stackOverflow !== null ||
+    external.badges.length > 0 ||
+    external.dockerHub !== null ||
+    external.articles.length > 0;
+
+  if (!stats.isLive && !hasExternal) {
     return (
       <>
         <Opening stats={stats} />
@@ -36,14 +47,18 @@ export default async function AnalyticsPage() {
     <>
       <Opening stats={stats} />
 
-      <section className="scene" data-scene="Headline" aria-labelledby="headline-heading">
-        <p className="scene-eyebrow">The last twelve months</p>
-        <h2 id="headline-heading" className="scene-heading">
-          What the year actually contained.
-        </h2>
-        <StatTiles stats={stats} />
-        <NoContributionData stats={stats} />
-      </section>
+      {/* Each section guards on its own data rather than on one flag, so GitHub being
+          unreachable costs exactly the GitHub sections and nothing else on the page. */}
+      {stats.isLive && (
+        <section className="scene" data-scene="Headline" aria-labelledby="headline-heading">
+          <p className="scene-eyebrow">The last twelve months</p>
+          <h2 id="headline-heading" className="scene-heading">
+            What the year actually contained.
+          </h2>
+          <StatTiles stats={stats} />
+          <NoContributionData stats={stats} />
+        </section>
+      )}
 
       {stats.weekly.length > 0 && (
         <section className="scene" data-scene="Over time" aria-labelledby="overtime-heading">
@@ -74,15 +89,17 @@ export default async function AnalyticsPage() {
         </section>
       )}
 
-      <section className="scene" data-scene="Rhythm" aria-labelledby="rhythm-heading">
-        <p className="scene-eyebrow">Rhythm</p>
-        <h2 id="rhythm-heading" className="scene-heading">
-          Consistency, with the quiet stretches left in.
-        </h2>
-        <Consistency stats={stats} />
-        <ContributionHeatmap calendar={stats.calendar} total={stats.contributionsLastYear} />
-        <WeekdayRhythm days={stats.byDayOfWeek} />
-      </section>
+      {stats.calendarDays > 0 && (
+        <section className="scene" data-scene="Rhythm" aria-labelledby="rhythm-heading">
+          <p className="scene-eyebrow">Rhythm</p>
+          <h2 id="rhythm-heading" className="scene-heading">
+            Consistency, with the quiet stretches left in.
+          </h2>
+          <Consistency stats={stats} />
+          <ContributionHeatmap calendar={stats.calendar} total={stats.contributionsLastYear} />
+          <WeekdayRhythm days={stats.byDayOfWeek} />
+        </section>
+      )}
 
       {stats.contributedTo.length > 0 && (
         <section
@@ -102,18 +119,84 @@ export default async function AnalyticsPage() {
         </section>
       )}
 
-      <section className="scene" data-scene="Languages" aria-labelledby="languages-heading">
-        <p className="scene-eyebrow">Spread</p>
-        <h2 id="languages-heading" className="scene-heading">
-          What the code is written in.
-        </h2>
-        <LanguageShare languages={stats.languages} />
-        <AllTime years={stats.years} currentYear={currentYear(stats)} />
-      </section>
+      {stats.languages.length > 0 && (
+        <section className="scene" data-scene="Languages" aria-labelledby="languages-heading">
+          <p className="scene-eyebrow">Spread</p>
+          <h2 id="languages-heading" className="scene-heading">
+            What the code is written in.
+          </h2>
+          <LanguageShare languages={stats.languages} />
+          <AllTime years={stats.years} currentYear={currentYear(stats)} />
+        </section>
+      )}
+
+      {external.stackOverflow && (
+        <section className="scene" data-scene="Answers" aria-labelledby="so-heading">
+          <p className="scene-eyebrow">Being useful to strangers</p>
+          <h2 id="so-heading" className="scene-heading">
+            Reputation is what other people thought was worth an upvote.
+          </h2>
+          <p className="analytics-sub rm-compact">
+            The second figure on this page that a third party controls. Reputation is a bare
+            count and gets a counter; the accepted-answer rate is a real proportion and is the
+            only thing here drawn as one.
+          </p>
+          <StackOverflow stats={external.stackOverflow} />
+        </section>
+      )}
+
+      {external.badges.length > 0 && (
+        <section className="scene" data-scene="Credentials" aria-labelledby="credentials-heading">
+          <p className="scene-eyebrow">Credentials</p>
+          <h2 id="credentials-heading" className="scene-heading">
+            Exams somebody else set and somebody else marked.
+          </h2>
+          <p className="analytics-sub rm-compact">
+            Merged from the CMS and from Credly, with the source shown so a line typed in by
+            hand is distinguishable from one a third party will confirm. Anything past its
+            renewal date says so rather than quietly passing as current.
+          </p>
+          <Credentials badges={external.badges} today={serverToday(stats)} />
+        </section>
+      )}
+
+      {external.dockerHub && (
+        <section className="scene" data-scene="Images" aria-labelledby="docker-heading">
+          <p className="scene-eyebrow">Published</p>
+          <h2 id="docker-heading" className="scene-heading">
+            Container images other people can pull.
+          </h2>
+          <DockerImages docker={external.dockerHub} />
+        </section>
+      )}
+
+      {external.articles.length > 0 && (
+        <section className="scene" data-scene="Elsewhere" aria-labelledby="articles-heading">
+          <p className="scene-eyebrow">Written elsewhere</p>
+          <h2 id="articles-heading" className="scene-heading">
+            Articles published somewhere that is not this site.
+          </h2>
+          <p className="analytics-sub rm-compact">
+            Titles, dates and tags. Claps and views are not available through anything
+            public, so there is no engagement figure here rather than an invented one.
+          </p>
+          <ExternalArticles articles={external.articles} />
+        </section>
+      )}
 
       <Provenance stats={stats} />
     </>
   );
+}
+
+/**
+ * The server's date as an ISO day, for comparing an expiry against.
+ *
+ * From the payload, never `new Date()` — a Server Component may not read the clock under
+ * Cache Components, and this is the date the data was actually gathered against anyway.
+ */
+function serverToday(stats: GitHubStats): string {
+  return stats.fetchedAt.slice(0, 10);
 }
 
 /**

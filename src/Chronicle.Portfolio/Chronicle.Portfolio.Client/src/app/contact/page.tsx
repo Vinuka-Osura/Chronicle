@@ -1,60 +1,69 @@
 import type { Metadata } from "next";
+import { Acquire } from "@/components/Acquire";
+import { SetLines } from "@/components/SetLines";
 import { ContactForm } from "./components/ContactForm";
+import { Elsewhere } from "./components/Elsewhere";
+import { getProfile } from "./profile";
+import "./contact.css";
 
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Send a message directly, or use GitHub. Nothing is stored — the form sends an email and forgets it.",
+    "Send a message directly, or find me elsewhere. Nothing is stored — the form sends an email and forgets it.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const profile = await getProfile();
+
   return (
-    <div className="mx-auto max-w-4xl">
-      <header className="mb-10">
-        <p className="mb-2 font-mono text-xs tracking-[0.2em] text-ink-faint uppercase">
-          Contact
-        </p>
-        <h1 className="text-title font-semibold">Say hello</h1>
-        <p className="mt-4 max-w-prose text-ink-soft">
-          Roles, collaborations, or a question about something on this site — all
-          welcome. Messages reach my inbox directly; nothing is stored here.
-        </p>
-      </header>
+    <>
+      <section className="contact-open" data-scene="Contact" aria-labelledby="contact-heading">
+        <div className="hero-channel">
+          <Acquire text="CONTACT" className="hero-channel-label" delay={120} />
+          <span className="hero-channel-rule" aria-hidden />
+          <Acquire text="REPLY WITHIN A FEW DAYS" className="hero-channel-label" delay={220} />
+        </div>
 
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_16rem]">
-        <ContactForm />
+        <SetLines as="h1" className="contact-heading" delay={320} id="contact-heading">
+          Roles, collaborations, or a question about something here.
+        </SetLines>
 
-        <aside className="rm-hide space-y-6 text-sm lg:border-l lg:border-rule lg:pl-8">
+        <p className="contact-lede reveal-mask">
+          Messages reach my inbox directly and nothing is written to the database — a
+          contact form is a notification, not content.
+        </p>
+      </section>
+
+      <section className="scene contact-scene" data-scene="Say hello">
+        <div className="contact-layout">
           <div>
-            <h2 className="mb-1.5 font-mono text-[0.7rem] tracking-[0.12em] text-ink-faint uppercase">
-              Elsewhere
-            </h2>
-            <ul className="space-y-1 text-ink-soft">
-              <li>
-                <a
-                  href="https://github.com/Vinuka-Osura"
-                  className="hover:text-signal"
-                  rel="me noreferrer"
-                  target="_blank"
-                >
-                  github.com/Vinuka-Osura
+            <h2 className="sr-only">Send a message</h2>
+            <ContactForm />
+          </div>
+
+          <aside className="contact-aside rm-hide">
+            <Elsewhere profile={profile} />
+
+            {profile?.email && (
+              <div>
+                <h2 className="elsewhere-title">Directly</h2>
+                <a href={`mailto:${profile.email}`} className="contact-email">
+                  {profile.email}
                 </a>
-              </li>
-            </ul>
-          </div>
+                {profile.location && <p className="contact-location">{profile.location}</p>}
+              </div>
+            )}
 
-          <div>
-            <h2 className="mb-1.5 font-mono text-[0.7rem] tracking-[0.12em] text-ink-faint uppercase">
-              What happens next
-            </h2>
-            <p className="text-ink-soft">
-              The message is emailed straight on and never written to the database — a
-              contact form is a notification, not content. Expect a reply within a few
-              days.
-            </p>
-          </div>
-        </aside>
-      </div>
-    </div>
+            <div>
+              <h2 className="elsewhere-title">What happens next</h2>
+              <p className="contact-note">
+                The message is emailed straight on and never stored. I read everything and
+                reply to anything that needs one — usually within a few days.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </>
   );
 }

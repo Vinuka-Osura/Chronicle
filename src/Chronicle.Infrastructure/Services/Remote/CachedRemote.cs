@@ -129,7 +129,12 @@ public sealed class CachedRemote<TPayload>(
             await StoreAsync(row, fresh, clock.UtcNow, cancellationToken).ConfigureAwait(false);
             return fresh;
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        // KeyNotFoundException sits with JsonException on purpose: both mean the remote
+        // payload was not the shape expected, and which one you get depends only on whether
+        // the provider used GetProperty or a parser. GitHubService lost a whole page to one
+        // of these escaping.
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException
+            or JsonException or KeyNotFoundException)
         {
             RemoteLog.RefreshFailed(logger, provider.Name, ex);
             return cached;

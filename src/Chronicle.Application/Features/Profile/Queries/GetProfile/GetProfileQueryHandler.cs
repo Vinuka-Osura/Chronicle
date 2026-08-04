@@ -20,6 +20,14 @@ public sealed class GetProfileQueryHandler(IChronicleDbContext db)
                 p.LinkedInUrl,
                 p.GitHubUrl,
                 p.WebsiteUrl,
-                p.Availability))
+                p.FacebookUrl,
+                p.InstagramUrl,
+                p.XUrl,
+                p.Availability,
+                p.GitHubUsername,
+                p.StackOverflowUserId,
+                p.CredlyUsername,
+                p.DockerHubUsername,
+                p.MediumUsername))
             .FirstOrDefaultAsync(cancellationToken);
 }
