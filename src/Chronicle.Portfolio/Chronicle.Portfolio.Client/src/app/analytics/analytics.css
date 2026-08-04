@@ -1,0 +1,657 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  Engineering Analytics
+
+  Scene rhythm and arrivals come from `app/scenes.css`; the card skeleton from
+  `globals.css`. What is here is the opening, the charts, and the readouts.
+
+  Every fill in this file animates `transform`, never `width` or `height`. A grid
+  of fifty-two weekly bars animating width is fifty-two layout writes a frame, and
+  the resting state of a scaled element is still the true value — so a browser with
+  no scroll-driven animation shows a correct chart rather than an empty one.
+  ═══════════════════════════════════════════════════════════════════════════════
+*/
+
+@layer components {
+  /* ── The opening ─────────────────────────────────────────────────────────── */
+  .analytics-open {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(52vh, 28rem);
+    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(3rem, 7vh, 5rem);
+  }
+
+  .analytics-heading {
+    max-width: 20ch;
+    margin-top: clamp(1.25rem, 3.5vh, 2rem);
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 0.99;
+    letter-spacing: -0.035em;
+  }
+
+  .analytics-lede {
+    --in-delay: 820ms;
+    max-width: 42rem;
+    margin-top: 1.5rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .analytics-sub {
+    max-width: 44rem;
+    margin-block: 0.85rem 1.75rem;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .analytics-notice {
+    max-width: 44rem;
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    border-left: 2px solid var(--color-signal);
+    background: var(--color-signal-soft);
+    border-radius: 0 0.4rem 0.4rem 0;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .analytics-notice strong {
+    color: var(--color-ink);
+  }
+
+  .analytics-empty {
+    padding: clamp(2rem, 6vh, 3rem) 1.5rem;
+    border: 1px dashed var(--color-rule);
+    border-radius: 0.85rem;
+  }
+
+  .analytics-provenance {
+    margin-top: clamp(3rem, 8vh, 5rem);
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-rule);
+    font-size: 0.72rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Chart chrome, shared by every figure on the page ────────────────────── */
+  .chart {
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .chart-head {
+    margin-bottom: 1.1rem;
+  }
+
+  .chart-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .chart-note {
+    max-width: 46rem;
+    margin-top: 0.3rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── Weekly bars, with the trailing mean over them ───────────────────────── */
+  .chart-plot {
+    position: relative;
+    height: clamp(7rem, 20vh, 10rem);
+  }
+
+  .week-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 100%;
+  }
+
+  .week-bar {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    height: 100%;
+    min-width: 0;
+  }
+
+  .week-bar-fill {
+    width: 100%;
+    /* The bar's own height is the data; the scale is what animates. */
+    height: var(--h);
+    min-height: 1px;
+    border-radius: 2px 2px 0 0;
+    background: color-mix(in oklch, var(--color-signal) 55%, transparent);
+    transform-origin: bottom;
+    transition: background-color var(--t-quick) var(--ease-move);
+  }
+
+  .week-bar:hover .week-bar-fill {
+    background: var(--color-signal);
+  }
+
+  /* Drawn over the bars, not instead of them: the smoothing must not be able to
+     hide a week it disagrees with. */
+  .week-mean {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .week-mean polyline {
+    fill: none;
+    stroke: var(--color-ink);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.75;
+  }
+
+  .chart-axis {
+    display: flex;
+    gap: 2px;
+    margin-top: 0.45rem;
+  }
+
+  .chart-tick {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-faint);
+    white-space: nowrap;
+  }
+
+  /* ── The data table behind every chart ───────────────────────────────────── */
+  .chart-data {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .chart-data summary {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+    cursor: pointer;
+  }
+
+  .chart-data summary:hover {
+    color: var(--color-signal);
+  }
+
+  .chart-table-scroll {
+    max-height: 20rem;
+    margin-top: 0.75rem;
+    overflow: auto;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.5rem;
+  }
+
+  .chart-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.76rem;
+  }
+
+  .chart-table th,
+  .chart-table td {
+    padding: 0.35rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .chart-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--color-paper-solid);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .chart-table tbody th {
+    font-weight: 400;
+    color: var(--color-ink-soft);
+  }
+
+  .chart-table td {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  /* ── Contribution mix ────────────────────────────────────────────────────── */
+  .mix-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+
+  @media (width >= 56rem) {
+    .mix-layout {
+      grid-template-columns: minmax(0, 1fr) 18rem;
+      gap: 2.5rem;
+    }
+  }
+
+  .mix {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .mix-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .mix-label {
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--color-ink);
+  }
+
+  .mix-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .mix-share {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-faint);
+  }
+
+  .mix-track {
+    display: block;
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .mix-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-signal);
+    transform: scaleX(var(--fill, 1));
+    transform-origin: left;
+  }
+
+  .mix-note {
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Private work ────────────────────────────────────────────────────────── */
+  .private-work {
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.85rem;
+    background: var(--color-paper-raised);
+  }
+
+  [data-motion="reduced"] .private-work,
+  [data-motion="still"] .private-work {
+    background: var(--color-paper-solid);
+  }
+
+  .private-work-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .private-work-figure {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .private-work-unit {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--color-ink-soft);
+  }
+
+  .private-work-note {
+    margin-top: 0.65rem;
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /* ── Consistency ─────────────────────────────────────────────────────────── */
+  .consistency {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: clamp(1.75rem, 5vh, 2.75rem);
+  }
+
+  @media (width >= 48rem) {
+    .consistency {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 2.5rem;
+    }
+  }
+
+  .consistency-ring {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .consistency-note {
+    max-width: 28rem;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .consistency-pair {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .consistency-pair dt {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .consistency-pair dd {
+    margin-top: 0.25rem;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .consistency-caveat {
+    grid-column: 1 / -1;
+    font-size: 0.76rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── All-time years ──────────────────────────────────────────────────────── */
+  .years {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+  }
+
+  .years-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .years-label,
+  .years-value {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-soft);
+  }
+
+  .years-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    color: var(--color-ink);
+  }
+
+  .years-partial {
+    font-size: 0.6rem;
+    color: var(--color-ink-faint);
+  }
+
+  .years-track {
+    display: block;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--color-rule);
+  }
+
+  .years-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--color-signal);
+    transform: scaleX(var(--fill, 1));
+    transform-origin: left;
+  }
+
+  /* Hatched, so an unfinished year cannot be read as a finished one. Not colour
+     alone — the label says "to date" as well. */
+  .years-fill.is-partial {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-signal) 0 4px,
+      color-mix(in oklch, var(--color-signal) 45%, transparent) 4px 8px
+    );
+  }
+
+  /* ── Weekday rhythm ──────────────────────────────────────────────────────── */
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    list-style: none;
+  }
+
+  .weekdays-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .weekdays-track {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    height: clamp(4rem, 12vh, 6rem);
+    border-radius: 0.3rem;
+    background: color-mix(in oklch, var(--color-rule) 45%, transparent);
+  }
+
+  .weekdays-fill {
+    width: 100%;
+    height: var(--h);
+    min-height: 2px;
+    border-radius: 0.3rem;
+    background: var(--color-signal);
+    transform-origin: bottom;
+  }
+
+  .weekdays-value {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink);
+  }
+
+  .weekdays-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Open-source participation ───────────────────────────────────────────── */
+  .participation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1rem;
+    list-style: none;
+  }
+
+  .participation-item .card-body {
+    padding-top: 1.15rem;
+  }
+
+  .participation-name {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .participation-description {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .participation-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+    margin-top: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-faint);
+  }
+
+  .participation-stars {
+    color: var(--color-signal);
+  }
+
+  .participation-icon {
+    width: 0.8rem;
+    height: 0.8rem;
+    margin-left: auto;
+  }
+}
+
+/*
+  ── The arrivals ────────────────────────────────────────────────────────────
+  Scroll-driven, so a chart draws as the reader reaches it and undraws on the way
+  back up. Gated on the motion tier exactly like `scenes.css`.
+*/
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Each weekly bar grows from the axis, a beat after the one to its left. The
+       delay comes from the bar's own index rather than nth-child, because there
+       are fifty-two of them and fifty-two selectors is not a stylesheet. */
+    :is([data-motion="full"], [data-motion="reduced"]) [data-stagger-bars] .week-bar-fill {
+      animation: bar-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 55%;
+      animation-delay: calc(var(--i) * -0.4ms);
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .week-mean polyline {
+      animation: mean-draw linear both;
+      animation-timeline: view();
+      /* The polyline carries pathLength="1" as an attribute, so one unit of dash is the
+         whole line however many weeks it spans. */
+      animation-range: entry 35% cover 70%;
+      stroke-dasharray: 1;
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .mix-fill,
+    :is([data-motion="full"], [data-motion="reduced"]) .years-fill {
+      animation: fill-x linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 58%;
+    }
+
+    :is([data-motion="full"], [data-motion="reduced"]) .weekdays-fill {
+      animation: bar-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 60%;
+    }
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes fill-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(var(--fill, 1));
+  }
+}
+
+@keyframes mean-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}

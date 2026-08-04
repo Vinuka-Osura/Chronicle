@@ -17,6 +17,14 @@ const NOT_CONNECTED: GitHubStats = {
   languages: [],
   lastCommit: null,
   repos: [],
+  breakdown: null,
+  weekly: [],
+  years: [],
+  byDayOfWeek: [],
+  contributedTo: [],
+  activeDays: 0,
+  calendarDays: 0,
+  longestGapDays: 0,
 };
 
 /**

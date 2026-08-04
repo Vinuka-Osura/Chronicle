@@ -52,7 +52,160 @@ public sealed class GetGitHubStatsQueryHandler(IGitHubService github, IDateTimeP
                 : null,
             Repos: stats.RecentRepos
                 .Select(repo => new RepoSummaryDto(repo.Name, repo.Language, repo.PushedAt, repo.Url))
-                .ToList());
+                .ToList(),
+            Breakdown: Breakdown(stats),
+            Weekly: Weekly(calendar),
+            Years: stats.ContributionYears
+                .Select(year => new YearTotalDto(year.Year, year.Contributions))
+                .ToList(),
+            ByDayOfWeek: ByDayOfWeek(calendar),
+            ContributedTo: stats.ContributedTo
+                .Select(repo => new ContributedRepoDto(
+                    repo.NameWithOwner,
+                    repo.Url,
+                    repo.Description,
+                    repo.Stars,
+                    repo.Language))
+                .ToList(),
+            ActiveDays: calendar.Count(day => day.Count > 0),
+            CalendarDays: calendar.Count,
+            LongestGapDays: LongestGap(calendar));
+    }
+
+    /// <summary>
+    /// The contribution mix, with the private repositories counted but never named.
+    /// </summary>
+    /// <remarks>
+    /// <c>CommitsByRepo</c> carries private repository names — the token's owner can see
+    /// them, so GitHub returns them. This is the boundary where that stops: only the count
+    /// crosses into the DTO. A private repository name is frequently a client's name or an
+    /// unannounced product, and publishing it because it was technically in the payload is
+    /// exactly the kind of leak nobody notices until it matters.
+    /// </remarks>
+    private static ContributionBreakdownDto? Breakdown(GitHubStats stats)
+    {
+        if (stats.Breakdown is not { } breakdown)
+        {
+            return null;
+        }
+
+        return new ContributionBreakdownDto(
+            breakdown.Commits,
+            breakdown.PullRequests,
+            breakdown.Reviews,
+            breakdown.Issues,
+            breakdown.PrivateContributions,
+            breakdown.HasPrivateContributions,
+            breakdown.RepositoriesCommittedTo,
+            stats.CommitsByRepo.Count(repo => repo.IsPrivate));
+    }
+
+    /// <summary>How many days in the window fall in each trailing-mean window.</summary>
+    private const int MeanWeeks = 4;
+
+    /// <summary>
+    /// The calendar collapsed into weeks, with a four-week trailing mean.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Weeks rather than days because 365 bars is texture, not a trend — the heatmap
+    /// already shows the daily grain, and this is the shape of the year beside it.
+    /// </para>
+    /// <para>
+    /// The first and last weeks are almost always partial: GitHub's calendar starts and
+    /// ends mid-week. They are kept, because dropping them silently loses real
+    /// contributions, and the chart labels its own range rather than pretending every
+    /// bucket is seven days.
+    /// </para>
+    /// </remarks>
+    internal static IReadOnlyList<WeekDto> Weekly(IReadOnlyList<ContributionDayDto> calendar)
+    {
+        if (calendar.Count == 0)
+        {
+            return [];
+        }
+
+        var buckets = calendar
+            .GroupBy(day => day.Date.AddDays(-(((int)day.Date.DayOfWeek + 6) % 7)))
+            .OrderBy(group => group.Key)
+            .Select(group => (Start: group.Key, Total: group.Sum(day => day.Count)))
+            .ToList();
+
+        return [.. buckets.Select((bucket, index) => new WeekDto(
+            bucket.Start,
+            bucket.Total,
+            // Null until there is a full window. An average over one week is that week.
+            index + 1 < MeanWeeks
+                ? null
+                : buckets.Skip(index + 1 - MeanWeeks).Take(MeanWeeks).Average(b => b.Total)))];
+    }
+
+    /// <summary>
+    /// Totals per weekday, and the per-occurrence mean.
+    /// </summary>
+    /// <remarks>
+    /// The mean is the honest one. A 365-day window contains 53 of one weekday and 52 of
+    /// the others, so raw totals hand one arbitrary day a 2% advantage and a reader
+    /// concludes something about Tuesdays.
+    /// </remarks>
+    internal static IReadOnlyList<DayOfWeekDto> ByDayOfWeek(IReadOnlyList<ContributionDayDto> calendar)
+    {
+        if (calendar.Count == 0)
+        {
+            return [];
+        }
+
+        // Monday first: a working week that starts on Sunday reads as a weekend split in two.
+        var order = new[]
+        {
+            DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday,
+            DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday,
+        };
+
+        var grouped = calendar
+            .GroupBy(day => day.Date.DayOfWeek)
+            .ToDictionary(group => group.Key, group => (Total: group.Sum(d => d.Count), Days: group.Count()));
+
+        return [.. order.Select(day =>
+        {
+            var found = grouped.GetValueOrDefault(day);
+            return new DayOfWeekDto(
+                day.ToString(),
+                found.Total,
+                found.Days == 0 ? 0 : (double)found.Total / found.Days);
+        })];
+    }
+
+    /// <summary>
+    /// The longest run of consecutive days with no contribution at all.
+    /// </summary>
+    /// <remarks>
+    /// The counterweight to the streak. A page that shows only the best run is a page
+    /// selecting its own evidence, and the gap is the figure that makes the streak mean
+    /// something.
+    /// </remarks>
+    internal static int LongestGap(IReadOnlyList<ContributionDayDto> calendar)
+    {
+        var longest = 0;
+        var run = 0;
+        DateOnly? previous = null;
+
+        foreach (var day in calendar)
+        {
+            if (day.Count > 0)
+            {
+                run = 0;
+            }
+            else
+            {
+                run = previous is { } last && day.Date == last.AddDays(1) ? run + 1 : 1;
+                longest = Math.Max(longest, run);
+            }
+
+            previous = day.Date;
+        }
+
+        return longest;
     }
 
     /// <summary>

@@ -17,7 +17,11 @@ public sealed record GitHubStats(
     IReadOnlyList<LanguageShare> TopLanguages,
     LastCommit? LastCommit,
     DateTimeOffset FetchedAt,
-    IReadOnlyList<RepoSummary>? RecentRepos = null)
+    IReadOnlyList<RepoSummary>? RecentRepos = null,
+    ContributionBreakdown? Breakdown = null,
+    IReadOnlyList<YearTotal>? ContributionYears = null,
+    IReadOnlyList<ContributedRepo>? ContributedTo = null,
+    IReadOnlyList<RepoCommits>? CommitsByRepo = null)
 {
     /// <summary>
     /// The most recently pushed public repositories.
@@ -30,10 +34,80 @@ public sealed record GitHubStats(
     /// </remarks>
     public IReadOnlyList<RepoSummary> RecentRepos { get; init; } = RecentRepos ?? [];
 
+    /// <summary>What the year's contributions were actually made of. Null on an old payload.</summary>
+    public ContributionBreakdown? Breakdown { get; init; } = Breakdown;
+
+    /// <summary>Totals per year, newest first, for the whole life of the account.</summary>
+    public IReadOnlyList<YearTotal> ContributionYears { get; init; } = ContributionYears ?? [];
+
+    /// <summary>Other people's repositories this account has contributed to.</summary>
+    public IReadOnlyList<ContributedRepo> ContributedTo { get; init; } = ContributedTo ?? [];
+
+    /// <summary>Where the year's commits went, private repositories included as a count.</summary>
+    public IReadOnlyList<RepoCommits> CommitsByRepo { get; init; } = CommitsByRepo ?? [];
+
     /// <summary>Served when GitHub has never been reached, so the UI has something honest to render.</summary>
     public static GitHubStats Empty(DateTimeOffset fetchedAt) =>
         new(0, 0, [], [], null, fetchedAt);
 }
+
+/// <summary>
+/// What the contribution total is actually made of, over the same window as the calendar.
+/// </summary>
+/// <remarks>
+/// <para>
+/// The headline "contributions" number is four different activities added together, and
+/// a reader cannot tell a year of commits from a year of code review by looking at it.
+/// These are the parts.
+/// </para>
+/// <para>
+/// <see cref="PrivateContributions"/> is GitHub's <c>restrictedContributionsCount</c> — work
+/// in repositories the viewer cannot see. It is **zero unless the account owner has turned
+/// on "Include private contributions on my profile"**, which is the whole reason it can be
+/// shown at all: the number is published by the person it describes, deliberately, and it
+/// reveals a count and nothing else. No repository name, no commit message, no employer.
+/// </para>
+/// </remarks>
+public sealed record ContributionBreakdown(
+    int Commits,
+    int PullRequests,
+    int Reviews,
+    int Issues,
+    int PrivateContributions,
+    bool HasPrivateContributions,
+    int RepositoriesCommittedTo);
+
+/// <summary>One year of the account's life, for the all-time view.</summary>
+public sealed record YearTotal(int Year, int Contributions);
+
+/// <summary>
+/// A repository belonging to somebody else that this account has contributed to.
+/// </summary>
+/// <remarks>
+/// The strongest claim on the page, and the hardest to fake: a merged pull request into a
+/// project you do not own is a third party agreeing your work was good enough to keep.
+/// </remarks>
+public sealed record ContributedRepo(
+    string NameWithOwner,
+    string Url,
+    string? Description,
+    int Stars,
+    string? Language);
+
+/// <summary>
+/// How many commits went to one repository this year.
+/// </summary>
+/// <param name="IsPrivate">
+/// True for a repository the reader cannot open. The name is still carried because the
+/// token's owner can see it — the DTO layer is what decides whether to publish it, and it
+/// does not.
+/// </param>
+public sealed record RepoCommits(
+    string NameWithOwner,
+    string? Url,
+    int Commits,
+    bool IsPrivate,
+    bool IsFork);
 
 public sealed record ContributionDay(DateOnly Date, int Count);
 

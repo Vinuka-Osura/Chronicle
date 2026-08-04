@@ -9,11 +9,13 @@ import type { GitHubStats } from "@/lib/types";
  * handful of headline figures, the number is the chart.
  */
 export function StatTiles({ stats }: { stats: GitHubStats }) {
+  const { breakdown } = stats;
+
   const tiles = [
     {
       label: "Contributions this year",
       value: stats.contributionsLastYear,
-      note: "Commits, reviews and issues, last 12 months",
+      note: "Commits, pull requests, reviews and issues, last 12 months",
     },
     {
       label: "Public repositories",
@@ -32,6 +34,36 @@ export function StatTiles({ stats }: { stats: GitHubStats }) {
       note: "Best run in the last 12 months",
       unit: "days",
     },
+    // Only once there is a GraphQL token behind them. A tile reading zero because the
+    // figure was never fetched is worse than no tile, because it looks like a measurement.
+    ...(breakdown
+      ? [
+          {
+            label: "Repositories committed to",
+            value: breakdown.repositoriesCommittedTo,
+            note: "Distinct repositories touched this year, private ones included",
+          },
+          {
+            label: "Pull requests",
+            value: breakdown.pullRequests,
+            note: "Changes proposed, mine and other people's projects",
+          },
+          {
+            label: "Reviews",
+            value: breakdown.reviews,
+            note: "Other people's pull requests read and responded to",
+          },
+        ]
+      : []),
+    ...(stats.contributedTo.length > 0
+      ? [
+          {
+            label: "Projects I don't own",
+            value: stats.contributedTo.length,
+            note: "Repositories where a maintainer merged my work",
+          },
+        ]
+      : []),
   ];
 
   return (

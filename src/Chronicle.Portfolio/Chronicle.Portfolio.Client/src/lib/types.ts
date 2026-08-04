@@ -269,6 +269,58 @@ export interface ContributionDay {
   count: number;
 }
 
+/**
+ * What the headline contribution number is made of.
+ *
+ * The four activity counts sum to the year's total, which is the rare case on this page
+ * where a proportional reading is honest — there is a real denominator.
+ *
+ * `privateContributions` is GitHub's `restrictedContributionsCount`: work in repositories
+ * a reader cannot open. It is zero unless the account owner has turned on "Include private
+ * contributions on my profile", which is what makes it publishable — the count is
+ * disclosed deliberately, and carries no repository name, message or employer with it.
+ */
+export interface ContributionBreakdown {
+  commits: number;
+  pullRequests: number;
+  reviews: number;
+  issues: number;
+  privateContributions: number;
+  hasPrivateContributions: boolean;
+  repositoriesCommittedTo: number;
+  /** Counted, never named. A private repository name is often a client's name. */
+  privateRepositoriesCommittedTo: number;
+}
+
+export interface Week {
+  /** The Monday the week begins on. */
+  weekStart: IsoDate;
+  total: number;
+  /** Four-week trailing mean; null for the first three weeks, where there is no window. */
+  mean: number | null;
+}
+
+export interface YearTotal {
+  year: number;
+  contributions: number;
+}
+
+export interface DayOfWeekTotal {
+  day: string;
+  total: number;
+  /** Per occurrence of this weekday, so a year with 53 Mondays does not read high. */
+  mean: number;
+}
+
+/** A repository owned by someone else that this account has contributed to. */
+export interface ContributedRepo {
+  nameWithOwner: string;
+  url: string;
+  description: string | null;
+  stars: number;
+  language: string | null;
+}
+
 export interface RepoSummary {
   name: string;
   language: string | null;
@@ -303,4 +355,17 @@ export interface GitHubStats {
   lastCommit: LastCommit | null;
   /** Most recently pushed public repositories. Empty until GitHub has been reached. */
   repos: RepoSummary[];
+  /** Null on a payload cached before the breakdown existed, or with no GraphQL token. */
+  breakdown: ContributionBreakdown | null;
+  /** The year as a series, one bucket per week, with a trailing mean. */
+  weekly: Week[];
+  /** One total per year, oldest first, for the life of the account. */
+  years: YearTotal[];
+  byDayOfWeek: DayOfWeekTotal[];
+  contributedTo: ContributedRepo[];
+  /** Days with at least one contribution, over `calendarDays` — a real denominator. */
+  activeDays: number;
+  calendarDays: number;
+  /** The longest run of days with nothing at all. The counterweight to the streak. */
+  longestGapDays: number;
 }
