@@ -75,7 +75,9 @@ public sealed record ContributionBreakdown(
     int Issues,
     int PrivateContributions,
     bool HasPrivateContributions,
-    int RepositoriesCommittedTo);
+    int RepositoriesCommittedTo,
+    /// <summary>How many of those repositories a reader cannot open. Counted, never named.</summary>
+    int PrivateRepositoriesCommittedTo = 0);
 
 /// <summary>One year of the account's life, for the all-time view.</summary>
 public sealed record YearTotal(int Year, int Contributions);

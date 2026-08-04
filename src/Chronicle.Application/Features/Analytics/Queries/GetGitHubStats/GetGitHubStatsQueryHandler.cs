@@ -97,7 +97,7 @@ public sealed class GetGitHubStatsQueryHandler(IGitHubService github, IDateTimeP
             breakdown.PrivateContributions,
             breakdown.HasPrivateContributions,
             breakdown.RepositoriesCommittedTo,
-            stats.CommitsByRepo.Count(repo => repo.IsPrivate));
+            breakdown.PrivateRepositoriesCommittedTo);
     }
 
     /// <summary>How many days in the window fall in each trailing-mean window.</summary>

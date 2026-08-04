@@ -294,17 +294,23 @@ public sealed class GitHubService(
             }
         }
 
-        var breakdown = new ContributionBreakdown(
-            Commits: Int(collection, "totalCommitContributions"),
-            PullRequests: Int(collection, "totalPullRequestContributions"),
-            Reviews: Int(collection, "totalPullRequestReviewContributions"),
-            Issues: Int(collection, "totalIssueContributions"),
-            PrivateContributions: Int(collection, "restrictedContributionsCount"),
-            HasPrivateContributions:
-                collection.TryGetProperty("hasAnyRestrictedContributions", out var restricted)
-                && restricted.ValueKind is JsonValueKind.True,
-            RepositoriesCommittedTo: Int(collection, "totalRepositoriesWithContributedCommits"));
+        /*
+          The private figure, worked out rather than read off a field.
 
+          `restrictedContributionsCount` is the obvious candidate and it is the wrong one.
+          It counts contributions **the viewer cannot access** — and the viewer here is the
+          account's own token, which GitHub treats as able to reach its owner's private
+          repositories in principle. So it reads 0 for us and is only non-zero when a
+          stranger looks at the profile. A panel keyed to it could never appear on this site.
+
+          What GitHub does tell us is the difference between two honest numbers: the totals
+          count every repository, while `commitContributionsByRepository` only returns the
+          ones this token may enumerate. Subtract, and what remains is real private work —
+          measured, not estimated, and still carrying no repository name with it.
+
+          `restrictedContributionsCount` is kept as a floor for the case where it is the
+          larger of the two, so a stranger's view is never understated.
+        */
         var years = collection.TryGetProperty("contributionYears", out var yearList)
             ? yearList.EnumerateArray().Select(y => y.GetInt32()).ToList()
             : [];
@@ -325,6 +331,24 @@ public sealed class GitHubService(
                     IsFork: repository.GetProperty("isFork").ValueKind is JsonValueKind.True));
             }
         }
+
+        var totalCommits = Int(collection, "totalCommitContributions");
+        var totalRepos = Int(collection, "totalRepositoriesWithContributedCommits");
+        var visibleCommits = commitsByRepo.Sum(repo => repo.Commits);
+
+        var hiddenCommits = Math.Max(
+            Math.Max(0, totalCommits - visibleCommits),
+            Int(collection, "restrictedContributionsCount"));
+
+        var breakdown = new ContributionBreakdown(
+            Commits: totalCommits,
+            PullRequests: Int(collection, "totalPullRequestContributions"),
+            Reviews: Int(collection, "totalPullRequestReviewContributions"),
+            Issues: Int(collection, "totalIssueContributions"),
+            PrivateContributions: hiddenCommits,
+            HasPrivateContributions: hiddenCommits > 0,
+            RepositoriesCommittedTo: totalRepos,
+            PrivateRepositoriesCommittedTo: Math.Max(0, totalRepos - commitsByRepo.Count));
 
         var contributedTo = new List<ContributedRepo>();
 

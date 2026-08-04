@@ -82,6 +82,19 @@
     list-style: none;
   }
 
+  /* Time-based, not scroll-driven — see the note in SectionGuide.tsx. It runs once on
+     load and is over before anyone has scrolled far enough to care. */
+  @media (prefers-reduced-motion: no-preference) {
+    :is([data-motion="full"], [data-motion="reduced"]) .guide-list > * {
+      animation: guide-in 420ms var(--ease-set) both;
+      animation-delay: calc(var(--in-delay, 900ms) + var(--i, 0) * 60ms);
+    }
+
+    .guide-list > *:nth-child(2) { --i: 1; }
+    .guide-list > *:nth-child(3) { --i: 2; }
+    .guide-list > *:nth-child(4) { --i: 3; }
+  }
+
   .guide-link {
     display: inline-flex;
     align-items: baseline;
@@ -156,6 +169,46 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
     gap: 1.15rem;
+  }
+
+  /*
+    A hairline between rows.
+
+    Cards on a dark surface with a moving background behind them lose their edges — the
+    grid reads as items floating at arbitrary distances rather than as a list. The rule
+    is drawn on the row above rather than on each card, so it spans the full column width
+    and does not appear under the last row.
+  */
+  .article-grid > li {
+    position: relative;
+    padding-bottom: 1.15rem;
+  }
+
+  .article-grid > li::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-rule),
+      color-mix(in oklch, var(--color-rule) 15%, transparent)
+    );
+  }
+
+  /* No trailing rule under the final row: a separator after the last item separates it
+     from nothing. */
+  .article-grid > li:last-child::after {
+    display: none;
+  }
+
+  @media (width >= 46rem) {
+    /* Two columns, so the last two share the final row. */
+    .article-grid > li:nth-last-child(-n + 2):nth-child(odd)::after,
+    .article-grid > li:nth-last-child(-n + 2):nth-child(odd) + li::after {
+      display: none;
+    }
   }
 
   .article-results {
@@ -570,5 +623,16 @@
   to {
     background: var(--color-signal);
     transform: scaleX(1);
+  }
+}
+
+@keyframes guide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.5rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

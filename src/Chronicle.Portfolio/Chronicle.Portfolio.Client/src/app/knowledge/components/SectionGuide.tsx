@@ -65,7 +65,16 @@ export function SectionGuide({ entries }: { entries: GuideEntry[] }) {
 
   return (
     <nav className="guide rm-hide" aria-label="Sections on this page">
-      <ul className="guide-list" data-stagger data-slide>
+      {/*
+        No `data-stagger` here, deliberately.
+
+        A `view()` timeline freezes the moment its element sticks — the same lesson the
+        pinned Outcomes scene taught and `docs/motion-plan.md` records. The guide is
+        sticky by definition, so a scroll-driven arrival left the chips stranded
+        part-faded at 0.7, 0.6, 0.5 opacity for as long as they were on screen. It gets a
+        plain time-based entrance instead, which finishes and stays finished.
+      */}
+      <ul className="guide-list">
         {entries.map((entry) => (
           <li key={entry.id}>
             <a
