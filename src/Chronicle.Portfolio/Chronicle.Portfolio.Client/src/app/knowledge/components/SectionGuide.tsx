@@ -64,7 +64,16 @@ export function SectionGuide({ entries }: { entries: GuideEntry[] }) {
   if (entries.length < 2) return null;
 
   return (
-    <nav className="guide rm-hide" aria-label="Sections on this page">
+    /*
+      Deliberately NOT `rm-hide`.
+
+      Almost everything atmospheric is hidden in Recruiter Mode, but this is the opposite
+      of atmosphere: a recruiter is the reader most likely to want one section and not the
+      other three, and the counts answer "is there anything here" before the scroll does.
+      Hiding the fastest route to the credentials from the person who came for them would
+      be exactly backwards.
+    */
+    <nav className="guide" aria-label="Sections on this page">
       {/*
         No `data-stagger` here, deliberately.
 
