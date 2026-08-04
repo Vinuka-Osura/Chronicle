@@ -29,6 +29,7 @@ public class ChronicleDbContext(DbContextOptions<ChronicleDbContext> options)
     public DbSet<SiteStatus> SiteStatuses => Set<SiteStatus>();
     public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<GitHubStatsCache> GitHubStatsCaches => Set<GitHubStatsCache>();
+    public DbSet<ExternalStatsCache> ExternalStatsCaches => Set<ExternalStatsCache>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

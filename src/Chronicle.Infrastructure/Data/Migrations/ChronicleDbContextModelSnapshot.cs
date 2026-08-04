@@ -50,6 +50,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<DateOnly?>("ExpiryDate")
+                        .HasColumnType("date");
+
                     b.Property<DateOnly>("IssueDate")
                         .HasColumnType("date");
 
@@ -57,6 +60,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
 
                     b.Property<string>("LogoUrl")
                         .HasMaxLength(500)
@@ -75,8 +81,9 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IssueDate")
-                        .IsDescending();
+                    b.HasIndex("Kind", "IssueDate")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_Certifications_Kind_IssueDate");
 
                     b.ToTable("profile_certifications", (string)null);
                 });
@@ -166,6 +173,33 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsDescending();
 
                     b.ToTable("portfolio_experiences", (string)null);
+                });
+
+            modelBuilder.Entity("Chronicle.Domain.Entities.ExternalStatsCache", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("FetchedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ExternalStats_Provider");
+
+                    b.ToTable("site_external_stats", (string)null);
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.GitHubStatsCache", b =>
@@ -397,6 +431,14 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CredlyUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("DockerHubUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -411,6 +453,10 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("GitHubUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Headline")
                         .IsRequired()
                         .HasMaxLength(160)
@@ -424,7 +470,15 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
 
+                    b.Property<string>("MediumUsername")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("StackOverflowUserId")
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
 

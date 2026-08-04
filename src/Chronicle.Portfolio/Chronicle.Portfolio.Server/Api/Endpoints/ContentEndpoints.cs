@@ -3,6 +3,7 @@ using Chronicle.Application.Features.Analytics;
 using Chronicle.Application.Features.CareerGraph;
 using Chronicle.Application.Features.CareerGraph.Queries.GetCareerGraph;
 using Chronicle.Application.Features.Analytics.Queries.GetGitHubStats;
+using Chronicle.Application.Features.Analytics.Queries.GetExternalStats;
 using Chronicle.Application.Features.Certifications;
 using Chronicle.Application.Features.Certifications.Queries.GetCertifications;
 using Chronicle.Application.Features.Experience;
@@ -143,6 +144,19 @@ public static class ContentEndpoints
                 "images, because that is what an applicant-tracking system can read.")
             .Produces<IResult>(StatusCodes.Status200OK, "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
             .CacheOutput(p => p.Expire(TimeSpan.FromSeconds(60)).Tag(ResumeTags))
+            .RequireRateLimiting("api");
+
+        app.MapGet("/api/external/stats", (ISender sender, CancellationToken ct) =>
+                sender.Send(new GetExternalStatsQuery(), ct))
+            .WithTags("Analytics")
+            .WithName("GetExternalStats")
+            .WithSummary("Stack Overflow, credentials, Docker Hub and Medium")
+            .WithDescription(
+                "Each source is independent and each may be absent. Absent means the service is " +
+                "not configured or has nothing to show, and its section is not rendered — never a " +
+                "zero, which would be a different and usually false claim.")
+            .Produces<ExternalStatsDto>()
+            .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(10)).Tag(CacheTags.ExternalStats))
             .RequireRateLimiting("api");
 
         app.MapGet("/api/career-graph", (ISender sender, CancellationToken ct) =>

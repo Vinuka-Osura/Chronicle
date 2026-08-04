@@ -66,4 +66,33 @@ public class Profile : AuditableEntity
     /// relocation. Rendered only when set, because an empty heading reads as an omission.
     /// </summary>
     public string? Availability { get; set; }
+
+    // ── Handles on other platforms ──────────────────────────────────────────────
+    //
+    // These are what the Analytics page fetches from, and they live here rather than in
+    // configuration for two reasons. They are public identifiers, not secrets, so nothing
+    // is gained by hiding them; and a username in appsettings.json cannot be changed
+    // without a redeploy, which contradicts the rule that everything on the public site is
+    // editable in the CMS.
+    //
+    // The GitHub *token* stays in configuration. It is a secret, and a secret in a
+    // database travels with every backup, dump and restored test copy of it.
+    //
+    // A null or blank handle means the provider makes no network call at all and its
+    // section does not render. There is deliberately no fallback to configuration: a stale
+    // config value could otherwise resurrect a handle that was deliberately cleared.
+
+    /// <summary>GitHub login, e.g. <c>Vinuka-Osura</c>. Not the profile URL.</summary>
+    public string? GitHubUsername { get; set; }
+
+    /// <summary>The numeric id from a Stack Overflow profile URL, e.g. <c>23785133</c>.</summary>
+    public string? StackOverflowUserId { get; set; }
+
+    /// <summary>Credly username. The profile must be public for the badge feed to answer.</summary>
+    public string? CredlyUsername { get; set; }
+
+    public string? DockerHubUsername { get; set; }
+
+    /// <summary>Medium username, stored without the leading <c>@</c>.</summary>
+    public string? MediumUsername { get; set; }
 }

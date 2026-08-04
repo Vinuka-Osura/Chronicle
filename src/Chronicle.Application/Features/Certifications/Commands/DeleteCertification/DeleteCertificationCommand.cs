@@ -27,7 +27,7 @@ public sealed class DeleteCertificationCommandHandler(
         db.Certifications.Remove(certification);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        await cache.EvictAsync(cancellationToken, CacheTags.Certifications, CacheTags.Skills)
+        await cache.EvictAsync(cancellationToken, CacheTags.Certifications, CacheTags.Skills, CacheTags.ExternalStats)
             .ConfigureAwait(false);
     }
 }

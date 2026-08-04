@@ -1,10 +1,13 @@
+using System.Net;
 using System.Net.Http.Headers;
 using Chronicle.Application.Common.Interfaces;
+using Chronicle.Application.Common.Models;
 using Chronicle.Infrastructure.Data;
 using Chronicle.Infrastructure.Data.Interceptors;
 using Chronicle.Infrastructure.Identity;
 using Chronicle.Infrastructure.Services;
 using Chronicle.Infrastructure.Services.Media;
+using Chronicle.Infrastructure.Services.Remote;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -64,6 +67,8 @@ public static class DependencyInjection
             // reader actually sees, so giving up early costs nothing.
             client.Timeout = TimeSpan.FromSeconds(15);
         });
+
+        AddRemoteProviders(services, configuration);
 
         // Handlers depend on the interface; both resolve to the same scoped instance,
         // so a handler and the initialiser share one change tracker per request.
@@ -126,6 +131,62 @@ public static class DependencyInjection
     /// operator uses; silently doing nothing would let uploads appear to succeed and
     /// vanish. A working fallback plus a log line is the honest middle.
     /// </remarks>
+    /// <summary>
+    /// The four non-GitHub services, each a typed client plus a <see cref="CachedRemote{T}"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All four are anonymous — no key, no account, no billing relationship. The handles
+    /// they need come from the <c>Profile</c> row rather than configuration, so nothing
+    /// here reads a username; only the base address and headers are fixed at this point.
+    /// </para>
+    /// <para>
+    /// Each inherits the resilience handler from ServiceDefaults, and each gets the same
+    /// short timeout as GitHub: the cached payload is what a reader actually sees, so
+    /// giving up early on a slow third party costs nothing.
+    /// </para>
+    /// </remarks>
+    private static void AddRemoteProviders(IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<RemoteCacheOptions>(configuration.GetSection(RemoteCacheOptions.SectionName));
+
+        AddProvider<StackOverflowProvider, StackOverflowStats>(
+            services,
+            "https://api.stackexchange.com/2.3/",
+            // Stack Exchange responds gzipped whatever the request asks for. Without
+            // automatic decompression every response is binary and every parse fails.
+            gzip: true);
+
+        AddProvider<CredlyProvider, CredlyBadges>(services, "https://www.credly.com/");
+        AddProvider<DockerHubProvider, DockerHubStats>(services, "https://hub.docker.com/");
+        AddProvider<MediumProvider, MediumFeed>(services, "https://medium.com/");
+
+        services.AddScoped(typeof(IRemoteStats<>), typeof(CachedRemote<>));
+    }
+
+    private static void AddProvider<TProvider, TPayload>(
+        IServiceCollection services,
+        string baseAddress,
+        bool gzip = false)
+        where TProvider : class, IRemoteStatsProvider<TPayload>
+        where TPayload : class
+    {
+        var builder = services.AddHttpClient<IRemoteStatsProvider<TPayload>, TProvider>(client =>
+        {
+            client.BaseAddress = new Uri(baseAddress);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Chronicle-Portfolio/1.0");
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+
+        if (gzip)
+        {
+            builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+            });
+        }
+    }
+
     private static void AddMediaStorage(IServiceCollection services, IConfiguration configuration)
     {
         var options = configuration

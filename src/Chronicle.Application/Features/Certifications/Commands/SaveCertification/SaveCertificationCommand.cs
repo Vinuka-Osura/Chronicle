@@ -99,7 +99,7 @@ public sealed class SaveCertificationCommandHandler(
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // Skills too: the skills page shows which credentials attest to each one.
-        await cache.EvictAsync(cancellationToken, CacheTags.Certifications, CacheTags.Skills)
+        await cache.EvictAsync(cancellationToken, CacheTags.Certifications, CacheTags.Skills, CacheTags.ExternalStats)
             .ConfigureAwait(false);
 
         return certification.Id;

@@ -23,6 +23,14 @@ public sealed class ProfileConfiguration : IEntityTypeConfiguration<Profile>
         builder.Property(p => p.WebsiteUrl).HasMaxLength(300);
         builder.Property(p => p.Availability).HasMaxLength(300);
 
+        // Handles on other platforms. Short by nature — these are usernames, not URLs, so
+        // the provider owns the address format and a change of theirs is one line here.
+        builder.Property(p => p.GitHubUsername).HasMaxLength(100);
+        builder.Property(p => p.StackOverflowUserId).HasMaxLength(40);
+        builder.Property(p => p.CredlyUsername).HasMaxLength(100);
+        builder.Property(p => p.DockerHubUsername).HasMaxLength(100);
+        builder.Property(p => p.MediumUsername).HasMaxLength(100);
+
         // Single-row table, enforced the same way site_status is: the admin screen offers
         // only an edit form, but a stray insert would otherwise leave two people on one CV.
         builder.ToTable("site_profile", t => t.HasCheckConstraint(

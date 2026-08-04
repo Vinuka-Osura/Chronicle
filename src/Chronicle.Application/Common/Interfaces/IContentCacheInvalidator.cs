@@ -37,6 +37,16 @@ public static class CacheTags
     public const string GitHubStats = "github-stats";
 
     /// <summary>
+    /// Stack Overflow, Credly, Docker Hub and Medium.
+    /// </summary>
+    /// <remarks>
+    /// Evicted by the certifications commands, unlike <see cref="GitHubStats"/>: the
+    /// credential list is a merge of Credly badges and CMS rows, so editing a certification
+    /// really does change what this endpoint returns.
+    /// </remarks>
+    public const string ExternalStats = "external-stats";
+
+    /// <summary>
     /// Tags invalidated by a change to any dated content, because the Timeline and the
     /// career graph are merged projections over several entities at once.
     /// </summary>

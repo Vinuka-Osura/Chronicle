@@ -31,6 +31,7 @@ public interface IChronicleDbContext
     DbSet<SiteStatus> SiteStatuses { get; }
     DbSet<Profile> Profiles { get; }
     DbSet<GitHubStatsCache> GitHubStatsCaches { get; }
+    DbSet<ExternalStatsCache> ExternalStatsCaches { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
