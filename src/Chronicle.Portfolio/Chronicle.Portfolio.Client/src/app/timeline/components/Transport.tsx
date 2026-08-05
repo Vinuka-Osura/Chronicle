@@ -1,61 +1,147 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { scrollToTop } from "@/lib/scroll";
-import type { Timeline, TimelineItemType } from "@/lib/types";
-import { areaPath } from "../curve";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { scrollToOffset, scrollToTop } from "@/lib/scroll";
+import type { Timeline } from "@/lib/types";
+import { smoothPath } from "../curve";
 import { buildDensity, type Density } from "../density";
 import { useActiveLenses } from "../useActiveLenses";
 
-/** Viewport height of the plot, in the same units the paths are built in. */
-const PLOT = 34;
+/** Height of the plot, in the units the paths are built in. */
+const PLOT = 40;
 
-/** Marks are drawn at these heights above the axis so a cluster does not overlap. */
-const MARK_ROW: Partial<Record<TimelineItemType, number>> = {
-  certification: 4,
-  roadmap: 4,
-  milestone: 9,
-};
+/** Where a year marker sits relative to the top of the viewport once scrolled to. */
+const HEADER = 96;
 
-const MARK_GLYPH: Partial<Record<TimelineItemType, string>> = {
-  certification: "◆",
-  roadmap: "○",
-  milestone: "▲",
-};
+/** A known (month, scroll offset) pair, used to map the page onto the time axis. */
+interface Anchor {
+  month: number;
+  top: number;
+}
 
 /**
- * The whole career as one readable shape, and the control for moving through it.
+ * The whole career as five curves, and the control for moving through it.
  *
- * Replaces a row of year buttons that could only be clicked, had no position-to-date
- * mapping at all, and drew a bar only for years that happened to contain a start date —
- * so an empty year simply vanished from the axis and the spacing lied about time.
+ * ── Why five lines rather than one stacked area ────────────────────────────────────
  *
- * It also absorbs the site's `StatusBar`, which stands down here. That was always the
- * intent: two bars competing for the same bottom edge is one too many, and the percentage
- * and back-to-top belong with the thing that already knows where you are.
+ * The first build stacked three bands. Stacking answers "how much in total", and reading
+ * one kind out of it means subtracting the layers underneath by eye — every band above the
+ * first sits on a moving floor, so its shape is distorted by its neighbours'. Overlaid
+ * lines all sit on the same zero, so "when was I studying" is a question you answer by
+ * looking. The totals still exist, in the table under `Show the numbers`.
+ *
+ * ── Why the playhead maps through the year markers ─────────────────────────────────
+ *
+ * A dot placed at `scrollY / scrollHeight` would be continuous but wrong: the page is not
+ * linear in time, so the dot would sit over 2023 while the reader was looking at 2021. A
+ * dot placed by the nearest section would be right but would jump. Measuring where each
+ * year heading actually is and interpolating between them is continuous AND correct, and
+ * the same function run backwards is what dragging uses — so the two directions cannot
+ * disagree about where "here" is.
  */
 export function Transport({ timeline }: { timeline: Timeline }) {
   const density = useMemo(() => buildDensity(timeline), [timeline]);
+  const clipId = useId();
+
   const [percent, setPercent] = useState(0);
-  const [window_, setWindow] = useState({ from: 0, to: 0 });
+  /** Fractional month index under the playhead. */
+  const [head, setHead] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
   const trackRef = useRef<HTMLDivElement>(null);
+  const anchors = useRef<Anchor[]>([]);
 
   /*
     The same subscription the context bar reads from, so the chips, the cards and this
     chart cannot disagree about what is showing.
 
     Not a `useState` filled by an effect, which is what this was first: on the server that
-    leaves the array empty, so the HTML shipped with no bands at all and the whole chart
+    leaves the array empty, so the HTML shipped with no lines at all and the whole chart
     appeared only after hydration. `useActiveLenses` answers "all of them" on the server,
     which is both the documented default and what a reader without JavaScript should see.
   */
   const lenses: string[] = useActiveLenses();
 
-  /*
-    Where the reader is, as a fraction of the page and as a window on the span.
+  const width = density.months.length;
+  const lastMonth = Math.max(1, width - 1);
 
-    rAF-throttled: the control this replaces called setState on every scroll event, which
-    on a page this long is hundreds of renders during one flick.
+  /*
+    Rebuild the scroll↔month map.
+
+    Re-measured on resize AND on a lens change, not just on mount: filtering hides cards,
+    which changes every year heading's offset. A map measured once would put the playhead
+    further from the truth the more the reader filtered.
+  */
+  const remeasure = useCallback(() => {
+    const found: Anchor[] = [];
+
+    for (const year of density.years) {
+      const el = document.querySelector<HTMLElement>(`[data-year-marker="${year.year}"]`);
+      if (!el || el.offsetParent === null) continue;
+      found.push({
+        month: year.at,
+        top: el.getBoundingClientRect().top + globalThis.scrollY - HEADER,
+      });
+    }
+
+    const max = Math.max(1, document.documentElement.scrollHeight - globalThis.innerHeight);
+
+    // Bookends, so the run-up before the first year and the tail after the last map to
+    // time as well. Without them the dot would sit still through the whole header.
+    const bounded: Anchor[] = [{ month: 0, top: 0 }];
+
+    for (const a of found) {
+      const previous = bounded[bounded.length - 1];
+      // Strictly increasing on both axes, or the interpolation divides by zero and its
+      // inverse stops being a function.
+      if (a.top > previous.top && a.month > previous.month) bounded.push(a);
+    }
+
+    const tail = bounded[bounded.length - 1];
+    if (max > tail.top && lastMonth > tail.month) bounded.push({ month: lastMonth, top: max });
+
+    anchors.current = bounded;
+  }, [density.years, lastMonth]);
+
+  /** Scroll offset → fractional month, interpolated between measured anchors. */
+  const monthAt = useCallback((top: number) => {
+    const list = anchors.current;
+    if (list.length < 2) return 0;
+
+    for (let i = 1; i < list.length; i++) {
+      if (top <= list[i].top) {
+        const a = list[i - 1];
+        const b = list[i];
+        return a.month + ((top - a.top) / (b.top - a.top)) * (b.month - a.month);
+      }
+    }
+
+    return list[list.length - 1].month;
+  }, []);
+
+  /** The inverse: fractional month → scroll offset. */
+  const offsetAt = useCallback((month: number) => {
+    const list = anchors.current;
+    if (list.length < 2) return 0;
+
+    for (let i = 1; i < list.length; i++) {
+      if (month <= list[i].month) {
+        const a = list[i - 1];
+        const b = list[i];
+        return a.top + ((month - a.month) / (b.month - a.month)) * (b.top - a.top);
+      }
+    }
+
+    return list[list.length - 1].top;
+  }, []);
+
+  /*
+    Where the reader is, recomputed on every frame the page moves.
+
+    rAF-throttled rather than debounced: the dot has to track the scroll as it happens, so
+    coalescing to one update per frame is exactly right and waiting for the scroll to end
+    would be exactly wrong. The control this replaced called setState on every scroll
+    event, which on a page this long is hundreds of renders during one flick.
   */
   useEffect(() => {
     let frame = 0;
@@ -64,159 +150,232 @@ export function Transport({ timeline }: { timeline: Timeline }) {
       frame = 0;
 
       const total = document.documentElement.scrollHeight - globalThis.innerHeight;
-      const ratio = total > 0 ? Math.min(1, Math.max(0, globalThis.scrollY / total)) : 0;
-      setPercent(Math.round(ratio * 100));
+      const y = globalThis.scrollY;
 
-      // The visible slice of the page, mapped onto the span. Approximate by design: the
-      // stream is not linear in time, and a window that claimed to be exact would be
-      // wrong in a way nobody could see.
-      const height = document.documentElement.scrollHeight || 1;
-      setWindow({
-        from: globalThis.scrollY / height,
-        to: (globalThis.scrollY + globalThis.innerHeight) / height,
-      });
+      setPercent(total > 0 ? Math.round(Math.min(1, Math.max(0, y / total)) * 100) : 0);
+      setHead(monthAt(y));
     };
 
     const onScroll = () => {
       if (frame === 0) frame = requestAnimationFrame(measure);
     };
 
+    const onResize = () => {
+      remeasure();
+      onScroll();
+    };
+
+    remeasure();
     measure();
+
     globalThis.addEventListener("scroll", onScroll, { passive: true });
-    globalThis.addEventListener("resize", onScroll, { passive: true });
+    globalThis.addEventListener("resize", onResize, { passive: true });
 
     return () => {
       cancelAnimationFrame(frame);
       globalThis.removeEventListener("scroll", onScroll);
-      globalThis.removeEventListener("resize", onScroll);
+      globalThis.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [monthAt, remeasure]);
 
-  const shown = density.bands.filter((band) => lenses.includes(band.key));
-  const marks = density.marks.filter((mark) => lenses.includes(mark.type));
+  // A lens change re-lays-out the stream beneath, so the map has to be rebuilt. One frame
+  // later, because the CSS that hides the cards has not applied when this effect runs.
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      remeasure();
+      setHead(monthAt(globalThis.scrollY));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [lenses, monthAt, remeasure]);
+
+  const shown = useMemo(
+    () => density.series.filter((s) => lenses.includes(s.key)),
+    [density.series, lenses],
+  );
 
   /*
     Scaled against the peak of what is CURRENTLY SHOWN, not the all-lens peak.
 
-    Isolating one band would otherwise draw it as a sliver at the bottom of a scale set by
-    bands that are no longer there, and the whole point of isolating it is to see its
-    shape. The axis is unlabelled and comparative, so rescaling misleads nobody.
+    Isolating one kind would otherwise draw it as a flat line at the bottom of a scale set
+    by series that are no longer there, and the whole point of isolating it is to see its
+    shape. The axis is unlabelled and comparative, so rescaling misleads nobody — and the
+    table carries the actual numbers.
   */
   const peak = useMemo(() => {
     let max = 0;
-    for (let i = 0; i < density.months.length; i++) {
-      let total = 0;
-      for (const band of shown) total += band.values[i];
-      if (total > max) max = total;
-    }
+    for (const s of shown) for (const v of s.values) if (v > max) max = v;
     return Math.max(1, max);
-  }, [shown, density.months.length]);
+  }, [shown]);
 
-  // Stack upwards, so band n is drawn on the shoulders of the ones below it.
-  const stacked = useMemo(() => {
-    const running = new Array<number>(density.months.length).fill(0);
+  /** Value → y in viewBox units, with headroom so the tallest line is not clipped. */
+  const yOf = useCallback((value: number) => PLOT - 2 - (value / peak) * (PLOT - 4), [peak]);
 
-    return shown.map((band) => {
-      const tops = band.values.map((value, i) => {
-        running[i] += value;
-        return PLOT - (running[i] / peak) * PLOT;
-      });
+  const lines = useMemo(
+    () => shown.map((s) => ({ ...s, d: smoothPath(s.values.map(yOf), PLOT - 2) })),
+    [shown, yOf],
+  );
 
-      return { ...band, path: areaPath(tops, PLOT) };
-    });
-  }, [shown, peak, density.months.length]);
+  if (width === 0) return null;
 
-  if (density.months.length === 0) return null;
+  const pct = (index: number) => (index / lastMonth) * 100;
+  const headPct = Math.min(100, Math.max(0, pct(head)));
 
-  const width = density.months.length;
-  const pct = (index: number) => (index / Math.max(1, width - 1)) * 100;
-
-  /** Pointer position on the track → the nearest month → the anchor for that year. */
-  const travelTo = (clientX: number) => {
+  /** Pointer x on the track → the month under it → the page offset for that month. */
+  const scrubTo = (clientX: number, immediate: boolean) => {
     const track = trackRef.current;
     if (!track) return;
 
     const box = track.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (clientX - box.left) / box.width));
-    const month = density.months[Math.round(ratio * (width - 1))];
-    if (!month) return;
 
-    const target =
-      document.getElementById(`year-${month.slice(0, 4)}`) ??
-      document.getElementById("timeline-start");
-
-    target?.scrollIntoView({
-      behavior: globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "auto"
-        : "smooth",
-      block: "start",
-    });
+    scrollToOffset(offsetAt(ratio * lastMonth), immediate);
   };
 
   return (
-    // The class is load-bearing: `globals.css` hides the site StatusBar wherever it
-    // appears, which is how the two avoid stacking on the same edge.
-    <div className="timeline-scrubber transport chrome">
-      <div className="transport-inner">
+    // `timeline-scrubber` is load-bearing: `globals.css` hides the site StatusBar
+    // wherever it appears, which is how the two avoid stacking on the same edge.
+    //
+    // `chrome` is on the INNER card, not this strip: the strip spans the viewport and
+    // must stay transparent and click-through, or it would paint a full-width slab and
+    // swallow every click along the bottom of the page.
+    <div className="timeline-scrubber transport">
+      <div className="transport-inner chrome">
+        {/*
+          Legend, position and back-to-top sit ABOVE the plot. Beside it they competed with
+          the years for the same horizontal space and squeezed the chart into two thirds of
+          the control; the percentage in particular was hard to find at the far right.
+        */}
+        <div className="transport-head">
+          <ul className="transport-legend">
+            {lines.map((line) => (
+              <li key={line.key} data-series={line.key}>
+                <span className="transport-swatch" aria-hidden>
+                  {line.glyph}
+                </span>
+                {line.label}
+              </li>
+            ))}
+          </ul>
+
+          {/*
+            The accessible twin, and the relief the palette validation requires: the
+            light theme's orange sits below 3:1 against the surface, which is legal only
+            with visible labels or a table. The legend is one and this is the other — so
+            it belongs in the head row where it can be found, not floating above the
+            control as grey caption-shaped text.
+          */}
+          <details className="transport-data">
+            <summary>Show the numbers</summary>
+            <Table density={density} />
+          </details>
+
+          <output className="transport-readout" aria-label={`${percent}% read`}>
+            {String(percent).padStart(2, "0")}%
+          </output>
+
+          <button
+            type="button"
+            className="transport-top"
+            onClick={scrollToTop}
+            aria-label="Back to the top"
+          >
+            ↑
+          </button>
+        </div>
+
         <div
           ref={trackRef}
           className="transport-track"
+          data-dragging={dragging || undefined}
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId);
-            travelTo(event.clientX);
+            setDragging(true);
+            scrubTo(event.clientX, true);
           }}
           onPointerMove={(event) => {
-            // Only while dragging. `buttons` is the reliable test — a pointermove with no
-            // button held is just the cursor crossing the control.
-            if (event.buttons === 1) travelTo(event.clientX);
+            // `buttons` rather than a captured flag: a pointermove with no button held is
+            // just the cursor crossing the control, and must not drag the page with it.
+            if (event.buttons === 1) scrubTo(event.clientX, true);
           }}
+          onPointerUp={() => setDragging(false)}
+          onPointerCancel={() => setDragging(false)}
           role="slider"
           tabIndex={0}
           aria-label="Scrub the timeline"
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          aria-valuetext={`${percent}% through the timeline`}
+          aria-valuetext={`${density.months[Math.round(head)] ?? density.months[0]}, ${percent}% through`}
           onKeyDown={(event) => {
             const step = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0;
             if (step === 0) return;
             event.preventDefault();
-            const box = trackRef.current?.getBoundingClientRect();
-            if (box) travelTo(box.left + box.width * (percent / 100) + step * (box.width / width));
+            // One month a press, so holding the key walks the axis at a readable rate.
+            scrollToOffset(offsetAt(Math.min(lastMonth, Math.max(0, head + step))), false);
           }}
         >
-          {/* The curve. Non-uniform scale, so any stroke needs vector-effect or it is
-              squashed to nothing horizontally and fattened vertically. */}
+          {/* Non-uniform scale, so every stroke needs vector-effect or it is squashed to
+              nothing horizontally and fattened vertically. */}
           <svg
             className="transport-plot"
-            viewBox={`0 0 ${width - 1} ${PLOT}`}
+            viewBox={`0 0 ${lastMonth} ${PLOT}`}
             preserveAspectRatio="none"
             aria-hidden
           >
-            {stacked.map((band) => (
+            <defs>
+              {/* Everything behind the playhead is "played", as on a music player: what
+                  you have scrolled past is lit, what is ahead of you is dim. */}
+              <clipPath id={`played-${clipId}`} clipPathUnits="userSpaceOnUse">
+                <rect x="0" y="0" width={Math.max(0.001, head)} height={PLOT} />
+              </clipPath>
+            </defs>
+
+            {lines.map((line) => (
               <path
-                key={band.key}
-                d={band.path}
-                className="transport-band"
-                data-band={band.key}
+                key={line.key}
+                d={line.d}
+                className="transport-line"
+                data-series={line.key}
                 vectorEffect="non-scaling-stroke"
               />
             ))}
+
+            <g clipPath={`url(#played-${clipId})`}>
+              {lines.map((line) => (
+                <path
+                  key={line.key}
+                  d={line.d}
+                  className="transport-line is-played"
+                  data-series={line.key}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+            </g>
           </svg>
 
-          {/* Moments, as glyphs rather than one-month slivers that smoothing erases. */}
-          {marks.map((mark) => (
-            <span
-              key={`${mark.type}-${mark.date}-${mark.title}`}
-              className="transport-mark"
-              data-mark={mark.type}
-              style={{ left: `${pct(mark.at)}%`, bottom: `${MARK_ROW[mark.type] ?? 4}px` }}
-              title={`${mark.title} · ${mark.date}`}
-              aria-hidden
-            >
-              {MARK_GLYPH[mark.type] ?? "·"}
-            </span>
-          ))}
+          {/*
+            Markers as HTML rather than SVG shapes: `preserveAspectRatio="none"` stretches
+            the viewBox horizontally by a factor of thirty here, which would turn a circle
+            into a lens and a square into a letterbox.
+          */}
+          {lines.map((line) =>
+            line.points.map((point) => (
+              <span
+                key={`${line.key}-${point.date}-${point.title}`}
+                className="transport-point"
+                data-series={line.key}
+                data-played={point.at <= head || undefined}
+                style={{
+                  left: `${pct(point.at)}%`,
+                  bottom: `${((PLOT - yOf(line.values[point.at])) / PLOT) * 100}%`,
+                }}
+                title={`${line.label} · ${point.title} · ${point.date}`}
+                aria-hidden
+              >
+                {line.glyph}
+              </span>
+            )),
+          )}
 
           {density.today >= 0 && density.today < width && (
             <span
@@ -226,15 +385,9 @@ export function Transport({ timeline }: { timeline: Timeline }) {
             />
           )}
 
-          {/* Where the reader is, on the whole span. */}
-          <span
-            className="transport-window"
-            style={{
-              left: `${window_.from * 100}%`,
-              width: `${Math.max(2, (window_.to - window_.from) * 100)}%`,
-            }}
-            aria-hidden
-          />
+          <span className="transport-playhead" style={{ left: `${headPct}%` }} aria-hidden>
+            <span className="transport-dot" />
+          </span>
         </div>
 
         {/* Eras, below the line, as the sectors asked for. */}
@@ -243,10 +396,7 @@ export function Transport({ timeline }: { timeline: Timeline }) {
             <span
               key={era.id}
               className="transport-era"
-              style={{
-                left: `${pct(era.from)}%`,
-                width: `${pct(era.to) - pct(era.from)}%`,
-              }}
+              style={{ left: `${pct(era.from)}%`, width: `${pct(era.to) - pct(era.from)}%` }}
               title={era.name}
             >
               <span className="transport-era-name">{era.name}</span>
@@ -261,53 +411,22 @@ export function Transport({ timeline }: { timeline: Timeline }) {
             </span>
           ))}
         </div>
+
       </div>
-
-      <div className="transport-side">
-        <ul className="transport-legend">
-          {stacked.map((band) => (
-            <li key={band.key} data-band={band.key}>
-              <span className="transport-swatch" aria-hidden />
-              {band.label}
-            </li>
-          ))}
-        </ul>
-
-        <output className="transport-readout" aria-label={`${percent}% read`}>
-          {String(percent).padStart(2, "0")}%
-        </output>
-
-        <button
-          type="button"
-          className="transport-top"
-          onClick={scrollToTop}
-          aria-label="Back to the top"
-        >
-          ↑
-        </button>
-      </div>
-
-      {/*
-        The accessible twin, and the relief the palette validation requires: the light
-        theme's bands sit below 3:1 against the surface, which is legal only with visible
-        labels or a table. The legend supplies one and this supplies the other.
-      */}
-      <details className="transport-data rm-hide">
-        <summary>Show the numbers</summary>
-        <Table density={density} />
-      </details>
     </div>
   );
 }
 
-/** Year totals rather than 100 months: a table nobody can read is not an alternative. */
+/** Year totals rather than a hundred months: a table nobody can read is not an alternative. */
 function Table({ density }: { density: Density }) {
   const rows = density.years.map((year, index) => {
-    const to = index + 1 < density.years.length ? density.years[index + 1].at : density.months.length;
-    const totals = density.bands.map((band) => {
-      let peak = 0;
-      for (let i = year.at; i < to; i++) peak = Math.max(peak, band.values[i]);
-      return peak;
+    const to =
+      index + 1 < density.years.length ? density.years[index + 1].at : density.months.length;
+
+    const totals = density.series.map((s) => {
+      let most = 0;
+      for (let i = year.at; i < to; i++) most = Math.max(most, s.values[i]);
+      return most;
     });
 
     return { year: year.year, totals };
@@ -316,15 +435,13 @@ function Table({ density }: { density: Density }) {
   return (
     <div className="transport-table-scroll">
       <table className="transport-table">
-        <caption className="sr-only">
-          The most things running at once in each year, by kind
-        </caption>
+        <caption className="sr-only">The most of each kind running at once, by year</caption>
         <thead>
           <tr>
             <th scope="col">Year</th>
-            {density.bands.map((band) => (
-              <th key={band.key} scope="col">
-                {band.label}
+            {density.series.map((s) => (
+              <th key={s.key} scope="col">
+                {s.label}
               </th>
             ))}
           </tr>
@@ -334,7 +451,7 @@ function Table({ density }: { density: Density }) {
             <tr key={row.year}>
               <th scope="row">{row.year}</th>
               {row.totals.map((total, i) => (
-                <td key={density.bands[i].key}>{total}</td>
+                <td key={density.series[i].key}>{total}</td>
               ))}
             </tr>
           ))}

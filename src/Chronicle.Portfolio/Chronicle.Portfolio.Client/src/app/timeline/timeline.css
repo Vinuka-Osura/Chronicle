@@ -482,31 +482,64 @@
   ═══════════════════════════════════════════════════════════════════════════════
 */
 
+/*
+  The outer strip spans the viewport but draws nothing and catches nothing — the card
+  inside it is the control. Full-bleed was the first build and it was wrong twice over:
+  a hundred months stretched across a 4K monitor made the curve almost flat, and the bar
+  disagreed with the context bar directly above it, which is the same axis at
+  `max-w-6xl`. Two controls for one page reading two different widths.
+*/
 .transport {
   position: fixed;
   inset-inline: 0;
   bottom: 0;
   z-index: 40;
-  display: flex;
-  align-items: flex-end;
-  gap: 1rem;
-  padding: 0.5rem clamp(1rem, 4vw, 2rem) 0.45rem;
-  border-top: 1px solid var(--color-rule);
+  padding: 0 1rem 0.75rem;
+  pointer-events: none;
 }
 
 .transport-inner {
   position: relative;
-  flex: 1;
-  min-width: 0;
+  width: 100%;
+  /* `max-w-6xl`, matching the page container and therefore the context bar exactly. */
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 0.45rem 0.8rem 0.5rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-raised);
+  pointer-events: auto;
+}
+
+@media (width >= 40rem) {
+  .transport {
+    padding-inline: 1.25rem;
+  }
+}
+
+/* ── The head row ───────────────────────────────────────────────────────────────
+   Legend, the numbers link, position and back-to-top. Above the plot rather than
+   beside it: at the side they shared horizontal space with the years and squeezed
+   the chart into two thirds of the control, and the percentage was hard to find at
+   the far right of a full-width bar. */
+.transport-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.3rem;
 }
 
 /* The plot area. `touch-action: none` so a drag scrubs instead of scrolling the page
    out from under the finger. */
 .transport-track {
   position: relative;
-  height: 3.25rem;
+  height: 3.4rem;
   cursor: ew-resize;
   touch-action: none;
+}
+
+.transport-track[data-dragging] {
+  cursor: grabbing;
 }
 
 .transport-track:focus-visible {
@@ -523,39 +556,72 @@
 }
 
 /*
-  Bands are filled, and only the top edge is stroked — five outlines would read as five
-  charts stacked rather than one silhouette. The fill is soft so the marks and the today
-  rule stay legible through it.
+  Five lines, stroked and unfilled.
+
+  Filled areas were the first build. Five translucent fills over one another make mud,
+  and stacking them instead means every series above the first sits on a moving floor —
+  its shape distorted by its neighbours', so reading one out of the pile means
+  subtracting by eye. Lines all sit on the same zero.
+
+  Ahead of the playhead they are dim; behind it they are lit. That is the music player's
+  own convention for "how far through this you are", and it is why the same path is
+  drawn twice with the second copy clipped.
 */
-.transport-band {
-  fill: currentColor;
-  fill-opacity: 0.42;
+.transport-line {
+  fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
+  stroke-linecap: round;
   stroke-linejoin: round;
+  opacity: 0.28;
 }
 
-.transport-band[data-band="experience"] { color: var(--color-band-experience); }
-.transport-band[data-band="project"]    { color: var(--color-band-project); }
-.transport-band[data-band="milestone"]  { color: var(--color-band-milestone); }
+.transport-line.is-played {
+  opacity: 1;
+  stroke-width: 2;
+}
+
+.transport-line[data-series="experience"]    { color: var(--color-series-experience); }
+.transport-line[data-series="project"]       { color: var(--color-series-project); }
+.transport-line[data-series="milestone"]     { color: var(--color-series-milestone); }
+.transport-line[data-series="certification"] { color: var(--color-series-certification); }
+.transport-line[data-series="roadmap"]       { color: var(--color-series-roadmap); }
 
 /*
-  Moments, not periods.
+  A data point: one real dated thing, drawn as its own lens glyph.
 
-  A certification occupies one month of about a hundred; drawn as a bar it is a 1%-wide
-  sliver that smoothing erases completely. As a glyph it is legible, and it says the
-  true thing — a credential is a day, not a season.
+  This is the palette's secondary encoding, not decoration. The validator puts the worst
+  CVD pair at dE 6.5, inside the 6-8 floor band, which is legal only when identity is
+  carried by something besides hue — so ● ■ ▲ ◆ ○ sit on the lines themselves rather
+  than only in the legend, and a reader who cannot separate the pink line from the blue
+  one can still separate a circle from a diamond.
+
+  The 2px ring is the surface gap that keeps two points at the same month from merging
+  into one blob.
 */
-.transport-mark {
+.transport-point {
   position: absolute;
-  transform: translateX(-50%);
-  font-size: 0.5rem;
+  transform: translate(-50%, 50%);
+  font-size: 0.42rem;
   line-height: 1;
-  color: var(--color-ink-faint);
+  color: currentColor;
+  opacity: 0.3;
+  text-shadow:
+    0 0 2px var(--color-paper-solid),
+    0 0 2px var(--color-paper-solid);
   pointer-events: none;
+  transition: opacity var(--t-quick) var(--ease-move);
 }
 
-.transport-mark[data-mark="certification"] { color: var(--color-signal); }
+.transport-point[data-played] {
+  opacity: 1;
+}
+
+.transport-point[data-series="experience"]    { color: var(--color-series-experience); }
+.transport-point[data-series="project"]       { color: var(--color-series-project); }
+.transport-point[data-series="milestone"]     { color: var(--color-series-milestone); }
+.transport-point[data-series="certification"] { color: var(--color-series-certification); }
+.transport-point[data-series="roadmap"]       { color: var(--color-series-roadmap); }
 
 .transport-today {
   position: absolute;
@@ -563,32 +629,60 @@
   bottom: 0;
   width: 1px;
   background: var(--color-ink);
-  opacity: 0.45;
+  opacity: 0.35;
 }
 
-/* Where the reader is on the whole span. Deliberately a soft wash rather than a
-   handle — it reports, it is not the thing you grab. */
-.transport-window {
+/*
+  The playhead.
+
+  Where the reader is, as a position on the TIME axis rather than a fraction of the
+  page — see the component for why those are not the same number. No transition: it is
+  driven from the scroll on every animation frame, and an eased transition on top of a
+  per-frame update is a second animation fighting the first, which reads as lag exactly
+  when the reader is looking for responsiveness.
+*/
+.transport-playhead {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  background: var(--color-signal-soft);
-  border-inline: 1px solid color-mix(in oklch, var(--color-signal) 45%, transparent);
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--color-signal);
   pointer-events: none;
-  transition: left var(--t-quick) linear, width var(--t-quick) linear;
 }
 
-/* ── Below the line ─────────────────────────────────────────────────────────── */
+.transport-dot {
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  transform: translateX(-50%);
+  border: 2px solid var(--color-paper-solid);
+  border-radius: 999px;
+  background: var(--color-signal);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+
+.transport-track[data-dragging] .transport-dot {
+  scale: 1.25;
+}
+
+/* ── Below the line ───────────────────────────────────────────────────────────
+   Both rows get explicit height and their own line. Previously the era band sat
+   2px under a full-bleed plot with no room of its own, so the names collided with
+   the years and the bottom of the control was cut off by the viewport edge. */
 .transport-eras {
   position: relative;
-  height: 0.85rem;
-  margin-top: 2px;
+  height: 1.05rem;
+  margin-top: 0.15rem;
   border-top: 1px solid var(--color-rule);
 }
 
 .transport-era {
   position: absolute;
   top: 0;
+  display: flex;
+  align-items: center;
   height: 100%;
   overflow: hidden;
   border-inline-start: 1px solid var(--color-rule);
@@ -597,23 +691,28 @@
 
 .transport-era-name {
   font-family: var(--font-mono);
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .transport-years {
   position: relative;
-  height: 0.8rem;
+  height: 0.9rem;
+  margin-top: 0.1rem;
 }
 
 .transport-year {
   position: absolute;
+  top: 0;
   transform: translateX(-50%);
   font-family: var(--font-mono);
   font-size: 0.55rem;
+  line-height: 1;
   color: var(--color-ink-faint);
 }
 
@@ -625,51 +724,55 @@
   }
 }
 
-/* ── The right-hand side ────────────────────────────────────────────────────── */
-.transport-side {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding-bottom: 0.5rem;
-}
-
+/* ── The head row's contents ────────────────────────────────────────────────── */
 .transport-legend {
   display: flex;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  margin-inline-end: auto;
   list-style: none;
 }
 
 .transport-legend li {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.28rem;
   font-size: 0.62rem;
   color: var(--color-ink-soft);
   white-space: nowrap;
 }
 
+/* The glyph, not a colour chip. Same mark the lens chips use and the same mark drawn on
+   the line itself, so the legend, the filter and the chart name a series identically. */
 .transport-swatch {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 2px;
-  background: currentColor;
+  font-size: 0.5rem;
+  line-height: 1;
 }
 
-.transport-legend li[data-band="experience"] .transport-swatch { color: var(--color-band-experience); }
-.transport-legend li[data-band="project"]    .transport-swatch { color: var(--color-band-project); }
-.transport-legend li[data-band="milestone"]  .transport-swatch { color: var(--color-band-milestone); }
+.transport-legend li[data-series="experience"]    .transport-swatch { color: var(--color-series-experience); }
+.transport-legend li[data-series="project"]       .transport-swatch { color: var(--color-series-project); }
+.transport-legend li[data-series="milestone"]     .transport-swatch { color: var(--color-series-milestone); }
+.transport-legend li[data-series="certification"] .transport-swatch { color: var(--color-series-certification); }
+.transport-legend li[data-series="roadmap"]       .transport-swatch { color: var(--color-series-roadmap); }
 
-@media (width < 60rem) {
-  .transport-legend {
-    display: none;
+/* The legend is the CVD relief, so it does not get hidden on small screens — it wraps
+   instead. Only the words go; the glyphs stay, because they are the encoding. */
+@media (width < 34rem) {
+  .transport-legend li {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .transport-swatch {
+    font-size: 0.6rem;
   }
 }
 
 .transport-readout {
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: 0.7rem;
   font-variant-numeric: tabular-nums;
-  color: var(--color-ink-faint);
+  color: var(--color-ink);
 }
 
 .transport-top {
@@ -691,32 +794,55 @@
   color: var(--color-signal);
 }
 
-/* The table the light palette's contrast warning obligates. Collapsed, because it is
-   the alternative route rather than the primary one. */
+/*
+  The table the light palette's contrast warning obligates.
+
+  It moved into the head row and grew a border. Floating above the control as bare
+  grey lowercase text, it read as a caption rather than a control — which matters more
+  than usual here, because this is the accessible route to the same data and a relief
+  nobody can find is not relief.
+*/
 .transport-data {
-  position: absolute;
-  right: clamp(1rem, 4vw, 2rem);
-  bottom: 100%;
-  margin-bottom: 0.4rem;
+  position: relative;
   font-size: 0.7rem;
 }
 
 .transport-data summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 999px;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-ink-faint);
+  color: var(--color-ink-soft);
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--t-quick) var(--ease-move),
+    color var(--t-quick) var(--ease-move);
 }
 
+.transport-data summary:hover,
+.transport-data[open] summary {
+  border-color: var(--color-signal);
+  color: var(--color-signal);
+}
+
+/* Opens upward, because the control is already on the bottom edge. */
 .transport-table-scroll {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.4rem);
   max-height: 14rem;
-  margin-top: 0.4rem;
   overflow: auto;
   border: 1px solid var(--color-rule);
   border-radius: 0.4rem;
   background: var(--color-paper-solid);
+  box-shadow: var(--shadow-raised);
 }
 
 .transport-table {

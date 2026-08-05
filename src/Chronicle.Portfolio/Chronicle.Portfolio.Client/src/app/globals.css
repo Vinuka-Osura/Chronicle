@@ -95,29 +95,36 @@
   --color-heat-4: #804600;
 
   /*
-    Categorical, for the timeline transport's stacked bands. The site's only palette
-    where colour carries IDENTITY rather than magnitude, which is why it is three
-    hues from opposite corners rather than steps of one.
+    Categorical, for the timeline transport's five lines. The site's only palette where
+    colour carries IDENTITY rather than magnitude, which is why it is five hues spread
+    around the wheel rather than steps of one.
 
-    Computed, not chosen. Run through the validator against this surface (#e4eef5)
-    with --pairs all, the strictest setting:
+    Computed, not chosen. Against this surface (#e4eef5) with --pairs all, the strictest
+    setting the validator has:
 
-      lightness band   all 3 inside L 0.43-0.77
-      chroma floor     all 3 >= 0.1
-      CVD separation   worst pair green<->orange dE 9.2 deutan, 9.6 tritan
-      normal vision    worst pair green<->blue dE 24.0
-      contrast         WARN, two below 3:1 - relief supplied by the always-on legend
+      lightness band   all 5 inside L 0.43-0.77
+      chroma floor     all 5 >= 0.1
+      CVD separation   WARN, worst pair pink<->blue dE 6.5 protan, 7.2 tritan
+      normal vision    worst pair pink<->purple dE 15.4
+      contrast         WARN, orange at 2.27 - relief supplied by the always-on legend
                        and the "show the numbers" table, which is what that warning
                        obligates rather than something to dismiss
 
-    THREE, not five. Certifications and goals are moments, not periods, so they are
-    glyph marks on the axis and take no hue at all - which is what let this pass:
-    five hues failed --pairs all on both surfaces (pink vs orange dE 12.9 here), and
-    the method says cut series rather than invent a sixth.
+    The CVD figure sits in the 6-8 floor band, which is legal ONLY with secondary
+    encoding. There are two: every series carries its lens glyph in the legend, and
+    every data point on every line is drawn as that glyph rather than a dot.
+
+    FIVE, and getting there took a search rather than a choice. Hand-picked five-hue
+    sets failed --pairs all repeatedly on both surfaces - purple<->blue and pink<->orange
+    collapse under deutan whatever you do with hue alone. What broke it was spreading
+    LIGHTNESS as a second axis inside the band, which the light mode has room for
+    (L 0.43-0.77) and which no amount of hue rotation substitutes for.
   */
-  --color-band-experience: #2a78d6;
-  --color-band-project: #eb6834;
-  --color-band-milestone: #1baf7a;
+  --color-series-experience: #345a98;
+  --color-series-project: #e08a3a;
+  --color-series-milestone: #11813c;
+  --color-series-certification: #9763bb;
+  --color-series-roadmap: #d43678;
 
   /*
     The channel: a calm band of water down the middle, where the reading happens.
@@ -230,20 +237,28 @@
   --color-heat-4: #f6a046;
 
   /*
-    The categorical bands, SELECTED against the dark surface (#16202c) rather than
+    The categorical series, SELECTED against the dark surface (#16202c) rather than
     flipped from the light set — the same rule the heat ramp above follows, and the
     reason is the same: a hue that separates on paper can collapse on a dark ground.
 
     Validated at --pairs all against #16202c:
-      lightness band   all 3 inside L 0.48-0.67   (the light values sit at 0.69-0.78
-                                                   and fail this outright)
-      CVD separation   worst pair green<->orange dE 8.3 deutan
-      normal vision    worst pair green<->blue dE 19.0
-      contrast         all 3 >= 3:1, so no relief is owed here
+      lightness band   all 5 inside L 0.48-0.67
+      CVD separation   WARN, worst pair green<->orange dE 6.5 deutan
+      normal vision    worst pair purple<->blue dE 15.4
+      contrast         all 5 >= 3:1, so no relief is owed here
+
+    Dark's band is HALF the width of light's — 0.19 against 0.34 — so the trick that
+    made five hues work on light (spread the lightness) is unavailable here, and every
+    hand-picked set failed. These came out of an exhaustive search of OKLCH space
+    ranked by distance to the light set's hues, because colour has to follow the entity:
+    "Projects" being amber on one theme and violet on the other would make the legend
+    something you re-learn every time the theme flips.
   */
-  --color-band-experience: #4f8fdd;
-  --color-band-project: #d9713f;
-  --color-band-milestone: #2fac7d;
+  --color-series-experience: #0280f7;
+  --color-series-project: #c8741d;
+  --color-series-milestone: #40a35c;
+  --color-series-certification: #976bc6;
+  --color-series-roadmap: #bd3964;
 
   /* Deepens the channel instead of lifting it: on a dark page the prose is the light
      thing, so the water behind it has to give way rather than brighten. */

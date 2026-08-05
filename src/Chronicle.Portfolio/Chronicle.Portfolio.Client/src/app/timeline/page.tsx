@@ -43,16 +43,18 @@ export default async function TimelinePage() {
 
         <p className="timeline-lede reveal-mask rm-compact">
           Everything below the &ldquo;you are here&rdquo; line is a stated goal rather than
-          something already done. The bar along the bottom is the whole span at once — its
-          height is how much was running that month, and the lenses cut it down to one kind.
+          something already done. The control along the bottom is the whole span at once —
+          one curve per kind, marked at the dates things actually happened, and a playhead
+          you can drag to travel through the years.
         </p>
       </section>
 
       {timeline.items.length > 0 ? (
         <>
           <ContextBar eraNames={eraNames} />
-          {/* Clears the fixed transport, so the last node is never hidden behind it. */}
-          <div className="pb-28">
+          {/* Clears the fixed transport, so the last node is never hidden behind it.
+              The control is ~8.6rem tall now that the legend sits above the plot. */}
+          <div className="pb-40">
             <TimelineStream timeline={timeline} />
           </div>
           <Transport timeline={timeline} />

@@ -142,28 +142,43 @@ than a destination.
 
 The signature page: your career and your life on one axis, rather than a list of jobs.
 
-**The bar along the bottom is the whole span at once.** Its height is how many things were
-running that month, split by kind and stacked — so a busy stretch is visibly busy, and you
-can see at a glance where the work actually was. Drag it, click it, or use the arrow keys
-to move through the years; the marker shows where you currently are.
+**The control along the bottom is the whole span at once** — a chart of nine years and a
+way of travelling through them, in the same place.
 
-It replaces a row of year buttons that drew a bar only for years containing something, so
-an empty year vanished from the axis altogether and the spacing quietly misrepresented
-time. Every month now occupies the same width whether anything happened in it or not,
-which is the only way the shape means anything.
+**One curve per kind.** Roles, Projects, Life, Certifications and Goals each get their own
+line, marked with its own shape at the dates things actually happened and smoothed between
+them. Five lines that share one baseline, rather than one shape cut into layers: you can
+follow any single kind with your eye without having to subtract the others from it.
 
-**Duration is drawn as area; a moment is drawn as a mark.** A role or a project or a degree
-occupies months, so it is counted across every month it ran — a three-year degree is a
-plateau, not a spike on the day it started. A certification has an issue date and nothing
-else; giving it a width would be inventing duration, and drawn as a single month it would
-be a sliver too thin to see. Those appear as small glyphs on the axis instead.
+Every month occupies the same width whether anything happened in it or not. It replaces a
+row of year buttons that drew a bar only for years containing something, so an empty year
+vanished from the axis altogether and the spacing quietly misrepresented time.
 
-That is why isolating the Certifications lens gives you a row of marks and no curve at all.
-It is the right answer: those are days, not seasons.
+**The line's height is how many of that kind were running that month.** A role, a project
+or a degree occupies months, so it is counted across every month it ran — a three-year
+degree is a plateau, not a spike on the day it started. A certification has an issue date
+and nothing else, so it counts in the month it was earned and nowhere else. Its line is
+flat with a peak at each credential, which is exactly what a line drawn through dated
+moments should look like.
 
-**The lenses now actually filter.** Turning one off hides its cards, its band in the bar,
-and any year that contained nothing else. Your choice is remembered in a cookie and
-reflected in the address bar, so a filtered timeline can be linked to.
+**The dot is where you are, and it works both ways.** Scroll and it slides along the years
+in step with you; drag it and the page follows in real time. It is placed against the
+*time* axis rather than against the scroll bar — it measures where each year actually sits
+on the page — so when the dot is over 2023, 2023 is what you are reading. Arrow keys move
+it a month at a time.
+
+**Everything behind the dot is lit; everything ahead of it is dim**, the way a music player
+shades the part of a track you have already heard.
+
+**The lenses filter the cards and the chart together.** Turning one off hides its cards,
+its line, and any year that contained nothing else. Isolating Certifications gives you a
+line with a peak at each one; isolating Life gives you the study years standing alone.
+Your choice is remembered in a cookie and reflected in the address bar, so a filtered
+timeline can be linked to.
+
+**Show the numbers** opens the same data as a table — the most of each kind running at
+once, by year — for anyone who would rather read it than look at it, and for anyone whom
+the colours do not serve.
 
 **Chapters, not just dates.** The timeline is divided into named eras — "First Steps",
 "Banking Systems" — each with a date range and a line on what that period was about. It

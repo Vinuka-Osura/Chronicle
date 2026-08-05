@@ -61,6 +61,25 @@ export function scrollToId(id: string) {
 }
 
 /**
+ * Scrolls to an absolute document offset, honouring inertial scroll when it is running.
+ *
+ * `immediate` exists for dragging. A scrub has to track the pointer frame by frame, so it
+ * cannot be animated — an eased 400ms move started on every `pointermove` would queue up
+ * behind itself and the page would keep travelling after the finger stopped. Lenis needs
+ * `force` as well as `immediate` here, or it refuses the move while its own animation is
+ * still settling and the drag stalls halfway.
+ */
+export function scrollToOffset(top: number, immediate = false) {
+  if (active) {
+    active.scrollTo(top, immediate ? { immediate: true, force: true } : { duration: 0.6 });
+    return;
+  }
+
+  const abrupt = immediate || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top, behavior: abrupt ? "auto" : "smooth" });
+}
+
+/**
  * Jumps to the top with no animation. For arriving at a new page.
  *
  * Next resets the scroll position itself on a client-side navigation, and with Lenis

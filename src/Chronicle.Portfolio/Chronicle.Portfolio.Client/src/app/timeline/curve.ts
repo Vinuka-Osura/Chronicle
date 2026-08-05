@@ -1,6 +1,6 @@
 /*
   ─────────────────────────────────────────────────────────────────────────────────
-  Points to a smooth filled path.
+  Points to a smooth path.
 
   The reference for this control is an audio waveform: continuous shapes with soft
   shoulders. A `<polyline>` through ~100 monthly points is visibly faceted, and a step
@@ -26,28 +26,10 @@
 const TENSION = 0.32;
 
 /**
- * A filled area path: along the top through `values`, then closed along the baseline.
- *
- * `values` are in the same units as `baseline` — the caller has already scaled them into
- * the viewBox, so nothing here needs to know the data's range.
- */
-export function areaPath(values: number[], baseline: number): string {
-  if (values.length === 0) return "";
-  if (values.length === 1) {
-    return `M 0,${baseline} L 0,${values[0]} L 1,${values[0]} L 1,${baseline} Z`;
-  }
-
-  const top = smoothPath(values, baseline);
-  const lastX = values.length - 1;
-
-  return `${top} L ${lastX},${baseline} L 0,${baseline} Z`;
-}
-
-/**
  * The open curve through `values`, x being the index.
  *
- * `floor` is the baseline. Control points are held inside the band between it and zero,
- * so the fill can neither bulge under its own axis nor overshoot the top of the plot.
+ * `floor` is the baseline. Control points are held inside the band between it and zero, so
+ * the line can neither dip under its own axis nor overshoot the top of the plot.
  */
 export function smoothPath(values: number[], floor: number): string {
   if (values.length === 0) return "";
@@ -60,7 +42,7 @@ export function smoothPath(values: number[], floor: number): string {
   /*
     Both ends, and both matter.
 
-    Under the floor is a fill bulging beneath its own baseline — activity below nothing.
+    Under the floor is a line dipping beneath its own baseline — activity below nothing.
     Over the top is the same error mirrored: a shoulder rising past the tallest month,
     claiming a peak that never happened and, since the plot is only as tall as its own
     viewBox, spilling out of the control and over whatever is above it. Measured at 34

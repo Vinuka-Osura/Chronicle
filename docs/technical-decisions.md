@@ -260,34 +260,78 @@ filter, a chart or an empty state is an hour spent twice — see `roadmap.md`.
 
 ---
 
-## 3b. The timeline transport: three bands, because five failed
+## 3b. The timeline transport: five lines, and the search that found their colours
 
-The stacked density bar is the site's **only** palette where colour carries identity rather
-than magnitude. Everything else — the heat ramp, the language bars — encodes an amount with
-one hue.
+The transport is the site's **only** palette where colour carries identity rather than
+magnitude. Everything else — the heat ramp, the language bars — encodes an amount with one
+hue.
 
-It started as five bands, one per item type, and **the validator refused it**. At
-`--pairs all`, the strictest setting, five hues could not be separated on either surface:
-pink against orange came out at ΔE 12.9 on the light ground, below the 15 floor at which
-full-colour readers can tell a pair apart; on the dark ground amber against orange was
-ΔE 1.5 under deuteranopia, effectively identical.
+### Overlaid lines, not a stacked area
 
-The method's prescribed remedy for an all-pairs failure is to **cut series, not to add
-relief**. And the cut was already available: certifications and roadmap goals are moments
-rather than periods, so they are glyph marks on the axis and take no hue at all. Three
-bands then passed everything on both surfaces:
+The first build stacked three filled bands. Stacking answers *how much in total*, and that
+is not the question the lens chips ask. To read one band out of a stack you have to
+subtract the ones under it by eye, because every layer above the first sits on a moving
+floor — its shape distorted by its neighbours'. Five lines all sit on the same zero, so
+"when was I studying" is answerable by looking.
+
+The totals did not disappear; they moved to the `Show the numbers` table, which is the
+right place for the question stacking was answering.
+
+### Five hues took a search, not a choice
+
+The three-band build existed **because five hues had failed**, and the note here used to
+say the method's remedy for an `--pairs all` failure — cut series — had been applied.
+That was true of the sets tried at the time and false in general.
+
+Hand-picking failed on both surfaces however the hues were rotated: purple↔blue and
+pink↔orange collapse under deuteranopia at almost any pure hue spacing. What broke it was
+using **lightness as a second axis** inside the mode's band. Light mode has room for that
+(L 0.43–0.77); the very first set built that way passed at `--pairs all`.
+
+Dark mode's band is **half as wide** — 0.48–0.67 — so the same trick is unavailable, and
+every hand-picked dark set kept failing. Those values came out of an exhaustive search of
+OKLCH space (`scratchpad/hunt.mjs`), enumerating candidates per hue family and validating
+each combination, then ranking the ~6,000 passing sets by **distance to the light set's
+hues** rather than by looks. Colour follows the entity: "Projects" being amber on one theme
+and violet on the other would make the legend something a reader re-learns every time the
+theme flips.
 
 |  | light `#e4eef5` | dark `#16202c` |
 |---|---|---|
-| worst CVD pair | green↔orange ΔE 9.2 | green↔orange ΔE 8.3 |
-| worst normal-vision pair | green↔blue ΔE 24.0 | green↔blue ΔE 19.0 |
-| contrast | two below 3:1 — **WARN** | all ≥ 3:1 |
+| worst CVD pair | pink↔blue ΔE 6.5 protan | green↔orange ΔE 6.5 deutan |
+| worst normal-vision pair | pink↔purple ΔE 15.4 | purple↔blue ΔE 15.4 |
+| contrast | orange 2.27 — **WARN** | all ≥ 3:1 |
 
-The light warning is not dismissable: it obligates visible labels or a table view. Both
-ship — an always-on legend, and a "show the numbers" table of per-year peaks.
+Both CVD figures sit in the **6–8 floor band, which is legal only with secondary
+encoding**. There are two, and they are why five series are defensible here at all: each
+series carries its lens glyph in the legend, and **every data point on every line is drawn
+as that glyph** rather than as a dot. A reader who cannot separate the pink line from the
+blue one can still separate a circle from a diamond.
 
-Dark is **selected against the dark surface**, not flipped. The light values sit at OKLCH L
-0.69–0.78 and fail the dark band (0.48–0.67) outright.
+The light contrast warning is not dismissable: it obligates visible labels or a table view.
+Both ship, and the table moved into the head row precisely because a relief nobody can find
+is not relief.
+
+Dark is **selected against the dark surface**, not flipped — the same rule the heat ramp
+follows.
+
+### The playhead maps through the year markers, not through the scroll bar
+
+A dot at `scrollY / scrollHeight` is continuous but wrong: the page is not linear in time,
+so it sits over 2023 while the reader is looking at 2021. A dot placed by nearest section is
+right but jumps, which is what the old year-button scrubber did.
+
+So the control measures where each year heading actually is and interpolates between them.
+That is continuous *and* correct, and **the same function run backwards is what dragging
+uses** — so the two directions cannot disagree about where "here" is. The map is rebuilt on
+resize and on every lens change, because filtering hides cards and moves every heading.
+
+Dragging goes through `scrollToOffset(..., immediate)` rather than `window.scrollTo`. Lenis
+holds its own target position and drags the page back otherwise — and the move must be
+un-animated, or an eased scroll started on every `pointermove` queues behind itself and the
+page keeps travelling after the finger stops.
+
+### The smoothing has to be clamped at both ends
 
 ### The smoothing has to be clamped at both ends
 
@@ -303,7 +347,7 @@ rather than predicted:
 Control points are held inside `[0, baseline]`, and centripetal parameterisation
 (alpha 0.5) rather than uniform Catmull-Rom, because uniform overshoots and forms cusps
 wherever the input jumps — which this input does constantly, since a role ending drops a
-band by one in a single month.
+line by one in a single month.
 
 ---
 
