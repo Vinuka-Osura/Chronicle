@@ -95,6 +95,31 @@
   --color-heat-4: #804600;
 
   /*
+    Categorical, for the timeline transport's stacked bands. The site's only palette
+    where colour carries IDENTITY rather than magnitude, which is why it is three
+    hues from opposite corners rather than steps of one.
+
+    Computed, not chosen. Run through the validator against this surface (#e4eef5)
+    with --pairs all, the strictest setting:
+
+      lightness band   all 3 inside L 0.43-0.77
+      chroma floor     all 3 >= 0.1
+      CVD separation   worst pair green<->orange dE 9.2 deutan, 9.6 tritan
+      normal vision    worst pair green<->blue dE 24.0
+      contrast         WARN, two below 3:1 - relief supplied by the always-on legend
+                       and the "show the numbers" table, which is what that warning
+                       obligates rather than something to dismiss
+
+    THREE, not five. Certifications and goals are moments, not periods, so they are
+    glyph marks on the axis and take no hue at all - which is what let this pass:
+    five hues failed --pairs all on both surfaces (pink vs orange dE 12.9 here), and
+    the method says cut series rather than invent a sixth.
+  */
+  --color-band-experience: #2a78d6;
+  --color-band-project: #eb6834;
+  --color-band-milestone: #1baf7a;
+
+  /*
     The channel: a calm band of water down the middle, where the reading happens.
 
     This is what lets the water be a real blue instead of a pale wash. Text sitting
@@ -203,6 +228,22 @@
   --color-heat-2: #9e5f16;
   --color-heat-3: #cd7d1e;
   --color-heat-4: #f6a046;
+
+  /*
+    The categorical bands, SELECTED against the dark surface (#16202c) rather than
+    flipped from the light set — the same rule the heat ramp above follows, and the
+    reason is the same: a hue that separates on paper can collapse on a dark ground.
+
+    Validated at --pairs all against #16202c:
+      lightness band   all 3 inside L 0.48-0.67   (the light values sit at 0.69-0.78
+                                                   and fail this outright)
+      CVD separation   worst pair green<->orange dE 8.3 deutan
+      normal vision    worst pair green<->blue dE 19.0
+      contrast         all 3 >= 3:1, so no relief is owed here
+  */
+  --color-band-experience: #4f8fdd;
+  --color-band-project: #d9713f;
+  --color-band-milestone: #2fac7d;
 
   /* Deepens the channel instead of lifting it: on a dark page the prose is the light
      thing, so the water behind it has to give way rather than brighten. */
@@ -1084,11 +1125,11 @@
   sees the full timeline flash past, and the filter works with JavaScript disabled.
 */
 @layer utilities {
-  html:not([data-lens~="experience"]) .timeline-node[data-node="experience"],
-  html:not([data-lens~="project"]) .timeline-node[data-node="project"],
-  html:not([data-lens~="milestone"]) .timeline-node[data-node="milestone"],
-  html:not([data-lens~="certification"]) .timeline-node[data-node="certification"],
-  html:not([data-lens~="roadmap"]) .timeline-node[data-node="roadmap"] {
+  html:not([data-lens~="experience"]) .timeline-slot[data-node="experience"],
+  html:not([data-lens~="project"]) .timeline-slot[data-node="project"],
+  html:not([data-lens~="milestone"]) .timeline-slot[data-node="milestone"],
+  html:not([data-lens~="certification"]) .timeline-slot[data-node="certification"],
+  html:not([data-lens~="roadmap"]) .timeline-slot[data-node="roadmap"] {
     display: none;
   }
 

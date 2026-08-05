@@ -468,3 +468,300 @@
     justify-content: center;
   }
 }
+
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  The transport
+
+  Replaces a row of year buttons that drew a bar only for years containing a start
+  date — so an empty year vanished from the axis entirely and the spacing lied about
+  time. This is a continuous month axis: every month occupies the same width whether
+  anything happened in it or not, which is the only way the shape means anything.
+
+  It also carries what the site's StatusBar carries, because it stands down here.
+  ═══════════════════════════════════════════════════════════════════════════════
+*/
+
+.transport {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 0.5rem clamp(1rem, 4vw, 2rem) 0.45rem;
+  border-top: 1px solid var(--color-rule);
+}
+
+.transport-inner {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The plot area. `touch-action: none` so a drag scrubs instead of scrolling the page
+   out from under the finger. */
+.transport-track {
+  position: relative;
+  height: 3.25rem;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.transport-track:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.transport-plot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/*
+  Bands are filled, and only the top edge is stroked — five outlines would read as five
+  charts stacked rather than one silhouette. The fill is soft so the marks and the today
+  rule stay legible through it.
+*/
+.transport-band {
+  fill: currentColor;
+  fill-opacity: 0.42;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.transport-band[data-band="experience"] { color: var(--color-band-experience); }
+.transport-band[data-band="project"]    { color: var(--color-band-project); }
+.transport-band[data-band="milestone"]  { color: var(--color-band-milestone); }
+
+/*
+  Moments, not periods.
+
+  A certification occupies one month of about a hundred; drawn as a bar it is a 1%-wide
+  sliver that smoothing erases completely. As a glyph it is legible, and it says the
+  true thing — a credential is a day, not a season.
+*/
+.transport-mark {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 0.5rem;
+  line-height: 1;
+  color: var(--color-ink-faint);
+  pointer-events: none;
+}
+
+.transport-mark[data-mark="certification"] { color: var(--color-signal); }
+
+.transport-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-ink);
+  opacity: 0.45;
+}
+
+/* Where the reader is on the whole span. Deliberately a soft wash rather than a
+   handle — it reports, it is not the thing you grab. */
+.transport-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--color-signal-soft);
+  border-inline: 1px solid color-mix(in oklch, var(--color-signal) 45%, transparent);
+  pointer-events: none;
+  transition: left var(--t-quick) linear, width var(--t-quick) linear;
+}
+
+/* ── Below the line ─────────────────────────────────────────────────────────── */
+.transport-eras {
+  position: relative;
+  height: 0.85rem;
+  margin-top: 2px;
+  border-top: 1px solid var(--color-rule);
+}
+
+.transport-era {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+  border-inline-start: 1px solid var(--color-rule);
+  padding-inline-start: 0.3rem;
+}
+
+.transport-era-name {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  white-space: nowrap;
+}
+
+.transport-years {
+  position: relative;
+  height: 0.8rem;
+}
+
+.transport-year {
+  position: absolute;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--color-ink-faint);
+}
+
+/* Every year gets a tick, but only every other one gets a label below ~52rem —
+   ten four-digit numbers on a phone is a grey smear. */
+@media (width < 52rem) {
+  .transport-year:nth-child(even) {
+    display: none;
+  }
+}
+
+/* ── The right-hand side ────────────────────────────────────────────────────── */
+.transport-side {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+
+.transport-legend {
+  display: flex;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.transport-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.62rem;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.transport-swatch {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.transport-legend li[data-band="experience"] .transport-swatch { color: var(--color-band-experience); }
+.transport-legend li[data-band="project"]    .transport-swatch { color: var(--color-band-project); }
+.transport-legend li[data-band="milestone"]  .transport-swatch { color: var(--color-band-milestone); }
+
+@media (width < 60rem) {
+  .transport-legend {
+    display: none;
+  }
+}
+
+.transport-readout {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-faint);
+}
+
+.transport-top {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--color-ink-soft);
+  transition:
+    border-color var(--t-quick) var(--ease-move),
+    color var(--t-quick) var(--ease-move);
+}
+
+.transport-top:hover {
+  border-color: var(--color-signal);
+  color: var(--color-signal);
+}
+
+/* The table the light palette's contrast warning obligates. Collapsed, because it is
+   the alternative route rather than the primary one. */
+.transport-data {
+  position: absolute;
+  right: clamp(1rem, 4vw, 2rem);
+  bottom: 100%;
+  margin-bottom: 0.4rem;
+  font-size: 0.7rem;
+}
+
+.transport-data summary {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+  cursor: pointer;
+}
+
+.transport-table-scroll {
+  max-height: 14rem;
+  margin-top: 0.4rem;
+  overflow: auto;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.4rem;
+  background: var(--color-paper-solid);
+}
+
+.transport-table {
+  border-collapse: collapse;
+  font-size: 0.68rem;
+}
+
+.transport-table th,
+.transport-table td {
+  padding: 0.25rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-rule);
+  white-space: nowrap;
+}
+
+.transport-table td {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+/* ── The opening, on the shared scene vocabulary ────────────────────────────── */
+.timeline-open {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: min(42vh, 22rem);
+  margin-block: clamp(1.5rem, 5vh, 3rem) clamp(2rem, 5vh, 3.5rem);
+}
+
+.timeline-heading {
+  max-width: 18ch;
+  margin-top: clamp(1.25rem, 3.5vh, 2rem);
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  font-weight: 600;
+  line-height: 0.99;
+  letter-spacing: -0.035em;
+}
+
+.timeline-lede {
+  --in-delay: 820ms;
+  max-width: 44rem;
+  margin-top: 1.5rem;
+  font-size: var(--text-lede);
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+}

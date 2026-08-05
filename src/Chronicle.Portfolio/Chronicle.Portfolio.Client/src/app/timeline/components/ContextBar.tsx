@@ -1,33 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TimelineItemType } from "@/lib/types";
 import { ALL_LENSES, LENSES, LENS_COOKIE, parseLenses } from "../lenses";
+import { useActiveLenses } from "../useActiveLenses";
 
 /*
   Lens state lives on <html data-lens="…">, not in React.
 
   The pre-paint script already put it there so CSS can hide filtered nodes on the first
   frame. Mirroring it into React state would create a second source of truth that can
-  disagree — and syncing them would mean a setState inside an effect, which is the thing
-  useSyncExternalStore exists to replace.
+  disagree.
+
+  Reading it moved to `useActiveLenses` once the transport needed the same value — two
+  subscriptions to one attribute is exactly the second truth this arrangement exists to
+  avoid. What stays here is the write half: this bar owns the toggling.
 */
-
-function subscribeToLens(onStoreChange: () => void) {
-  const observer = new MutationObserver(onStoreChange);
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["data-lens"],
-  });
-  return () => observer.disconnect();
-}
-
-const readLens = () => document.documentElement.dataset.lens ?? ALL_LENSES.join(" ");
-const serverLens = () => ALL_LENSES.join(" ");
-
 function useLenses(): [TimelineItemType[], (key: TimelineItemType) => void] {
-  const raw = useSyncExternalStore(subscribeToLens, readLens, serverLens);
-  const active = parseLenses(raw);
+  const active = useActiveLenses();
   const urlTimer = useRef<number | null>(null);
 
   useEffect(

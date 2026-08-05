@@ -142,6 +142,29 @@ than a destination.
 
 The signature page: your career and your life on one axis, rather than a list of jobs.
 
+**The bar along the bottom is the whole span at once.** Its height is how many things were
+running that month, split by kind and stacked — so a busy stretch is visibly busy, and you
+can see at a glance where the work actually was. Drag it, click it, or use the arrow keys
+to move through the years; the marker shows where you currently are.
+
+It replaces a row of year buttons that drew a bar only for years containing something, so
+an empty year vanished from the axis altogether and the spacing quietly misrepresented
+time. Every month now occupies the same width whether anything happened in it or not,
+which is the only way the shape means anything.
+
+**Duration is drawn as area; a moment is drawn as a mark.** A role or a project or a degree
+occupies months, so it is counted across every month it ran — a three-year degree is a
+plateau, not a spike on the day it started. A certification has an issue date and nothing
+else; giving it a width would be inventing duration, and drawn as a single month it would
+be a sliver too thin to see. Those appear as small glyphs on the axis instead.
+
+That is why isolating the Certifications lens gives you a row of marks and no curve at all.
+It is the right answer: those are days, not seasons.
+
+**The lenses now actually filter.** Turning one off hides its cards, its band in the bar,
+and any year that contained nothing else. Your choice is remembered in a cookie and
+reflected in the address bar, so a filtered timeline can be linked to.
+
 **Chapters, not just dates.** The timeline is divided into named eras — "First Steps",
 "Banking Systems" — each with a date range and a line on what that period was about. It
 is the difference between remembering "the Banking Systems chapter" and remembering

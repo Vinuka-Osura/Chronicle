@@ -260,6 +260,53 @@ filter, a chart or an empty state is an hour spent twice — see `roadmap.md`.
 
 ---
 
+## 3b. The timeline transport: three bands, because five failed
+
+The stacked density bar is the site's **only** palette where colour carries identity rather
+than magnitude. Everything else — the heat ramp, the language bars — encodes an amount with
+one hue.
+
+It started as five bands, one per item type, and **the validator refused it**. At
+`--pairs all`, the strictest setting, five hues could not be separated on either surface:
+pink against orange came out at ΔE 12.9 on the light ground, below the 15 floor at which
+full-colour readers can tell a pair apart; on the dark ground amber against orange was
+ΔE 1.5 under deuteranopia, effectively identical.
+
+The method's prescribed remedy for an all-pairs failure is to **cut series, not to add
+relief**. And the cut was already available: certifications and roadmap goals are moments
+rather than periods, so they are glyph marks on the axis and take no hue at all. Three
+bands then passed everything on both surfaces:
+
+|  | light `#e4eef5` | dark `#16202c` |
+|---|---|---|
+| worst CVD pair | green↔orange ΔE 9.2 | green↔orange ΔE 8.3 |
+| worst normal-vision pair | green↔blue ΔE 24.0 | green↔blue ΔE 19.0 |
+| contrast | two below 3:1 — **WARN** | all ≥ 3:1 |
+
+The light warning is not dismissable: it obligates visible labels or a table view. Both
+ship — an always-on legend, and a "show the numbers" table of per-year peaks.
+
+Dark is **selected against the dark surface**, not flipped. The light values sit at OKLCH L
+0.69–0.78 and fail the dark band (0.48–0.67) outright.
+
+### The smoothing has to be clamped at both ends
+
+Bézier smoothing through real data lies twice if it is left alone, and both were measured
+rather than predicted:
+
+- **Below the baseline.** A curve through two adjacent zero months with peaks either side
+  dips under the axis — activity below nothing.
+- **Above the peak.** The mirror image: a shoulder rising past the tallest month, claiming
+  a maximum that never occurred. Unclamped, on a plot 34 units tall, the curve reached
+  **−1.6** — outside the viewBox, spilling over the content above it.
+
+Control points are held inside `[0, baseline]`, and centripetal parameterisation
+(alpha 0.5) rather than uniform Catmull-Rom, because uniform overshoots and forms cusps
+wherever the input jumps — which this input does constantly, since a role ending drops a
+band by one in a single month.
+
+---
+
 ## 4. Charts, and why the colours are computed rather than chosen
 
 The Analytics page is the only surface with data visualisation, and the colour on it is

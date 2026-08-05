@@ -81,7 +81,9 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
                 {group.era.name}
               </span>
 
-              <header className="timeline-era-head">
+              {/* The scroll-spy on both controls queries this attribute; nothing emitted
+                  it, so the context readout never left "Timeline". */}
+              <header className="timeline-era-head" data-era-marker={group.era.id}>
                 <h2
                   id={`era-${group.era.id}`}
                   className="text-section font-semibold text-ink"
@@ -97,11 +99,23 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
             </>
           )}
 
-          {group.years.map((yearGroup) => (
+          {group.years.map((yearGroup) => {
+            /*
+              A year whose items are all one kind should disappear with that kind — a lone
+              "2021" heading over nothing reads as missing content rather than as a filter
+              doing its job. `data-only` is what the lens CSS keys on; nothing emitted it
+              before, so the rule matched nothing.
+            */
+            const kinds = new Set(yearGroup.items.map((item) => item.type));
+            const only = kinds.size === 1 ? [...kinds][0] : undefined;
+
+            return (
             <div key={`${group.era?.id ?? "none"}-${yearGroup.year}`} className="relative">
               <h3
                 id={`year-${yearGroup.year}`}
                 className="timeline-year"
+                data-year-marker={yearGroup.year}
+                data-only={only}
                 aria-label={`Year ${yearGroup.year}`}
               >
                 {yearGroup.year}
@@ -114,6 +128,8 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
                   return (
                     <li
                       key={itemKey(item)}
+                      // The first item past today, so "What comes next" has a target.
+                      id={itemKey(item) === boundaryKey ? "timeline-future" : undefined}
                       className="timeline-slot"
                       data-side={side}
                       // The lens filter hides by node type, and it hides the whole slot
@@ -122,7 +138,9 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
                       data-node={item.type}
                     >
                       {itemKey(item) === boundaryKey && (
-                        <p className="timeline-today">
+                        // Both ids exist so the "Today" and "What comes next" jump buttons
+                        // land somewhere. They pointed at nothing and failed silently.
+                        <p className="timeline-today" id="timeline-today">
                           <span aria-hidden>—</span> today <span aria-hidden>—</span>
                           <span className="timeline-today-note">
                             everything below is a stated intention
@@ -136,7 +154,8 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
                 })}
               </ul>
             </div>
-          ))}
+            );
+          })}
         </section>
       ))}
     </div>
