@@ -518,7 +518,7 @@
   /* `max-w-6xl`, matching the page container and therefore the context bar exactly. */
   max-width: 72rem;
   margin-inline: auto;
-  padding: 0.45rem 0.8rem 0.5rem;
+  padding: 0.35rem 0.8rem 0.4rem;
   border: 1px solid var(--color-rule);
   border-radius: 0.75rem;
   box-shadow: var(--shadow-raised);
@@ -540,14 +540,23 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding-bottom: 0.3rem;
+  padding-bottom: 0.2rem;
 }
 
-/* The plot area. `touch-action: none` so a drag scrubs instead of scrolling the page
-   out from under the finger. */
+/*
+  The plot area. `touch-action: none` so a drag scrubs instead of scrolling the page out
+  from under the finger.
+
+  Shorter than it was, and nothing else changed to get there. The plot is an SVG on a
+  fixed 40-unit viewBox with preserveAspectRatio="none", so its height is pure
+  presentation — the curves rescale and keep their shape, and every other measurement in
+  the control is a function of its own type size rather than of this. Taken with the
+  trimmed rows below, the control is about a fifth shorter without a single element
+  moving or changing size relative to its neighbours.
+*/
 .transport-track {
   position: relative;
-  height: 3.4rem;
+  height: 2.5rem;
   cursor: ew-resize;
   touch-action: none;
 }
@@ -687,8 +696,8 @@
    the years and the bottom of the control was cut off by the viewport edge. */
 .transport-eras {
   position: relative;
-  height: 1.05rem;
-  margin-top: 0.15rem;
+  height: 0.95rem;
+  margin-top: 0.1rem;
   border-top: 1px solid var(--color-rule);
 }
 
@@ -716,8 +725,8 @@
 
 .transport-years {
   position: relative;
-  height: 0.9rem;
-  margin-top: 0.1rem;
+  height: 0.8rem;
+  margin-top: 0.05rem;
 }
 
 .transport-year {
@@ -792,8 +801,8 @@
 .transport-top {
   display: grid;
   place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.4rem;
+  height: 1.4rem;
   border: 1px solid var(--color-rule);
   border-radius: 999px;
   font-size: 0.8rem;

@@ -146,4 +146,92 @@
     letter-spacing: -0.02em;
     color: var(--color-ink);
   }
+
+  /*
+    A technology on a case study, as a destination.
+
+    Same shape as the skills page's own chips, deliberately: the reader meets this chip
+    first and the one it lands on second, and two different treatments for the same thing
+    would read as two different things.
+  */
+  .tech-chip {
+    display: inline-block;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--color-ink-soft);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .tech-chip:hover {
+    border-color: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  /* ── Pagination ────────────────────────────────────────────────────────────
+     Only rendered above one page, so these styles describe a control the reader
+     never sees on a short list. */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  .pager-list {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    list-style: none;
+  }
+
+  .pager-step,
+  .pager-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 2rem;
+    height: 2rem;
+    padding-inline: 0.6rem;
+    justify-content: center;
+    border: 1px solid var(--color-rule);
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--color-ink-soft);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .pager-page {
+    padding-inline: 0.45rem;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pager-step:hover:not(:disabled),
+  .pager-page:hover {
+    border-color: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  /* Disabled rather than hidden: a control that disappears at the ends moves the two
+     beside it, and the reader has to re-find the one they were clicking. */
+  .pager-step:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pager-page[aria-current="page"] {
+    border-color: var(--color-signal);
+    color: var(--color-signal);
+    background: var(--color-signal-soft);
+  }
 }

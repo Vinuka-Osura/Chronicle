@@ -1,12 +1,15 @@
 "use client";
 
-import { useDeferredValue, useId, useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useRef, useState } from "react";
 import { CardGrid } from "@/components/CardGrid";
 import { Close, Search } from "@/components/Icon";
 import type { ProjectCard as ProjectCardData } from "@/lib/types";
 import { ProjectCard } from "./ProjectCard";
 
 type Sort = "curated" | "newest" | "oldest";
+
+/** Three full rows on the widest grid, so a page never ends on a row of one. */
+const PER_PAGE = 9;
 
 const SORTS: { key: Sort; label: string }[] = [
   { key: "curated", label: "Curated" },
@@ -39,6 +42,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
   const [tag, setTag] = useState<string | null>(null);
   const [sort, setSort] = useState<Sort>("curated");
   const searchId = useId();
+  const gridRef = useRef<HTMLDivElement>(null);
 
   /*
     The typed value drives the input; a deferred copy drives the list.
@@ -86,6 +90,60 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
 
   const filtering = Boolean(tag) || query.trim().length > 0;
 
+  /*
+    Pagination, and it is deliberately invisible until it is needed.
+
+    Nine per page — three full rows on the widest grid, so a page never ends on a row of
+    one. Below that threshold the controls do not render at all: a pager under a list of
+    four is a control that can only ever say "1 of 1", which is furniture pretending to
+    be a feature.
+
+    The page resets whenever the filter or the sort changes, and it resets in the handlers
+    that change them rather than in an effect watching them. An effect would be a second
+    render pass to correct state the first pass already knew was wrong — which is what
+    `react-hooks/set-state-in-effect` exists to catch.
+
+    `current` is clamped independently, so a stale page can never render a blank grid even
+    for one frame. The reset is about where the reader lands, not about correctness.
+  */
+  const [page, setPage] = useState(0);
+  const pages = Math.max(1, Math.ceil(shown.length / PER_PAGE));
+  const current = Math.min(page, pages - 1);
+
+  // Every filter change goes through one of these, so "reset to the first page" is
+  // stated once rather than remembered at six call sites.
+  const changeQuery = (value: string) => {
+    setQuery(value);
+    setPage(0);
+  };
+
+  const changeTag = (value: string | null) => {
+    setTag(value);
+    setPage(0);
+  };
+
+  const changeSort = (value: Sort) => {
+    setSort(value);
+    setPage(0);
+  };
+
+  const visible = useMemo(
+    () => (shown.length > PER_PAGE ? shown.slice(current * PER_PAGE, current * PER_PAGE + PER_PAGE) : shown),
+    [shown, current],
+  );
+
+  const goTo = (next: number) => {
+    setPage(next);
+    // Back to the top of the grid, not the top of the document: the filters above stay
+    // put, which is where someone paging through a filtered list is looking.
+    gridRef.current?.scrollIntoView({
+      behavior: globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <>
       <div className="browser rm-hide">
@@ -98,7 +156,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
             id={searchId}
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => changeQuery(event.target.value)}
             placeholder="Search by name, technology or tag"
             className="browser-input"
             autoComplete="off"
@@ -106,7 +164,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
           {query && (
             <button
               type="button"
-              onClick={() => setQuery("")}
+              onClick={() => changeQuery("")}
               className="browser-clear"
               aria-label="Clear search"
             >
@@ -120,7 +178,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
             <button
               key={option.key}
               type="button"
-              onClick={() => setSort(option.key)}
+              onClick={() => changeSort(option.key)}
               aria-pressed={sort === option.key}
               className="browser-sort-option"
             >
@@ -138,7 +196,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
             label="All"
             count={projects.length}
             active={tag === null}
-            onClick={() => setTag(null)}
+            onClick={() => changeTag(null)}
           />
           {tags.map(([value, count]) => (
             <FilterChip
@@ -146,7 +204,7 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
               label={value}
               count={count}
               active={tag === value}
-              onClick={() => setTag(tag === value ? null : value)}
+              onClick={() => changeTag(tag === value ? null : value)}
             />
           ))}
         </div>
@@ -177,17 +235,57 @@ export function ProjectBrowser({ projects }: { projects: ProjectCardData[] }) {
       <h2 className="sr-only">All projects</h2>
 
       {shown.length > 0 ? (
-        <CardGrid
-          items={shown}
-          keyOf={(project) => project.slug}
-          className="projects-grid rm-grid"
-        >
-          {(project) => <ProjectCard project={project} />}
-        </CardGrid>
+        <div ref={gridRef} className="scroll-mt-28">
+          <CardGrid
+            items={visible}
+            keyOf={(project) => project.slug}
+            className="projects-grid rm-grid"
+          >
+            {(project) => <ProjectCard project={project} />}
+          </CardGrid>
+
+          {pages > 1 && (
+            <nav className="pager rm-hide" aria-label="Pages of projects">
+              <button
+                type="button"
+                className="pager-step"
+                onClick={() => goTo(current - 1)}
+                disabled={current === 0}
+              >
+                <span aria-hidden>←</span> Previous
+              </button>
+
+              <ol className="pager-list">
+                {Array.from({ length: pages }, (_, i) => (
+                  <li key={i}>
+                    <button
+                      type="button"
+                      className="pager-page"
+                      aria-current={i === current ? "page" : undefined}
+                      onClick={() => goTo(i)}
+                    >
+                      <span className="sr-only">Page </span>
+                      {i + 1}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+
+              <button
+                type="button"
+                className="pager-step"
+                onClick={() => goTo(current + 1)}
+                disabled={current === pages - 1}
+              >
+                Next <span aria-hidden>→</span>
+              </button>
+            </nav>
+          )}
+        </div>
       ) : (
         <div className="browser-empty">
           <p className="browser-empty-line">Nothing matches that.</p>
-          <button type="button" className="browser-reset" onClick={() => { setQuery(""); setTag(null); }}>
+          <button type="button" className="browser-reset" onClick={() => { changeQuery(""); changeTag(null); }}>
             Clear the filters
           </button>
         </div>

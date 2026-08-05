@@ -9,6 +9,7 @@ import { ArchitectureDiagram } from "@/components/ArchitectureDiagram";
 import { MetricCards } from "../components/MetricCards";
 import { JsonLd } from "@/components/JsonLd";
 import { Markdown } from "@/components/Markdown";
+import { anchorId } from "@/lib/anchor";
 import { breadcrumbSchema, projectSchema } from "@/lib/structuredData";
 import "../projects.css";
 
@@ -156,14 +157,26 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
         <h1 className="text-title mb-3 font-semibold">{project.title}</h1>
         <p className="rm-compact mb-5 text-lg text-ink-soft">{project.pitch}</p>
 
+        {/*
+          The stack, as links rather than labels.
+
+          A case study naming six technologies and offering no way to reach any of them
+          is a dead end in the middle of the site's best page. Each chip now lands on
+          that skill's own card, where the years, the level and every other project that
+          used it already live — so the relationship the database holds is one a reader
+          can actually walk.
+        */}
         {project.techStack.length > 0 && (
           <ul className="flex flex-wrap gap-1.5">
             {project.techStack.map((tech) => (
-              <li
-                key={tech}
-                className="rounded border border-rule px-2 py-0.5 font-mono text-xs text-ink-soft"
-              >
-                {tech}
+              <li key={tech}>
+                <Link
+                  href={`/skills#${anchorId("skill", tech)}`}
+                  className="tech-chip"
+                  title={`${tech} — see the skill`}
+                >
+                  {tech}
+                </Link>
               </li>
             ))}
           </ul>

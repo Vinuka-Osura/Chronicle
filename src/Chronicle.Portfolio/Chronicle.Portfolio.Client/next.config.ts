@@ -35,6 +35,25 @@ const nextConfig: NextConfig = {
   },
 
   /*
+   * Uploaded media, proxied to the API.
+   *
+   * The local-disk storage provider stores a RELATIVE url — `/media/<key>` — and the API
+   * serves those files itself. That works when the API is the origin. It is not: the
+   * public site is this Next app on its own port, so `<img src="/media/x.png">` asked
+   * Next for a file only the API has, and every uploaded screenshot 404'd on the public
+   * pages while looking perfectly fine in the CMS preview.
+   *
+   * A rewrite rather than absolute URLs in the database, because the host is deployment
+   * configuration and the database should not have to be rewritten when it changes. The
+   * R2 provider already stores absolute URLs and is unaffected — this only ever matches
+   * the local provider's paths.
+   */
+  async rewrites() {
+    const api = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5080";
+    return [{ source: "/media/:path*", destination: `${api}/media/:path*` }];
+  },
+
+  /*
    * The floating badge in the corner during `next dev`. It is Next's own dev tools -
    * route render mode, compile errors, preferences - and it is stripped from production
    * builds entirely, so visitors never see it.

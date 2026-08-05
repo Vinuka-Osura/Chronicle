@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { anchorId } from "@/lib/anchor";
 import type { Skill } from "@/lib/types";
 
 function years(value: number): string {
@@ -47,7 +48,9 @@ export function SkillCard({ skill, deepest }: { skill: Skill; deepest: number })
   const share = deepest > 0 ? Math.max(0.08, skill.yearsExperience / deepest) : 0;
 
   return (
-    <article className="skill-card">
+    // The anchor a case study's tech-stack chip links to. `scroll-mt` clears the sticky
+    // header, which would otherwise cover the card the reader just asked to see.
+    <article className="skill-card scroll-mt-28" id={anchorId("skill", skill.name)}>
       <div className="skill-head">
         <h3 className="skill-name">{skill.name}</h3>
         <span className="skill-level">{skill.proficiency}</span>
