@@ -25,8 +25,8 @@ namespace Chronicle.Infrastructure.Data;
 /// and the hide-empty-sections paths are exercised.
 /// </para>
 /// <para>
-/// Seeding is skipped entirely once any project exists, so this can never overwrite real
-/// content. Replace it through the admin CMS.
+/// Seeding is skipped entirely once <i>any</i> content table has a row, so this can never
+/// overwrite or collide with real content. Replace it through the admin CMS.
 /// </para>
 /// </remarks>
 internal static partial class SampleContent
@@ -36,8 +36,9 @@ internal static partial class SampleContent
         ILogger logger,
         CancellationToken cancellationToken)
     {
-        if (await context.Projects.AnyAsync(cancellationToken).ConfigureAwait(false))
+        if (await HasAnyContentAsync(context, cancellationToken).ConfigureAwait(false))
         {
+            LogSkipped(logger);
             return;
         }
 
@@ -586,7 +587,55 @@ internal static partial class SampleContent
             SortOrder = sortOrder
         };
 
+    /// <summary>
+    /// True when any content table already holds a row.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Every table this seeder writes to is listed, because a guard is only as good as its
+    /// least-checked table. This tested <c>Projects</c> alone, as a stand-in for "does this
+    /// database belong to someone yet" — which holds exactly as long as the content tables
+    /// agree with one another, and they stop agreeing the moment anybody uses the CMS.
+    /// </para>
+    /// <para>
+    /// The observed failure: three posts written in <c>/admin</c>, no projects yet, so the
+    /// guard read "empty" and the seeder ran — straight into
+    /// <c>23505: duplicate key value violates unique constraint "IX_knowledge_posts_Slug"</c>
+    /// on the one slug the operator's post shared with the sample set. And because the
+    /// initialiser commits every seeder in a single <c>SaveChanges</c>, that one collision
+    /// rolled the whole thing back and took startup down with it. A guard that is wrong in
+    /// this direction does not degrade, it fails the application to a stop.
+    /// </para>
+    /// <para>
+    /// Erring toward not seeding is the safe direction: the cost is a developer with one
+    /// stray tag not getting the demo persona, against overwriting or colliding with real
+    /// content. The skip is logged so the reason is visible rather than mysterious.
+    /// </para>
+    /// </remarks>
+    private static async Task<bool> HasAnyContentAsync(
+        ChronicleDbContext context,
+        CancellationToken cancellationToken)
+    {
+        // Sequential and short-circuiting. Eleven EXISTS probes at startup cost nothing,
+        // and the common case — a database with content — stops at the first one.
+        return await context.Projects.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Posts.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Experiences.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Skills.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Certifications.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Milestones.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Eras.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.RoadmapItems.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.LearningItems.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Tags.AnyAsync(cancellationToken).ConfigureAwait(false)
+            || await context.Profiles.AnyAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     [LoggerMessage(EventId = 2100, Level = LogLevel.Information,
         Message = "Seeding sample content for the demo persona (content tables were empty).")]
     private static partial void LogSeeding(ILogger logger);
+
+    [LoggerMessage(EventId = 2101, Level = LogLevel.Information,
+        Message = "Sample content skipped: this database already has content of its own.")]
+    private static partial void LogSkipped(ILogger logger);
 }
