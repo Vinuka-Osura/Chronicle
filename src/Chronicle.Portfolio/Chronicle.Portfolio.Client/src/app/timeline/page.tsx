@@ -52,9 +52,10 @@ export default async function TimelinePage() {
       {timeline.items.length > 0 ? (
         <>
           <ContextBar eraNames={eraNames} />
-          {/* Clears the fixed transport, so the last node is never hidden behind it.
-              The control is ~8.6rem tall now that the legend sits above the plot. */}
-          <div className="pb-40">
+          {/* Breathing room only. The transport is sticky rather than fixed, so it takes
+              up its own space at the end of the page and no longer needs the stream to
+              reserve any on its behalf. */}
+          <div className="pb-10">
             <TimelineStream timeline={timeline} />
           </div>
           <Transport timeline={timeline} />

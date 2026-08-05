@@ -489,12 +489,26 @@
   disagreed with the context bar directly above it, which is the same axis at
   `max-w-6xl`. Two controls for one page reading two different widths.
 */
+/*
+  STICKY, not fixed.
+
+  Fixed took it out of the flow entirely, so it floated over whatever happened to be
+  under it — including the footer, which it covered completely once you reached the end
+  of the page. Sticky pins it to the bottom edge exactly the same way while there is
+  timeline left to scroll, and then lets it come to rest at its own place in the document
+  so the footer arrives underneath it rather than behind it.
+
+  It also means the control no longer needs the page to reserve space for it: it occupies
+  its own, which is what the `pb-40` on the stream was standing in for.
+*/
 .transport {
-  position: fixed;
-  inset-inline: 0;
+  position: sticky;
   bottom: 0;
   z-index: 40;
-  padding: 0 1rem 0.75rem;
+  /* Back out to the page container's edges, so the card lines up with the context bar
+     rather than sitting inside `main`'s padding. */
+  margin-inline: -1rem;
+  padding-bottom: 0.75rem;
   pointer-events: none;
 }
 
@@ -513,7 +527,7 @@
 
 @media (width >= 40rem) {
   .transport {
-    padding-inline: 1.25rem;
+    margin-inline: -1.25rem;
   }
 }
 

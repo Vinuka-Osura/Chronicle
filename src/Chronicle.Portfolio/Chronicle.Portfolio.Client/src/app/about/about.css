@@ -358,6 +358,18 @@
     inset: 0;
   }
 
+  /*
+    The issuer's badge. Contained rather than cropped — a Credly badge is usually a
+    shield or a hexagon on transparency, and `cover` would slice its corners off.
+  */
+  .cert-logo {
+    display: block;
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 0.7rem;
+    object-fit: contain;
+  }
+
   .cert-name {
     display: block;
     font-weight: 600;

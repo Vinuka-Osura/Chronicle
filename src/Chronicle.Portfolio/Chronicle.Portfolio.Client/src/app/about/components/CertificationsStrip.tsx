@@ -29,6 +29,30 @@ export function CertificationsStrip({ items }: { items: Certification[] }) {
         {items.map((cert) => {
           const body = (
             <>
+              {/*
+                The issuer's badge, when there is one.
+
+                `logoUrl` has been on this DTO since the beginning and nothing rendered
+                it, so a Credly badge — which arrives with its artwork already — showed
+                as text. A plain <img>, not next/image: the URL comes from the CMS or
+                from Credly at request time, so there is no build-time knowledge to
+                optimise against and a remote loader for an unknown host is a bigger
+                surface than the saving is worth at 40px.
+
+                Purely decorative. The name and issuer beside it already say what it is,
+                so the alt is empty rather than a duplicate for a screen reader to read
+                twice.
+              */}
+              {cert.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={cert.logoUrl}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="cert-logo"
+                />
+              )}
               <span className="cert-name">{cert.name}</span>
               <span className="cert-issuer">
                 {cert.issuer} &middot; {issued(cert.issueDate)}

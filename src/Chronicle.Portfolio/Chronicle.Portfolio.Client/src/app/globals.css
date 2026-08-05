@@ -948,6 +948,38 @@
     transform: scaleX(1);
   }
 
+  /*
+    The icon row: the same destinations as the Elsewhere column, as marks.
+
+    A bordered target rather than a bare glyph, because a 16px icon on its own is a hit
+    area smaller than a fingertip. 36px square clears the 24px minimum with room to
+    spare, and the border is what makes it read as something you can press.
+  */
+  .footer-mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    color: var(--color-ink-soft);
+    transition:
+      color var(--t-quick) var(--ease-move),
+      border-color var(--t-quick) var(--ease-move),
+      transform var(--t-quick) var(--ease-move);
+  }
+
+  .footer-mark:hover {
+    color: var(--color-signal);
+    border-color: var(--color-signal);
+    transform: translateY(-2px);
+  }
+
+  .footer-mark:focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 2px;
+  }
+
   [data-motion="reduced"] .surface,
   [data-motion="still"] .surface {
     background: var(--color-paper-solid);
