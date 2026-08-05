@@ -150,8 +150,8 @@ export function StatusBar() {
       <p className="status-bar-mark">
         {/* The build year and the browser's year differ for one night a year, and the
             browser is the one that is right. */}
-        <span suppressHydrationWarning>&copy; {YEAR}</span> Sam Iversen. All rights
-        reserved.
+        <span suppressHydrationWarning>&copy; {YEAR}</span> Vinuka Osura Anupama. All
+        rights reserved.
       </p>
 
       {/* Where you are, keyed so it re-enters when it changes rather than swapping the

@@ -3,14 +3,15 @@
  *
  * The identity strings live here rather than being repeated at each call site, so
  * changing who the site belongs to is one edit rather than a search across the tree.
- * They match the demo persona in `app/layout.tsx` — change both together.
+ * They match `app/layout.tsx` — change both together.
  */
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const PERSON = {
-  name: "Sam Iversen",
+  name: "Vinuka Osura Anupama",
   jobTitle: "Software Engineer",
   github: "https://github.com/Vinuka-Osura",
+  linkedIn: "https://www.linkedin.com/in/vinuka-osura-anupama/",
 };
 
 /** The `@id` every other node points at, so search engines treat them as one person. */
@@ -24,7 +25,9 @@ export function personSchema() {
     name: PERSON.name,
     jobTitle: PERSON.jobTitle,
     url: SITE_URL,
-    sameAs: [PERSON.github],
+    // Every profile that is demonstrably the same person, so a search engine can merge
+    // them into one entity rather than treating each as a separate someone.
+    sameAs: [PERSON.github, PERSON.linkedIn],
   };
 }
 

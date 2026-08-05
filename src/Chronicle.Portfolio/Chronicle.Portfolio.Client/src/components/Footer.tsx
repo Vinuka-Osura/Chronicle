@@ -30,11 +30,12 @@ export function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           <div className="lg:col-span-1">
             <p className="font-mono text-xs tracking-[0.2em] text-ink uppercase">
-              Sam Iversen
+              Vinuka Osura Anupama
             </p>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
-              Backend engineer working on ledgers, statements and the reliability around
-              them — the parts where being nearly right is the same as being wrong.
+              Full-stack software engineer working on enterprise systems — backend
+              services, the databases under them, and the architecture that keeps both
+              maintainable as the requirements move.
             </p>
           </div>
 
@@ -103,7 +104,9 @@ export function Footer() {
         <div className="mt-6 flex flex-col gap-2 border-t border-rule pt-5 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
           {/* The build year and the browser's year differ for one night a year, and the
               browser is the one that is right. */}
-          <p suppressHydrationWarning>&copy; {YEAR} Sam Iversen. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            &copy; {YEAR} Vinuka Osura Anupama. All rights reserved.
+          </p>
           <p className="font-mono">Built in the open — the source is on GitHub.</p>
         </div>
       </div>

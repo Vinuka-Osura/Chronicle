@@ -28,25 +28,21 @@ export default async function AboutPage() {
         <div className="hero-channel">
           <Acquire text="ABOUT" className="hero-channel-label" delay={120} />
           <span className="hero-channel-rule" aria-hidden />
-          <Acquire text="SAM IVERSEN" className="hero-channel-label" delay={220} />
+          <Acquire text="VINUKA OSURA" className="hero-channel-label" delay={220} />
         </div>
 
         <SetLines as="h1" className="about-heading" delay={320} id="about-heading">
-          Payments, where being nearly right is the same as being wrong.
+          Engineering through curiosity.
         </SetLines>
 
         <p className="about-lede reveal-mask">
-          Ledgers, settlement, reconciliation, and the unglamorous reliability work
-          around all three. It turns out to be a good way to learn how to build things
-          properly, because the domain does not let you get away with anything.
+          I enjoy building software, but what keeps me engaged is understanding why
+          systems behave the way they do — and that question is usually more useful than
+          the feature that prompted it.
         </p>
       </section>
 
       {/*
-        DEMO CONTENT. This is Sam Iversen, the fictional engineer the seed data
-        describes — written so the application reads as a finished thing before anyone's
-        real history is in it.
-
         Prose lives in the page for now. It moves into the CMS with the About editor, at
         which point this becomes a Markdown render like the case studies and the copy
         stops needing a deploy to change.
@@ -54,27 +50,30 @@ export default async function AboutPage() {
       <section className="scene" data-scene="The story" aria-labelledby="story-heading">
         <p className="scene-eyebrow">The story</p>
         <h2 id="story-heading" className="scene-heading">
-          It started with a spreadsheet nobody wanted to open.
+          The process is where the lessons are.
         </h2>
 
         <div className="story rm-compact" data-stagger>
           <p>
-            I started out automating a month-end statement process that used to be done
-            by hand, and stayed because the problems kept getting more interesting.
+            Whether it is investigating a ZIP bomb vulnerability, redesigning an
+            architecture, or making an existing application faster, I prefer starting
+            with the underlying problem rather than jumping to the implementation.
           </p>
 
           {/* The one sentence worth stopping on, set as a pull quote rather than left
               buried in the middle of a paragraph where nobody would find it. */}
           <blockquote className="story-pull">
-            The work I am proudest of is a double-entry ledger that had to stay correct
-            while several transfers posted at the same instant — a problem where the
-            naive answer looks fine right up until money goes missing.
+            Instead of only the polished outcomes, I write down the real challenges — the
+            unexpected failures, the architectural decisions, and the trade-offs. Every
+            one of them reveals something that makes the next system better.
           </blockquote>
 
           <p>
-            What I care about is the unglamorous part: systems that behave predictably
-            under load, that fail in ways you can diagnose, and that the next engineer
-            can understand without a handover call.
+            Professionally I work in the Microsoft ecosystem, building enterprise
+            applications with C#, ASP.NET Core, Entity Framework Core, SQL Server and
+            PostgreSQL. Alongside that I build full-stack applications with Next.js and
+            NestJS, using Docker, Git and DevOps practices to get things from development
+            into production.
           </p>
 
           <p>

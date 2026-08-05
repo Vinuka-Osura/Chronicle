@@ -332,7 +332,7 @@ create a new one silently.
 **Category** must be one of: `Backend` · `Frontend` · `Database` · `DevOps` · `Cloud` ·
 `AI` · `Other`
 
-**Level** must be one of: `Learning` · `Working` · `Proficient` · `Advanced` · `Expert`
+**Level** must be one of: `Novice` · `Working` · `Proficient` · `Advanced` · `Expert`
 
 Be honest about levels. An inflated one is a trap you set for yourself in an interview.
 
@@ -408,13 +408,15 @@ Body (Markdown) — only if there is no External URL above, i.e. this is hosted 
 
 What you are actively working through. Shows on the Knowledge page.
 
-**Status** must be one of: `Planned` · `InProgress` · `Completed` · `Paused`
+**Status** must be one of: `Exploring` · `Learning` · `Comfortable` — where you are with
+it, not whether it is finished. There is no "completed": something you are comfortable
+with belongs in §8 as a skill.
 
-| Title | Kind (book / course / paper / other) | Status | Started | Finished | Link *(optional)* | One-line note |
-|---|---|---|---|---|---|---|
-| | | | | | | |
-| | | | | | | |
-| | | | | | | |
+| Topic | Status | Progress % *(optional)* | Link *(optional)* | One-line note |
+|---|---|---|---|---|
+| | | | | |
+| | | | | |
+| | | | | |
 
 ---
 
@@ -423,7 +425,7 @@ What you are actively working through. Shows on the Knowledge page.
 Stated intentions, rendered below the timeline's "today" marker. These are goals, not
 achievements, and the site says so — which is what makes them worth stating.
 
-**Status** must be one of: `Planned` · `InProgress` · `Done` · `Abandoned`
+**Status** must be one of: `Planned` · `InProgress` · `Done`
 
 | Goal | Target date | Status | Why it matters — one line |
 |---|---|---|---|

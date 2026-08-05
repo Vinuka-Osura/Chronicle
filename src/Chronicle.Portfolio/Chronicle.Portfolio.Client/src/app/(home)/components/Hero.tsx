@@ -37,21 +37,23 @@ export function Hero() {
           <div className="hero-channel">
             <Acquire text="SOFTWARE ENGINEER" className="hero-channel-label" delay={120} />
             <span className="hero-channel-rule" aria-hidden />
-            <Acquire text="BANKING SYSTEMS" className="hero-channel-label" delay={220} />
+            <Acquire text="ENTERPRISE SYSTEMS" className="hero-channel-label" delay={220} />
           </div>
 
           <SetLines as="h1" className="hero-headline" delay={320} id="hero-heading">
-            I build backends that stay correct when things go wrong.
+            Building reliable software by understanding the problem before writing the
+            solution.
           </SetLines>
 
           {/* The arrival delays are in the stylesheet, not on the element. They belong
               to the hero's choreography rather than to this paragraph, and keeping them
               in CSS is what lets the whole sequence run without any JavaScript. */}
           <p className="hero-lede reveal-mask">
-            Most of my work is ledgers, statements and the unglamorous reliability around
-            them — the parts where being nearly right is the same as being wrong. This
-            site is a working example: a .NET&nbsp;10 API and CMS behind a Next.js
-            frontend, so everything you read here is content I can edit without a deploy.
+            Great software starts with understanding the problem, not writing code. I
+            design and build full-stack applications on clean architecture and robust
+            backend systems that stay reliable as the requirements move. This site is a
+            working example: a .NET&nbsp;10 API and CMS behind a Next.js frontend, so
+            everything you read here is content I can edit without a deploy.
           </p>
 
           {/* The confirmation. Draws last, once the words have landed. */}
