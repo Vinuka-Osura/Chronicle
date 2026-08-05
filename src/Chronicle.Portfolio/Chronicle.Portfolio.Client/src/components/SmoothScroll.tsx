@@ -32,6 +32,7 @@ export function SmoothScroll() {
     const root = document.documentElement;
 
     let lenis: Lenis | null = null;
+    let height: ResizeObserver | null = null;
     let frame = 0;
     let published = 0;
 
@@ -52,6 +53,30 @@ export function SmoothScroll() {
 
       // So the status bar's back-to-top can go through Lenis rather than fighting it.
       registerScroller(lenis);
+
+      /*
+        Re-measure whenever the page's height changes. Without this the scroll simply
+        stops early, and it is not subtle.
+
+        Lenis caches a `limit` and recomputes it only when its `content` element resizes.
+        Content defaults to `<html>` — which this layout pins to `height: 100%` with
+        `h-full`. An element that is exactly the viewport's height never changes its own
+        border box when the content inside it grows, so Lenis's own observer never fires
+        and the limit stays at whatever it was when it last measured.
+
+        On a client-side navigation that is the PREVIOUS page's height. Measured: arrive
+        at /timeline by clicking the header link from /about and the wheel stopped 1008px
+        short of the bottom, exactly at About's old limit — and every `lenis.scrollTo`
+        clamped with it, so dragging the timeline's scrubber past that point did nothing
+        at all. The browser's own scrollbar does not consult Lenis, which is why it was
+        the one thing that still worked.
+
+        `<body>` is `min-h-full`, so unlike `<html>` it grows with its content. Observing
+        it also covers the other ways the height moves — filtering the timeline's lenses,
+        late-loading fonts and images — rather than only navigation.
+      */
+      height = new ResizeObserver(() => lenis?.resize());
+      height.observe(document.body);
 
       const tick = (time: number) => {
         // Narrowed for the closure: `stop()` can null the outer binding between frames.
@@ -86,6 +111,8 @@ export function SmoothScroll() {
 
       cancelAnimationFrame(frame);
       registerScroller(null);
+      height?.disconnect();
+      height = null;
       lenis.destroy();
       lenis = null;
       published = 0;
