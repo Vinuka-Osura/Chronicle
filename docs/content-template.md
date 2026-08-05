@@ -10,6 +10,12 @@ Some rules that will save you time:
   invent something to fill a gap.
 - **Dates**: `YYYY-MM` is enough almost everywhere (`2024-03`). Write `ongoing` for
   anything that has not ended. Where a day matters, the field says so.
+- **End dates do more work than you would expect.** The chart along the bottom of the
+  Timeline is drawn from them: something with an end date is counted across every month
+  it ran, so a three-year degree is a plateau rather than a spike on the day it started.
+  Leave one blank and that entry becomes a single point. Neither is wrong — see §4 — but
+  a blank end date on a three-year job will quietly flatten the most interesting part of
+  the picture.
 - **Don't write to a word count.** Two honest sentences beat a padded paragraph, and
   padding is very visible on a page like this.
 - **Markdown works** anywhere marked *(Markdown)* — `**bold**`, `` `code` ``,
@@ -35,10 +41,34 @@ data search engines read.
 | Specialism line | | One clause. e.g. "payments systems and reliability" |
 | Location | | Optional. City + country, or leave blank |
 | Public email | | The address on the printed résumé. Blank = contact form only |
-| GitHub username | | |
+| Phone | | Optional. Shown on the résumé only |
+| GitHub profile URL | | Optional. Powers the GitHub icon on the Contact page |
 | LinkedIn URL | | Optional |
-| Other profile | | Optional — anything else worth linking |
-| Domain | | Once you have bought it |
+| Personal website | | Optional — your own site, shown on the résumé header |
+| Availability | | Optional closing line for the résumé — availability, work authorisation, relocation. Blank hides the section entirely |
+| Domain | | Once you have bought it, for *this* site |
+
+**Elsewhere** *(all optional)* — icon links on the Contact page, professional first.
+Blank ones simply do not render; there is no dead-icon row.
+
+| Field | Your answer |
+|---|---|
+| X (Twitter) URL | |
+| Instagram URL | |
+| Facebook URL | |
+
+**Live stats handles** *(all optional)* — public usernames, not secrets, that let
+Analytics and Knowledge pull real numbers live: contributions, reputation, badges,
+published images. A blank handle means no call is made and that section is simply
+absent, rather than showing as empty or zero.
+
+| Field | Your answer | Notes |
+|---|---|---|
+| GitHub username | | Login, e.g. `Vinuka-Osura` — not the profile URL above |
+| Stack Overflow user id | | The number from your profile URL, e.g. `23785133` |
+| Credly username | | Profile must be public |
+| Docker Hub username | | |
+| Medium username | | Without the leading `@`. Also pulls your Medium posts into §10 automatically — do not re-enter them there |
 
 **Home page headline** — the one sentence at the top of the site. Say what you do and
 what makes you different, not what you are looking for.
@@ -57,6 +87,13 @@ and what kind of engineer you are.
 Your paragraph:
 
 ```
+
+> **These four are the exception to "everything is editable in `/admin`".** The home
+> hero — the two words either side of the rule, the headline and this paragraph — is
+> written into the page itself rather than stored as content, so changing it is a
+> one-line code edit and a deploy rather than a CMS field. It is the first thing anyone
+> sees and it changes about once a year, so it has not been worth a form. Everything
+> else in this document is editable without a deploy.
 
 **Résumé summary** — three or four sentences, but written for someone deciding whether
 to read on. Slightly more formal than the home page.
@@ -119,6 +156,32 @@ is a better era name than "Junior Developer, 2021–2023".
 > (2021-07 → 2023-01) · *Payments at Scale* (2023-02 → 2025-12) · *What Comes Next*
 > (2026-01 → ongoing)
 
+### What the chart at the bottom of the Timeline is made of
+
+Nothing extra to fill in — it is drawn entirely from the dates you give in §5 to §12.
+It is worth knowing what it does with them, because it is the one place where a blank
+field visibly changes the shape of the page rather than just hiding a heading.
+
+Each kind gets its own curve, marked with its own shape at the dates things happened:
+
+| Curve | Comes from | Counted as |
+|---|---|---|
+| Roles | §6 | every month from start to end — `ongoing` runs to today |
+| Projects | §7 | the same |
+| Life | §5 | a period if you give an end date, otherwise a single moment |
+| Certifications | §9 | a moment, at the month it was issued |
+| Goals | §12 | a moment, at its target date |
+
+**A moment is not a shortcoming.** A certification is a day, not a season, so its curve
+is flat with a peak at each one — which is the truthful shape and reads perfectly well.
+The distinction only matters in §5, where you get to choose: a degree wants its start
+*and* end so it draws as the three years it took, whereas a talk or an award wants the
+end left blank so it stays the single day it was.
+
+Your era names in §4 become the labelled sectors under the same chart, which is the
+other reason to name them the way you would in conversation — they are read at a glance,
+in about eight characters of width.
+
 ---
 
 ## 5. Milestones
@@ -127,6 +190,11 @@ The dated moments that are not a job and not a project: graduating, a talk, an a
 move, a first commit. These are the punctuation of the timeline.
 
 **Category** must be one of: `Education` · `Recognition` · `Community` · `Personal`
+
+**The end date is the meaningful choice here** — it is what decides whether an entry
+draws as a period or as a point on the Timeline's chart. Give a degree its start and end
+and it becomes the three years it took; leave a talk's end blank and it stays the one day
+it was. See §4.
 
 | Date | End date *(optional)* | Category | Title | One-line description | Link *(optional)* |
 |---|---|---|---|---|---|
@@ -208,9 +276,30 @@ only one optional section, write this one. "I picked X" is not interesting;
 Architecture notes (Markdown) — how the pieces fit. Diagram URL below if you have one.
 
 
+Architecture diagram (optional) — one connection per line, `A -> B` with an optional
+`: label`. This becomes an animated SVG, drawn from the text — a different thing from
+the "Architecture diagram image URL" link further down, which is for a diagram this
+plain grammar cannot express. Blank lines space it out, a line starting `#` is a comment,
+and a malformed line is skipped rather than breaking the page — so rough is fine:
+
+  # the read path
+  Browser -> API : HTTPS
+  API -> Database : SQL
+  API -> Cache
+
+
 Results (Markdown) — what changed. Numbers if you have them, honestly. "Cut p99 from
 1.2s to 180ms" is worth more than three paragraphs of adjectives. If you have no
 numbers, say what got better in plain terms rather than reaching for a metric.
+
+Results metrics (optional) — up to 4 lines, pipe-separated, rendered as stat tiles
+beside the Results prose above: `Label | Value | optional caveat`. Four is the limit
+because it fits a phone in one row. The caveat is usually the honest part — a number
+with none is a number nobody can check. `#` starts a comment, and a line with a label
+but no value is skipped rather than rejected:
+
+  Statement p95 | 2.4s to 40ms | at the 95th percentile
+  Throughput | ~4,000/sec |
 
 
 Lessons learned (Markdown) — what you would do differently. Do not skip this because
@@ -267,14 +356,19 @@ Be honest about levels. An inflated one is a trap you set for yourself in an int
 
 ## 9. Certifications
 
-| Name | Issuer | Issued (YYYY-MM) | Expires *(optional)* | Credential URL *(optional)* | Skills it attests to |
-|---|---|---|---|---|---|
-| | | | | | |
-| | | | | | |
-| | | | | | |
+**Kind** must be one of: `Certification` · `Applied Skill` · `Badge` · `Training` — only
+the first two reach the résumé; badges and training show grouped and compact instead. An
+invigilated exam and a module you clicked through should not carry the same weight.
+
+| Name | Issuer | Kind | Issued (YYYY-MM) | Expires *(optional)* | Credential URL *(optional)* | Logo URL *(optional)* | Skills it attests to |
+|---|---|---|---|---|---|---|---|
+| | | | | | | | |
+| | | | | | | | |
+| | | | | | | | |
 
 The last column links a certificate to entries in §8, so AZ-204 can point at both "Azure"
-and "C#". Names must match §8 exactly.
+and "C#". Names must match §8 exactly. Credly badges merge in automatically once the
+Credly username in §1 is set, so only add a row here for something Credly does not have.
 
 ---
 
@@ -283,6 +377,11 @@ and "C#". Names must match §8 exactly.
 Optional at launch — you can write these in the CMS whenever, with no deploy. Include
 any you already have.
 
+**Medium posts need no row here** — set the Medium username in §1 and they are pulled
+in live from your feed, cover image included. This section is for everything else:
+something published on LinkedIn or another host with no feed to read, entered by hand
+with a link out, or a piece with nowhere else to live, hosted here in full.
+
 ```
 Title:
 Slug (lowercase-with-hyphens):
@@ -290,11 +389,18 @@ Excerpt — one or two sentences, shown on the card and in search results:
 Tags (comma separated):
 Published? (yes/no — no keeps it as a draft, invisible on the public site):
 
-Body (Markdown):
+External URL (optional) — where it actually lives, if published elsewhere (LinkedIn,
+dev.to, ...). Set this and the card links out; Body below is ignored and there is
+nothing to read at /knowledge/<slug> on this site:
+
+Cover image URL (optional) — only used alongside an External URL, for the preview card:
+
+Body (Markdown) — only if there is no External URL above, i.e. this is hosted here:
 
 ```
 
-> Reading time is calculated from the body. There is no field for it.
+> Reading time is calculated from the body, for articles hosted here. There is no
+> field for it.
 
 ---
 
@@ -319,12 +425,17 @@ achievements, and the site says so — which is what makes them worth stating.
 
 **Status** must be one of: `Planned` · `InProgress` · `Done` · `Abandoned`
 
-| Goal | Target date *(optional)* | Status | Why it matters — one line |
+| Goal | Target date | Status | Why it matters — one line |
 |---|---|---|---|
 | | | | |
 | | | | |
 | | | | |
 | | | | |
+
+**Target date is required** — it is what puts the goal in order and places it on the
+Timeline's Goals curve, out past today. A goal with no date is a wish, and the page is
+built on the distinction between the two. A rough quarter is fine; `2027-06` commits you
+to nothing except an intention to have meant it.
 
 ---
 
@@ -362,10 +473,11 @@ work differently.
 4. **From then on you edit projects, articles and the status strip yourself in `/admin`,
    and changes are live on the next page load** — no deploy, no waiting for a cache.
 
-**Every one of these sections is now editable in `/admin` too.** So this template is a
-convenience, not a requirement — if you would rather type it straight into the CMS, do
-that instead and skip the document entirely. It is still the faster route for §7
-(projects), where the writing is the work and a text editor beats a web form.
+**Every one of these sections is editable in `/admin` too**, with the single exception
+of the home hero noted in §1. So this template is a convenience, not a requirement — if
+you would rather type it straight into the CMS, do that instead and skip the document
+entirely. It is still the faster route for §7 (projects), where the writing is the work
+and a text editor beats a web form.
 
 If you do use the CMS directly, **fill in Skills first**: projects, roles and
 certifications can only name a skill that already exists, so an empty Skills page blocks
