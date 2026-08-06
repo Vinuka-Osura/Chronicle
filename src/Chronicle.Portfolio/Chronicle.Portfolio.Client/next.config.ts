@@ -50,6 +50,13 @@ const nextConfig: NextConfig = {
    */
   async rewrites() {
     const api = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5080";
+
+    /*
+     * The bot's endpoint is deliberately NOT here. A rewrite proxies the request but does
+     * not follow what comes back, and the API enforces HTTPS — so a rewrite to it returned
+     * a bare 307 with no body. It is a route handler instead, at `app/api/ask/route.ts`,
+     * where `fetch` follows the redirect the way every Server Component already does.
+     */
     return [{ source: "/media/:path*", destination: `${api}/media/:path*` }];
   },
 
@@ -66,7 +73,9 @@ const nextConfig: NextConfig = {
    * clear the site's local storage in devtools to bring it back.
    */
   devIndicators: {
-    position: "bottom-right",
+    // Bottom-LEFT since the bot took the other corner. Two round badges an inch apart is
+    // a developer clicking the wrong one, and this is the one that only exists in dev.
+    position: "bottom-left",
   },
 
   // The API owns its own error contract; never leak framework internals to visitors.
