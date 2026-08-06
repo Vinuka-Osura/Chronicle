@@ -30,4 +30,12 @@ public sealed record AskAnswerDto(
     string Answer,
     IReadOnlyList<AskSourceDto> Sources,
     IReadOnlyList<string> Suggestions,
-    string Matched);
+    string Matched,
+    /// <summary>What this answer was about — a skill name, a project title — or null.</summary>
+    /// <remarks>
+    /// Handed back so the caller can return it as <c>context</c> on the next question,
+    /// which is what lets "what projects used it?" have an "it". The thread is carried on
+    /// the client rather than in server state, so the endpoint stays a pure function of
+    /// its query string — cacheable, and unbothered by a restart mid-conversation.
+    /// </remarks>
+    string? Subject);

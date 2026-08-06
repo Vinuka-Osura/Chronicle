@@ -41,15 +41,25 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
     /// <b>Nothing here may also be an intent cue.</b> Noise is stripped before scoring, so
     /// a cue that appears in this set can never be matched — which is what made "who are
     /// you" fall through to the unknown answer while every other question worked. "who"
-    /// and "about" were in both lists; they are cues, so they are not noise.
+    /// was in both lists, and is now only a cue.
+    /// <para>
+    /// "about" went the other way. It was promoted to a cue for the same reason and had to
+    /// come back: it is a preposition far more often than it is a topic, so "anything about
+    /// concurrency" scored as a request for the biography. A word that matches the
+    /// question's grammar rather than its subject belongs here.
+    /// </para>
     /// </remarks>
     private static readonly HashSet<string> Noise = new(StringComparer.Ordinal)
     {
         "a", "an", "the", "is", "are", "was", "were", "do", "does", "did", "you",
         "your", "yours", "he", "his", "him", "i", "me", "my", "what", "which",
         "whom", "when", "why", "can", "could", "would", "should", "have",
-        "has", "had", "any", "some", "of", "in", "on", "at", "to", "for", "with",
-        "and", "or", "it", "its", "this", "that", "there", "tell", "show", "give", "us",
+        "has", "had", "any", "some", "of", "in", "on", "at", "to", "for", "with", "about",
+        // "it", "its", "this", "that" were here and are not any more: they are pronouns,
+        // and a pronoun stripped as noise cannot be resolved against the previous answer.
+        // Same rule as the cue words above — nothing that carries meaning elsewhere in
+        // this file may also be noise. They match no intent, so keeping them is free.
+        "and", "or", "there", "tell", "show", "give", "us",
         "please", "know", "much", "many", "long", "been", "be", "am", "get", "got",
     };
 
@@ -64,11 +74,35 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         "thanks", "thank", "thankyou", "cheers", "appreciated", "ta",
     };
 
+    /// <summary>Words that point back at the previous answer rather than naming anything.</summary>
+    private static readonly HashSet<string> Pronouns = new(StringComparer.Ordinal)
+    {
+        "it", "its", "that", "this", "them", "those", "these", "they",
+    };
+
     public async Task<AskAnswerDto> Handle(AskQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var words = Tokenise(request.Question);
+
+        /*
+          Resolve a pronoun against whatever the last answer was about.
+
+          "What projects used it?" is the single commonest follow-up and it had no "it" to
+          resolve — the question tokenised to {projects, used} and answered with the whole
+          list, which reads as the bot having forgotten the previous sentence. Folding the
+          caller's context into the token set gives the named-entity passes below something
+          to find, and costs nothing when there is no pronoun.
+
+          The context is a hint from the client, never an authority: it can only select
+          among things already published, so the worst a forged one does is answer a
+          question about a different skill.
+        */
+        if (!string.IsNullOrWhiteSpace(request.Context) && words.Overlaps(Pronouns))
+        {
+            words.UnionWith(Tokenise(request.Context));
+        }
 
         // Ordered by specificity: the first intent whose score ties wins, so a question
         // naming a technology resolves to that technology rather than to "skills".
@@ -81,7 +115,7 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             // strongest cue, and having them here too meant "what did you study" tied and
             // resolved to whichever intent came first. "case" alone carries "case study".
             ("projects", ["project", "projects", "built", "build", "case", "portfolio", "shipped"], ProjectsAsync),
-                        // "strongest" and "best" are here because the console offers "What is he
+            // "strongest" and "best" are here because the console offers "What is he
             // strongest at?" as a starter prompt, and it did not match — a suggested
             // question answering "I do not have that" is the worst possible first
             // impression of the feature. Every prompt the UI offers has been checked
@@ -93,7 +127,12 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             ("writing", ["article", "articles", "blog", "post", "posts", "write", "writes", "writing", "written", "journal"], WritingAsync),
             ("goals", ["goal", "goals", "next", "future", "plan", "plans", "roadmap", "learning", "learn"], GoalsAsync),
             ("location", ["location", "based", "live", "lives", "living", "city", "country", "remote", "relocate"], LocationAsync),
-            ("who", ["who", "about", "yourself", "introduce", "summary", "bio"], WhoAsync),
+            // "about" is NOT a cue, though it is the obvious one. It is a preposition
+            // before it is a topic: "anything about concurrency" scored here and answered
+            // with the biography, when concurrency is a real subject in two case studies
+            // and the search fallback would have found both. A cue that matches the
+            // question's grammar rather than its subject will always win the wrong ties.
+            ("who", ["who", "yourself", "introduce", "summary", "bio"], WhoAsync),
         };
 
         /*
@@ -139,6 +178,19 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             var answer = await best.Build(cancellationToken).ConfigureAwait(false);
             if (answer is not null) return Render(request.Question, best.Name, answer);
         }
+
+        /*
+          Before giving up: search the content for the words that were actually typed.
+
+          The intent table only knows the questions somebody thought of in advance, and
+          "did he do anything with concurrency" is not one of them — it named a real topic
+          that appears in two case studies and got a flat refusal. Falling back to a scan
+          of the writing turns "I do not have that" into a genuine miss rather than a gap
+          in the cue list, and it is the difference between a lookup and something that
+          feels like it read the site.
+        */
+        var found = await SearchAsync(words, cancellationToken).ConfigureAwait(false);
+        if (found is not null) return Render(request.Question, "search", found);
 
         return Render(request.Question, "none", await UnknownAsync(cancellationToken).ConfigureAwait(false));
     }
@@ -267,10 +319,25 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             .Select(s => new { s.Name, s.Category, s.Proficiency, s.YearsExperience })
             .ToListAsync(ct).ConfigureAwait(false);
 
-        // Match on the skill's own tokens, so ".NET" is found by "net" and "ASP.NET Core"
-        // by "asp" — the punctuation a visitor omits is the punctuation that breaks a
-        // literal comparison.
-        var hit = skills.FirstOrDefault(s => Tokenise(s.Name).Any(words.Contains));
+        /*
+          Exact first, then prefixes — and that order is the whole safeguard.
+
+          Matching on the skill's own tokens already handled the punctuation a visitor
+          omits: ".NET" is found by "net", "ASP.NET Core" by "asp". What it did not handle
+          was the abbreviation everybody actually types. "postgres" is not a typo, it is
+          what the thing is called out loud, and it matched nothing — so the question fell
+          through to a generic list of every skill on the site.
+
+          The second pass accepts one token being a prefix of the other from four
+          characters up, and it runs ONLY when nothing matched exactly. That matters here:
+          "java" is a prefix of "javascript" and both are skills on this site. Exact-first
+          means each still resolves to itself, and only a genuinely partial word like
+          "javas" ever reaches the looser rule.
+        */
+        var hit = skills.FirstOrDefault(s => Tokenise(s.Name).Any(words.Contains))
+            ?? skills.FirstOrDefault(s =>
+                Tokenise(s.Name).Any(token => words.Any(word => Related(word, token))));
+
         if (hit is null) return null;
 
         var used = await db.Projects.AsNoTracking()
@@ -307,7 +374,8 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         var sources = new List<AskSourceDto> { new("Skills", "/skills") };
         sources.AddRange(used.Take(4).Select(p => new AskSourceDto(p.Title, $"/projects/{p.Slug}")));
 
-        return new Answer(text, sources);
+        // The subject, so a follow-up asking about "it" knows which skill was meant.
+        return new Answer(text, sources, hit.Name);
     }
 
     private async Task<Answer?> NamedProjectAsync(string question, CancellationToken ct)
@@ -327,7 +395,7 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         if (hit.Owner is not null) text += $"\n\nBuilt for {hit.Owner}. {hit.PermissionNote}";
         text += $"\n\n{FirstSentences(hit.Problem, 2)}";
 
-        return new Answer(text, [new AskSourceDto(hit.Title, $"/projects/{hit.Slug}")]);
+        return new Answer(text, [new AskSourceDto(hit.Title, $"/projects/{hit.Slug}")], hit.Title);
     }
 
     private async Task<Answer?> EducationAsync(CancellationToken ct)
@@ -420,6 +488,71 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             [new AskSourceDto("Timeline", "/timeline"), new AskSourceDto("Knowledge", "/knowledge")]);
     }
 
+    /// <summary>
+    /// Scan the written content for the words that were typed, and report what turned up.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Scored by how many distinct query words a piece contains, so a case study that
+    /// mentions both "concurrency" and "threads" outranks one that mentions either. Two
+    /// results at most: this is the answer to a question nobody anticipated, and a list of
+    /// nine is a way of saying "I do not know" at greater length.
+    /// </para>
+    /// <para>
+    /// In memory rather than through the tsvector index on posts. The corpus here is a few
+    /// dozen rows, the same pass has to cover projects — which have no such index — and
+    /// one comparable ranking across both beats two incomparable ones. If this ever holds
+    /// hundreds of case studies, that trade flips.
+    /// </para>
+    /// </remarks>
+    private async Task<Answer?> SearchAsync(HashSet<string> words, CancellationToken ct)
+    {
+        if (words.Count == 0) return null;
+
+        var projects = await db.Projects.AsNoTracking()
+            .Select(p => new { p.Title, p.Slug, p.Pitch, p.Problem, p.Solution, p.LessonsLearned })
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        var posts = await db.Posts.AsNoTracking()
+            .Where(p => p.IsPublished)
+            .Select(p => new { p.Title, p.Slug, p.Excerpt, p.BodyMarkdown, p.ExternalUrl })
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        var hits = new List<(int Score, string Line, AskSourceDto Source)>();
+
+        foreach (var p in projects)
+        {
+            var text = Normalise($"{p.Title} {p.Pitch} {p.Problem} {p.Solution} {p.LessonsLearned}");
+            var score = words.Count(w => text.Contains(w, StringComparison.Ordinal));
+            if (score > 0)
+            {
+                hits.Add((score, $"· {p.Title} — {p.Pitch}", new AskSourceDto(p.Title, $"/projects/{p.Slug}")));
+            }
+        }
+
+        foreach (var p in posts)
+        {
+            var text = Normalise($"{p.Title} {p.Excerpt} {p.BodyMarkdown}");
+            var score = words.Count(w => text.Contains(w, StringComparison.Ordinal));
+            if (score > 0)
+            {
+                // An external post has nothing to read on this site, so it points at the
+                // index rather than at a slug that renders a stub.
+                var path = p.ExternalUrl is null ? $"/knowledge/{p.Slug}" : "/knowledge";
+                hits.Add((score, $"· {p.Title} — {p.Excerpt}", new AskSourceDto(p.Title, path)));
+            }
+        }
+
+        if (hits.Count == 0) return null;
+
+        var best = hits.OrderByDescending(h => h.Score).Take(2).ToList();
+
+        return new Answer(
+            "Not something I have a direct answer for, but this is where it comes up:\n\n"
+                + string.Join("\n", best.Select(h => h.Line)),
+            [.. best.Select(h => h.Source)]);
+    }
+
     /// <summary>What to say when nothing matched — which is a real outcome, not a failure.</summary>
     private async Task<Answer> UnknownAsync(CancellationToken ct)
     {
@@ -440,10 +573,19 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
 
     // ── Assembly ─────────────────────────────────────────────────────────────────────
 
-    private sealed record Answer(string Text, IReadOnlyList<AskSourceDto> Sources);
+    /// <param name="Subject">
+    /// What this answer is about, when it is about one nameable thing — a skill, a
+    /// project. Returned to the caller so the next question can carry it back as context
+    /// and "it" has something to mean. Null for answers about no particular thing, which
+    /// correctly clears the thread rather than leaving a stale antecedent behind.
+    /// </param>
+    private sealed record Answer(
+        string Text,
+        IReadOnlyList<AskSourceDto> Sources,
+        string? Subject = null);
 
     private static AskAnswerDto Render(string question, string matched, Answer answer) =>
-        new(question, answer.Text, answer.Sources, Suggestions(matched), matched);
+        new(question, answer.Text, answer.Sources, Suggestions(matched), matched, answer.Subject);
 
     /// <summary>Follow-ups that move the reader somewhere they have not been.</summary>
     private static string[] Suggestions(string matched) => matched switch
@@ -463,6 +605,22 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
 
     private static string Normalise(string value) =>
         new(value.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : ' ').ToArray());
+
+    /// <summary>
+    /// Whether two words are close enough to be the same thing: one a prefix of the other,
+    /// from four characters up.
+    /// </summary>
+    /// <remarks>
+    /// Four is the shortest length at which a prefix is more likely to be an abbreviation
+    /// than a coincidence — "post" would otherwise tie "postgres" to "posts", and three
+    /// characters puts "net" inside a dozen unrelated words. It is not fuzzy matching and
+    /// deliberately not: an edit distance would start answering questions about things
+    /// nobody named, which is the failure this whole feature is built to avoid.
+    /// </remarks>
+    private static bool Related(string a, string b) =>
+        a.Length >= 4
+        && b.Length >= 4
+        && (a.StartsWith(b, StringComparison.Ordinal) || b.StartsWith(a, StringComparison.Ordinal));
 
     private static HashSet<string> Tokenise(string value) =>
         [.. Normalise(value).Split(' ', StringSplitOptions.RemoveEmptyEntries).Where(w => !Noise.Contains(w))];

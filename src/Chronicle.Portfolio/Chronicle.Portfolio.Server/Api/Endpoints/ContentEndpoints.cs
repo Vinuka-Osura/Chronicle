@@ -167,8 +167,8 @@ public static class ContentEndpoints
           antiforgery. Varying the cache by the query string is what makes that safe —
           without it every visitor would be served the first visitor's answer.
         */
-        app.MapGet("/api/ask", (string? q, ISender sender, CancellationToken ct) =>
-                sender.Send(new AskQuery(q ?? string.Empty), ct))
+        app.MapGet("/api/ask", (string? q, string? context, ISender sender, CancellationToken ct) =>
+                sender.Send(new AskQuery(q ?? string.Empty, context), ct))
             .WithTags("Ask")
             .WithName("Ask")
             .WithSummary("Answer a question from this site's own content")
@@ -179,7 +179,7 @@ public static class ContentEndpoints
                 "answer returns `matched: none` and says so rather than guessing.")
             .Produces<AskAnswerDto>()
             .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(5))
-                .SetVaryByQuery("q")
+                .SetVaryByQuery("q", "context")
                 .Tag(CacheTags.Projects))
             .RequireRateLimiting("api");
 

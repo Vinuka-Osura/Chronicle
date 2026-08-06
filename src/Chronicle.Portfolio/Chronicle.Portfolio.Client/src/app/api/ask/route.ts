@@ -26,9 +26,14 @@ import { apiUrl } from "@/lib/http";
  * this origin, and a catch-all proxy would publish it by accident.
  */
 export async function GET(request: Request) {
-  const question = new URL(request.url).searchParams.get("q") ?? "";
+  const incoming = new URL(request.url).searchParams;
+  const query = new URLSearchParams({ q: incoming.get("q") ?? "" });
 
-  const response = await fetch(`${apiUrl("/api/ask")}?q=${encodeURIComponent(question)}`, {
+  // The thread's antecedent, carried by the client rather than held in server state.
+  const context = incoming.get("context");
+  if (context) query.set("context", context);
+
+  const response = await fetch(`${apiUrl("/api/ask")}?${query}`, {
     headers: { accept: "application/json" },
     // The API output-caches this by query string for five minutes; caching it again here
     // would only add a second place for a stale answer to live.

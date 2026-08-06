@@ -20,9 +20,16 @@ import type { AskAnswer } from "@/lib/types";
  * the reader looking at their own question with nothing under it, and "I could not reach
  * the content service" is itself a usable reply.
  */
-export async function ask(question: string, signal?: AbortSignal): Promise<AskAnswer> {
+export async function ask(
+  question: string,
+  context: string | null,
+  signal?: AbortSignal,
+): Promise<AskAnswer> {
   try {
-    const response = await fetch(`/api/ask?q=${encodeURIComponent(question)}`, {
+    const query = new URLSearchParams({ q: question });
+    if (context) query.set("context", context);
+
+    const response = await fetch(`/api/ask?${query}`, {
       signal,
       headers: { accept: "application/json" },
     });
@@ -46,6 +53,7 @@ export async function ask(question: string, signal?: AbortSignal): Promise<AskAn
       ],
       suggestions: [],
       matched: "error",
+      subject: null,
     };
   }
 }

@@ -51,8 +51,12 @@ export function AskBot() {
   const panelId = useId();
   const inputId = useId();
   const nextId = useRef(0);
+  /** What the last answer was about, so the next question can say "it". */
+  const subject = useRef<string | null>(null);
   const inFlight = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -84,6 +88,40 @@ export function AskBot() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  /*
+    The wheel, anywhere over the panel, scrolls the TRANSCRIPT and never the page.
+
+    `data-lenis-prevent` alone was not enough, and the reason is worth writing down: it
+    does not stop the scroll, it hands the event back to the browser. Over the transcript
+    that is the right outcome, because the transcript can consume it. Over the input or
+    the prompt chips nothing underneath is scrollable, so the browser walks up and scrolls
+    the document — the page moved out from under an open panel, which is the bug the
+    attribute was supposed to fix.
+
+    So the panel claims the gesture outright: cancel it, and apply the delta to the one
+    element in here that scrolls. Wheeling over the input now moves the conversation,
+    which is what a reader means by it.
+
+    A native listener with `passive: false` rather than React's `onWheel`, because React
+    registers wheel handlers passively — `preventDefault` inside one is ignored, with a
+    console warning and no effect.
+  */
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (!open || !panel) return;
+
+    const onWheel = (event: WheelEvent) => {
+      const thread = threadRef.current;
+      if (!thread) return;
+
+      event.preventDefault();
+      thread.scrollTop += event.deltaY;
+    };
+
+    panel.addEventListener("wheel", onWheel, { passive: false });
+    return () => panel.removeEventListener("wheel", onWheel);
+  }, [open]);
+
   useEffect(() => {
     if (turns.length > 0) endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [turns]);
@@ -102,7 +140,19 @@ export function AskBot() {
     setPending(true);
 
     try {
-      const answer = await ask(trimmed, controller.signal);
+      /*
+        The thread's antecedent travels with the question rather than living on the server.
+
+        `subject` is whatever the last answer was about — a skill name, a project title —
+        and sending it back is what gives "what projects used it?" an "it". Holding it here
+        rather than in a session keeps the endpoint a pure function of its query string, so
+        it stays cacheable and a restart mid-conversation costs nothing.
+
+        Read from the ref, not from state: two questions asked in quick succession would
+        otherwise both send the subject from before either of them.
+      */
+      const answer = await ask(trimmed, subject.current, controller.signal);
+      subject.current = answer.subject ?? null;
       setTurns((previous) => previous.map((t) => (t.id === id ? { ...t, answer } : t)));
     } catch {
       // Aborted: the reader asked something else. Drop the turn rather than leaving a
@@ -120,10 +170,16 @@ export function AskBot() {
   const prompts = latest?.suggestions?.length ? latest.suggestions : OPENERS;
 
   return (
-    <div className="ask-bot" data-open={open || undefined}>
+    /*
+      `data-lenis-prevent` keeps the inertial-scroll layer out of this subtree entirely, so
+      the wheel handler above is the only thing acting on the gesture. Both running at once
+      is how the page kept drifting while the panel was open.
+    */
+    <div className="ask-bot" data-open={open || undefined} data-lenis-prevent>
       {open && (
         <div
           id={panelId}
+          ref={panelRef}
           className="ask-bot-panel"
           role="dialog"
           aria-modal="false"
@@ -147,7 +203,7 @@ export function AskBot() {
             </button>
           </header>
 
-          <div className="ask-bot-thread">
+          <div ref={threadRef} className="ask-bot-thread">
             {turns.length === 0 && (
               <div className="ask-bot-intro">
                 <p>

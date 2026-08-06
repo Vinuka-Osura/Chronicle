@@ -499,4 +499,9 @@ export interface AskAnswer {
   suggestions: string[];
   /** Which intent answered, or `none` when nothing matched. `error` is client-side only. */
   matched: string;
+  /**
+   * What the answer was about, when it was about one nameable thing. Sent back as
+   * `context` on the next question so a follow-up asking about "it" has an antecedent.
+   */
+  subject: string | null;
 }
