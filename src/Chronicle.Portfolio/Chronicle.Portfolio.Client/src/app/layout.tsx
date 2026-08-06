@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
+import { AskBot } from "@/components/AskBot";
 import { Footer } from "@/components/Footer";
 import { ScrollReset } from "@/components/ScrollReset";
 import { SmoothScroll } from "@/components/SmoothScroll";
@@ -13,6 +14,7 @@ import { WaterBackground } from "@/components/WaterBackground";
 import { appearanceScript } from "@/lib/appearanceScript";
 import { lensScript } from "@/app/timeline/lenses";
 import "./globals.css";
+import "./ask-bot.css";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -139,6 +141,11 @@ export default function RootLayout({
         {/* Copyright, read position and the way back up, in one strip. Withdraws
             when the footer above comes into view. */}
         <StatusBar />
+
+        {/* The bot, in the corner of every page. Mounted here rather than per-page
+            because the question a reader wants to ask occurs to them halfway down a case
+            study, not after navigating somewhere to ask it. */}
+        <AskBot />
 
         {/* Inertial scroll, scroll velocity published as a CSS variable, and the motion
             tier kept in step with the OS reduced-motion setting.

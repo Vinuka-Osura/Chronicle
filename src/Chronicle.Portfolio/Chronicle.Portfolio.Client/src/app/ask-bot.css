@@ -1,0 +1,400 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  The bot
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  Fixed bottom-right on every page, the way a dev-tools badge sits: present,
+  ignorable, and in the one corner nothing else claims for content.
+
+  Its own file rather than more of globals.css. This is global chrome, but it is
+  also one self-contained thing with two dozen rules and three keyframes, and
+  globals.css is long enough that adding those to it makes both harder to read.
+*/
+
+@layer components {
+  /*
+    Above the status strip, not beside it. That strip is full-width and 2.25rem tall,
+    so anything at bottom:0 lands on top of the read position. The timeline's transport
+    is taller again and sticky, so on that page the bot lifts clear of it instead —
+    keyed off the same class the strip itself keys off, so the two cannot disagree.
+  */
+  .ask-bot {
+    position: fixed;
+    right: clamp(0.75rem, 2vw, 1.5rem);
+    bottom: 3.25rem;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
+  body:has(.timeline-scrubber) .ask-bot {
+    bottom: 1.25rem;
+  }
+
+  /* ── The launcher ───────────────────────────────────────────────────────── */
+  .ask-bot-launch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.9rem 0.3rem 0.35rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-solid);
+    box-shadow: var(--shadow-lifted);
+    font-size: 0.82rem;
+    color: var(--color-ink);
+    transition:
+      transform var(--t-quick) var(--ease-move),
+      border-color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-launch:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-signal);
+  }
+
+  .ask-bot-launch:focus-visible {
+    outline: 2px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+
+  /* A slow bob, so it reads as present rather than as a sticker. Transform only —
+     nothing here costs layout. */
+  .ask-bot-figure {
+    width: 2.6rem;
+    height: 2.6rem;
+    animation: ask-bot-bob 4.5s var(--ease-move) infinite;
+  }
+
+  @keyframes ask-bot-bob {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-3px) rotate(-1.5deg);
+    }
+  }
+
+  /*
+    The blink, scaled on Y from the top of the eye — which is how an eyelid closes.
+    Scaling from the centre reads as the eye shrinking, which is unsettling rather
+    than alive.
+  */
+  .ask-bot-eye {
+    transform-origin: center 33px;
+    animation: ask-bot-blink 6s step-end infinite;
+  }
+
+  @keyframes ask-bot-blink {
+    0%,
+    92%,
+    100% {
+      transform: scaleY(1);
+    }
+    94%,
+    96% {
+      transform: scaleY(0.1);
+    }
+  }
+
+  /* These loop, which the site's motion rules otherwise forbid, so they stop entirely
+     where motion is unwanted rather than being slowed. */
+  [data-motion="reduced"] .ask-bot-figure,
+  [data-motion="still"] .ask-bot-figure,
+  [data-motion="reduced"] .ask-bot-eye,
+  [data-motion="still"] .ask-bot-eye {
+    animation: none;
+  }
+
+  /* Recruiter Mode is for reading a career in a hurry. A bot in the corner is not
+     what that reader came for. */
+  [data-recruiter="on"] .ask-bot {
+    display: none;
+  }
+
+  /* ── The panel ──────────────────────────────────────────────────────────── */
+  .ask-bot-panel {
+    display: flex;
+    flex-direction: column;
+    width: min(23rem, calc(100vw - 2rem));
+    max-height: min(30rem, calc(100vh - 8rem));
+    overflow: hidden;
+    border: 1px solid var(--color-rule);
+    border-radius: 1rem;
+    background: var(--color-paper-solid);
+    box-shadow: var(--shadow-lifted);
+    transform-origin: bottom right;
+    animation: ask-bot-open var(--t-move) var(--ease-set) both;
+  }
+
+  @keyframes ask-bot-open {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  [data-motion="reduced"] .ask-bot-panel,
+  [data-motion="still"] .ask-bot-panel {
+    animation: none;
+  }
+
+  .ask-bot-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem 0.7rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .ask-bot-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+
+  .ask-bot-sub {
+    margin-top: 0.15rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-faint);
+  }
+
+  .ask-bot-close {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    color: var(--color-ink-faint);
+    transition: color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-close:hover {
+    color: var(--color-ink);
+  }
+
+  .ask-bot-thread {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.9rem 1rem;
+  }
+
+  .ask-bot-intro {
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+  }
+
+  .ask-bot-caveat {
+    margin-top: 0.6rem;
+    font-size: 0.78rem;
+    color: var(--color-ink-faint);
+  }
+
+  .ask-bot-turns {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    list-style: none;
+  }
+
+  .ask-bot-turn {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* The question right, the answer left — the one chat convention worth keeping,
+     because it shows who is speaking without labelling every line. */
+  .ask-bot-question {
+    align-self: flex-end;
+    max-width: 85%;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.9rem 0.9rem 0.2rem 0.9rem;
+    background: var(--color-signal-soft);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-ink);
+  }
+
+  .ask-bot-answer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .ask-bot-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.25rem;
+    list-style: none;
+  }
+
+  .ask-bot-source {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-ink-faint);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-source:hover {
+    border-color: var(--color-signal);
+    color: var(--color-signal);
+  }
+
+  /* Three dots, and a real pending state rather than a simulated one. */
+  .ask-bot-pending {
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.3rem 0;
+  }
+
+  .ask-bot-pending > span {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 999px;
+    background: var(--color-ink-faint);
+    animation: ask-bot-dot 1.2s var(--ease-move) infinite;
+  }
+
+  .ask-bot-pending > span:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  .ask-bot-pending > span:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+
+  @keyframes ask-bot-dot {
+    0%,
+    60%,
+    100% {
+      opacity: 0.25;
+      transform: translateY(0);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
+
+  [data-motion="reduced"] .ask-bot-pending > span,
+  [data-motion="still"] .ask-bot-pending > span {
+    animation: none;
+    opacity: 0.6;
+  }
+
+  /* ── Prompts and field ──────────────────────────────────────────────────── */
+  .ask-bot-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0 1rem 0.7rem;
+  }
+
+  .ask-bot-prompt {
+    padding: 0.22rem 0.6rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    text-align: left;
+    color: var(--color-ink-soft);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-prompt:hover:not(:disabled) {
+    border-color: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  .ask-bot-prompt:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .ask-bot-form {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.7rem 1rem 0.9rem;
+    border-top: 1px solid var(--color-rule);
+  }
+
+  .ask-bot-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+    font-size: 0.85rem;
+    color: var(--color-ink);
+    transition: border-color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .ask-bot-input:focus {
+    border-color: var(--color-signal);
+    outline: none;
+  }
+
+  .ask-bot-send {
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-signal);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--color-signal);
+    transition:
+      background-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-bot-send:hover:not(:disabled) {
+    background: var(--color-signal);
+    color: var(--color-paper-solid);
+  }
+
+  .ask-bot-send:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* On a phone the label is noise beside a figure that already says what it is. */
+  @media (width < 26rem) {
+    .ask-bot-label {
+      display: none;
+    }
+
+    .ask-bot-launch {
+      padding: 0.3rem;
+    }
+  }
+}

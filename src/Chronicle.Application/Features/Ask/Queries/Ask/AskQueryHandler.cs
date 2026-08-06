@@ -53,6 +53,17 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         "please", "know", "much", "many", "long", "been", "be", "am", "get", "got",
     };
 
+    /// <summary>Openers. Matched before any intent, so hello is answered as hello.</summary>
+    private static readonly HashSet<string> Greetings = new(StringComparer.Ordinal)
+    {
+        "hi", "hey", "hello", "yo", "greetings", "morning", "afternoon", "evening", "sup",
+    };
+
+    private static readonly HashSet<string> Thanks = new(StringComparer.Ordinal)
+    {
+        "thanks", "thank", "thankyou", "cheers", "appreciated", "ta",
+    };
+
     public async Task<AskAnswerDto> Handle(AskQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -84,6 +95,29 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             ("location", ["location", "based", "live", "lives", "living", "city", "country", "remote", "relocate"], LocationAsync),
             ("who", ["who", "about", "yourself", "introduce", "summary", "bio"], WhoAsync),
         };
+
+        /*
+          Small talk first, and it is not decoration.
+
+          Without it "hi" fell straight to the unknown answer — a flat "that is outside
+          what this site holds" in response to hello, which is the one exchange that
+          decides whether a visitor tries a second question. It is also the only place
+          this thing is allowed to be warm without asserting anything.
+        */
+        if (words.Overlaps(Greetings))
+        {
+            return Render(request.Question, "greeting", new Answer(
+                "Hello. Ask me anything about the work here — the roles, the projects, the "
+                    + "stack, what he is learning, or how to reach him. I answer from what is "
+                    + "actually on the site, so if I do not have something I will say so.",
+                []));
+        }
+
+        if (words.Overlaps(Thanks))
+        {
+            return Render(request.Question, "thanks", new Answer(
+                "Any time. Ask another if something else would help.", []));
+        }
 
         // A named technology beats every general intent — "do you know Prisma" is a
         // question about Prisma, not a question about skills.
@@ -126,7 +160,11 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         var profile = await db.Profiles.AsNoTracking().FirstOrDefaultAsync(ct).ConfigureAwait(false);
         if (profile is null) return null;
 
-        var lines = new List<string> { $"The contact form on this site reaches {profile.FullName} directly." };
+        var lines = new List<string>
+        {
+            $"The contact form here goes straight to {profile.FullName}, which is the surest "
+                + "route. Otherwise:",
+        };
         if (!string.IsNullOrWhiteSpace(profile.Email)) lines.Add($"Email: {profile.Email}");
         if (!string.IsNullOrWhiteSpace(profile.LinkedInUrl)) lines.Add($"LinkedIn: {profile.LinkedInUrl}");
         if (!string.IsNullOrWhiteSpace(profile.GitHubUrl)) lines.Add($"GitHub: {profile.GitHubUrl}");
@@ -170,8 +208,9 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             $"· {r.Role} at {r.Company} — {Month(r.StartDate)} to {(r.EndDate is { } e ? Month(e) : "now")}");
 
         return new Answer(
-            $"{roles.Count} role{(roles.Count == 1 ? "" : "s")}, about {span} in total.\n\n"
-                + string.Join("\n", lines),
+            $"He has held {roles.Count} role{(roles.Count == 1 ? "" : "s")}, about {span} in total.\n\n"
+                + string.Join("\n", lines)
+                + "\n\nThe timeline has the whole thing in order, if the shape of it is useful.",
             [new AskSourceDto("About", "/about"), new AskSourceDto("Timeline", "/timeline")]);
     }
 
@@ -191,7 +230,10 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         sources.AddRange(projects.Take(4).Select(p => new AskSourceDto(p.Title, $"/projects/{p.Slug}")));
 
         return new Answer(
-            $"{projects.Count} case stud{(projects.Count == 1 ? "y" : "ies")}:\n\n" + string.Join("\n", lines),
+            $"There {(projects.Count == 1 ? "is one case study" : $"are {projects.Count} case studies")} "
+                + "here, each written problem-first rather than as a feature list:\n\n"
+                + string.Join("\n", lines)
+                + "\n\nAsk about any of them by name and I will go deeper.",
             sources);
     }
 
@@ -210,7 +252,8 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             .Select(g => $"· {g.Key}: {string.Join(", ", g.Take(6).Select(s => s.Name))}");
 
         return new Answer(
-            $"{skills.Count} tracked skills. The strongest are "
+            $"He tracks {skills.Count} skills and is deliberately conservative about the levels. "
+                + "The strongest are "
                 + string.Join(", ", skills.Take(4).Select(s => $"{s.Name} ({s.Proficiency}, {Years(s.YearsExperience)})"))
                 + ".\n\n" + string.Join("\n", byCategory),
             [new AskSourceDto("Skills", "/skills")]);
@@ -300,7 +343,8 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         var lines = education.Select(m =>
             $"· {m.Title} — {Month(m.Date)}{(m.EndDate is { } e ? $" to {Month(e)}" : "")}. {m.Description}");
 
-        return new Answer(string.Join("\n", lines),
+        return new Answer(
+            "Here is the education on record:\n\n" + string.Join("\n", lines),
             [new AskSourceDto("Timeline", "/timeline"), new AskSourceDto("Résumé", "/resume")]);
     }
 
@@ -314,7 +358,8 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         if (certs.Count == 0)
         {
             return new Answer(
-                "There are no certifications on the site yet.",
+                "None on the site yet — he has not added any. That is the real answer rather than "
+                    + "an empty list dressed up as one.",
                 [new AskSourceDto("About", "/about")]);
         }
 
@@ -338,7 +383,7 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
             .Select(p => new AskSourceDto(p.Title, $"/knowledge/{p.Slug}")));
 
         return new Answer(
-            $"{posts.Count} published piece{(posts.Count == 1 ? "" : "s")}:\n\n"
+            $"He has published {posts.Count} piece{(posts.Count == 1 ? "" : "s")} so far:\n\n"
                 + string.Join("\n", posts.Take(6).Select(p => $"· {p.Title} — {p.Excerpt}")),
             sources);
     }
@@ -385,10 +430,11 @@ public sealed class AskQueryHandler(IChronicleDbContext db, IDateTimeProvider cl
         var who = profile ?? "this engineer";
 
         return new Answer(
-            $"That is outside what this site holds, so there is nothing to quote — and guessing "
-                + $"about {who}'s career is exactly what this is built not to do.\n\n"
-                + "It answers from the content on these pages: roles, projects, skills, education, "
-                + "certifications, writing, goals, and how to get in touch.",
+            "I do not have that one, sorry. I only answer from what is actually published here, "
+                + $"and I would rather say so than guess about {who}'s career.\n\n"
+                + "Things I can help with: his roles, the projects and how they were built, any "
+                + "technology by name, his education, certifications, what he has written, what he "
+                + "is learning next, and how to reach him.",
             [new AskSourceDto("About", "/about"), new AskSourceDto("Projects", "/projects")]);
     }
 
