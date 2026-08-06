@@ -84,54 +84,40 @@
 }
 
 /* ── Era headings ───────────────────────────────────────────────────────────
-   The name of the chapter you are currently inside, pinned while its contents
-   pass. This is what turns a list of years into somewhere you have arrived. */
+   The name of the chapter, at the top of its own section.
+
+   NOT sticky, and that is the fix rather than the compromise. Pinned at top: 4.5rem it
+   sat directly beneath the context bar — which is itself sticky at top-14 and already
+   names the current era, live, as you scroll. Two elements pinned to the same edge
+   saying the same thing, and the lower one lost: the heading was clipped behind the bar
+   on every era boundary. One of them had to stop, and the redundant one is this. */
 .timeline-era-head {
-  position: sticky;
-  top: 4.5rem;
-  z-index: 2;
-  padding: 0.5rem 0;
-  /* The page wash shows through, so pinned type never sits on a hard band. */
-  background: linear-gradient(
-    to bottom,
-    var(--color-paper) 55%,
-    color-mix(in oklch, var(--color-paper) 60%, transparent)
-  );
-  backdrop-filter: blur(6px);
+  /* Scroll-margin rather than sticky offset: the era heading is a link target, so
+     landing on it should clear the chrome instead of tucking under it. */
+  scroll-margin-top: 7.5rem;
+  /* The room the watermark used to occupy, spent on the header instead. An era is a
+     chapter opening; it earns space above it. */
+  padding-block: clamp(1.5rem, 5vh, 3rem) 1rem;
+  margin-bottom: clamp(1rem, 3vh, 2rem);
+  border-bottom: 1px solid var(--color-rule);
 }
 
-/*
-  The era name again, enormous and barely there, behind everything. Parallax: it
-  drifts slower than the cards, which is most of why a scene reads as having
-  depth at all.
-*/
-.timeline-era-ghost {
-  position: absolute;
-  top: 2rem;
-  left: 50%;
-  z-index: 0;
-  translate: -50% 0;
-  font-family: var(--font-display);
-  font-size: clamp(4rem, 16vw, 13rem);
-  font-weight: 600;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  white-space: nowrap;
-  pointer-events: none;
-  user-select: none;
-  color: color-mix(in oklch, var(--color-ink) 4.5%, transparent);
-  animation: timeline-ghost-drift linear both;
-  animation-timeline: view();
-  animation-range: cover 0% cover 100%;
+/* The eyebrow is tight to its heading here, not spaced like a page-level scene. */
+.timeline-era-head .scene-eyebrow {
+  margin-bottom: 0.4rem;
 }
 
-@keyframes timeline-ghost-drift {
-  from {
-    transform: translate3d(0, 14%, 0);
-  }
-  to {
-    transform: translate3d(0, -14%, 0);
-  }
+/* An era name is two or three words, so the shared 22ch clamp never bites — but the
+   type scale and the weight are the point, and those come across unchanged. */
+.timeline-era-head .scene-heading {
+  max-width: none;
+}
+
+.timeline-era-tagline {
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
 }
 
 /* ── The cards ──────────────────────────────────────────────────────────────
@@ -194,15 +180,33 @@
 }
 
 /* ── Card surface ───────────────────────────────────────────────────────── */
-.timeline-card-hit,
 .timeline-card {
   display: block;
   border-radius: 0.875rem;
 }
 
+/*
+  The title is the link; its ::after is what makes the whole card the target.
+
+  The card used to be a single <a> wrapped around everything, which is the right
+  instinct and the wrong mechanism: an <a> may not contain another <a>, so every
+  technology and every connection on the card was condemned to be plain text. On a page
+  whose argument is that these things are related, the relations were the one part you
+  could not follow.
+
+  The accessible name stays the title alone — a link labelled with the card's entire
+  contents is one nobody can read out.
+*/
 .timeline-card-hit {
   color: inherit;
   text-decoration: none;
+}
+
+.timeline-card-hit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 
 .timeline-card::before {
@@ -322,12 +326,60 @@
   color: var(--color-ink-faint);
 }
 
+.timeline-card-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
 .timeline-card-links li + li {
   margin-top: 0.15rem;
 }
 
 .timeline-card-via {
   color: var(--color-signal);
+}
+
+/*
+  Above the title link's cover.
+
+  `.timeline-card-hit::after` spans the whole card so the entire surface is clickable.
+  Anything that has to stay clickable *through* it needs to be raised, and `position`
+  alone is what does that — `z-index: 1` is stated as well because the cover is a later
+  sibling in paint order and would otherwise win on tree order at the same level.
+
+  The card's own painted surface sits at z-index -1, so raising these does not lift them
+  out of the card; they stay inside its stacking context.
+*/
+.timeline-card-chip,
+.timeline-card-rel {
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-card-chip {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--color-rule);
+  border-radius: 0.3rem;
+  color: var(--color-ink-soft);
+  transition:
+    border-color var(--t-quick) var(--ease-move),
+    color var(--t-quick) var(--ease-move);
+}
+
+.timeline-card-chip:hover,
+.timeline-card-rel:hover {
+  border-color: var(--color-signal);
+  color: var(--color-signal);
+}
+
+.timeline-card-rel {
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--color-ink-faint) 55%, transparent);
+  text-underline-offset: 2px;
+  transition: color var(--t-quick) var(--ease-move);
 }
 
 /* ── Off switches ───────────────────────────────────────────────────────────
@@ -337,7 +389,6 @@
    is what remains. */
 @supports not (animation-timeline: view()) {
   .timeline-card,
-  .timeline-era-ghost,
   .timeline-path::after {
     animation: none;
     opacity: 1;
@@ -347,7 +398,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .timeline-card,
-  .timeline-era-ghost,
   .timeline-path::after {
     animation: none !important;
     opacity: 1 !important;
@@ -356,7 +406,6 @@
 }
 
 [data-recruiter="on"] .timeline-card,
-[data-recruiter="on"] .timeline-era-ghost,
 [data-recruiter="on"] .timeline-path::after {
   animation: none !important;
   opacity: 1 !important;
@@ -364,7 +413,6 @@
 }
 
 /* Recruiter Mode wants density, not atmosphere. */
-[data-recruiter="on"] .timeline-era-ghost,
 [data-recruiter="on"] .timeline-card-media {
   display: none;
 }

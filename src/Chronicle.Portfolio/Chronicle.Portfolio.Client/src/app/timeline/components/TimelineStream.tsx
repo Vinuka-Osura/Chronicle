@@ -73,30 +73,24 @@ export function TimelineStream({ timeline }: { timeline: Timeline }) {
           aria-labelledby={group.era ? `era-${group.era.id}` : undefined}
         >
           {group.era && (
-            <>
-              {/* Decorative, and enormous. The chapter name you are inside, drifting
-                  behind the content at a different rate — which is most of the reason
-                  the scene reads as having depth. */}
-              <span className="timeline-era-ghost" aria-hidden>
-                {group.era.name}
-              </span>
+            /* The scroll-spy on both controls queries this attribute; nothing emitted
+               it, so the context readout never left "Timeline".
 
-              {/* The scroll-spy on both controls queries this attribute; nothing emitted
-                  it, so the context readout never left "Timeline". */}
-              <header className="timeline-era-head" data-era-marker={group.era.id}>
-                <h2
-                  id={`era-${group.era.id}`}
-                  className="text-section font-semibold text-ink"
-                >
-                  <a href={`#era-${group.era.id}`} className="hover:text-signal">
-                    {group.era.name}
-                  </a>
-                </h2>
-                {group.era.tagline && (
-                  <p className="text-sm text-ink-soft">{group.era.tagline}</p>
-                )}
-              </header>
-            </>
+               The enormous ghost watermark that used to sit behind this is gone. It
+               drifted the era name across the section at 16vw as decoration, and on a
+               wide screen it read as a rendering fault rather than as depth — text
+               overlapping the cards it was meant to sit behind. */
+            <header className="timeline-era-head" data-era-marker={group.era.id}>
+              <p className="scene-eyebrow">Chapter</p>
+              <h2 id={`era-${group.era.id}`} className="scene-heading">
+                <a href={`#era-${group.era.id}`} className="hover:text-signal">
+                  {group.era.name}
+                </a>
+              </h2>
+              {group.era.tagline && (
+                <p className="timeline-era-tagline">{group.era.tagline}</p>
+              )}
+            </header>
           )}
 
           {group.years.map((yearGroup) => {

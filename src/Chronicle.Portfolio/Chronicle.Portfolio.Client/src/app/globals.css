@@ -78,21 +78,9 @@
   --color-alert-soft: rgb(138 26 19 / 0.12);
 
   /*
-    Sequential ramp for the contribution heatmap: one hue - the accent's own, at
-    OKLCH hue 64deg - stepping light to dark, because the cells encode magnitude
-    rather than identity. A rainbow here would invent categories that do not exist.
-
-    Derived in OKLCH at even lightness steps and validated, not eyeballed:
-    monotone lightness, adjacent dL >= 0.06, single hue, and a light end that
-    still clears 2:1 on the surface so the quietest live cell is not mistaken for
-    an empty one. --heat-0 is deliberately NOT on the ramp; "no contributions" is
-    an absence, and it wears the rule colour like any other piece of chrome.
+    The heatmap ramp is NOT here. It lives in a plain `:root` rule below this block,
+    and it has to — see the note there.
   */
-  --color-heat-0: #c5d6e2;
-  --color-heat-1: #df9c5b;
-  --color-heat-2: #c77b23;
-  --color-heat-3: #a65f00;
-  --color-heat-4: #804600;
 
   /*
     Categorical, for the timeline transport's five lines. The site's only palette where
@@ -193,6 +181,51 @@
 }
 
 /*
+  ═══════════════════════════════════════════════════════════════════════════════
+  The contribution heatmap's ramp, and why it is NOT in `@theme`.
+
+  Tailwind v4 tree-shakes `@theme` variables: a token survives into the built
+  stylesheet only if something is seen using it. The heatmap builds its reference at
+  runtime — `fill={`var(--color-heat-${cell.level})`}` in ContributionHeatmap.tsx —
+  so the literal string `var(--color-heat-0)` appears nowhere for the scanner to find,
+  and every one of these was dropped from the output.
+
+  Dark mode was unaffected, because its values sit in a plain `[data-theme="dark"]`
+  rule that is always emitted. So light mode alone shipped with the whole ramp
+  undefined — and an SVG `fill` given an unresolvable var falls back to its initial
+  value, which is BLACK. The grid rendered as solid black squares on a pale surface.
+
+  A plain `:root` rule is never tree-shaken. This is the only runtime-constructed
+  token in the codebase; every other one is referenced literally in CSS somewhere and
+  survives, which is why nothing else broke.
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  Sequential: one hue — the accent's own — stepping light to dark, because the cells
+  encode magnitude rather than identity. A rainbow here would invent categories that
+  do not exist.
+
+  Validated as an ordinal ramp, not eyeballed: monotone lightness, adjacent dL >= 0.06,
+  a single hue, and a light end that clears 2:1 against the surface so the quietest
+  live cell is not mistaken for an empty one.
+
+  That last check is why step 1 is #d8934f and not #df9c5b. The old value measured
+  1.97:1 — under the floor — which the comment here used to claim it cleared. It had
+  never been rendered, so nothing contradicted the claim. The window is narrow: any
+  darker and the gap to step 2 falls below 0.06 and the first two levels stop being
+  distinguishable.
+
+  --heat-0 is deliberately NOT on the ramp. "No contributions" is an absence, and it
+  wears a chrome colour like any other empty state.
+*/
+:root {
+  --color-heat-0: #c5d6e2;
+  --color-heat-1: #d8934f;
+  --color-heat-2: #c77b23;
+  --color-heat-3: #a65f00;
+  --color-heat-4: #804600;
+}
+
+/*
   Night palette. Not the light one inverted - a dark surface needs a lighter accent to
   hold its contrast ratio, so the amber lifts from #b26b00 to #e0973f rather than
   staying put and going muddy.
@@ -226,12 +259,18 @@
 
   /*
     Chosen for the dark surface, not flipped from the light ramp. The direction
-    reverses - more contributions means lighter, because on a dark surface it is
-    light that reads as "more" - and each step was re-derived against #0b0f16 so
-    the quietest live cell still clears 2:1 against it.
+    reverses — more contributions means lighter, because on a dark surface it is
+    light that reads as "more".
+
+    Step 1 is #805019 and not #704415 for the same reason the light ramp's step 1
+    moved: the old value measured 1.98:1 against the surface, under the 2:1 floor, so
+    a day with a single contribution was very nearly indistinguishable from a day
+    with none — the one place on this chart where the difference carries meaning.
+    Re-validated as an ordinal ramp: monotone lightness, adjacent dL >= 0.06, single
+    hue, and the surface-adjacent end now at 2.41:1.
   */
   --color-heat-0: #1a2a3a;
-  --color-heat-1: #704415;
+  --color-heat-1: #805019;
   --color-heat-2: #9e5f16;
   --color-heat-3: #cd7d1e;
   --color-heat-4: #f6a046;
