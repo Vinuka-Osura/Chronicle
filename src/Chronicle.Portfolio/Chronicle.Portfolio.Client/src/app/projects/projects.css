@@ -234,4 +234,87 @@
     color: var(--color-signal);
     background: var(--color-signal-soft);
   }
+
+  /* ── Ownership ─────────────────────────────────────────────────────────────
+     An aside, not a card: it is context for the page rather than another thing on
+     it, and a bordered box here would compete with the case study it introduces. */
+  .attribution {
+    margin-bottom: clamp(2rem, 5vh, 3rem);
+    padding: 1rem 1.15rem;
+    border-left: 2px solid var(--color-signal);
+    background: color-mix(in oklch, var(--color-signal) 6%, transparent);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .attribution-owner {
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .attribution-permission {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--color-ink-soft);
+  }
+
+  .attribution-evidence {
+    margin-top: 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .attribution-note {
+    margin-top: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    line-height: 1.5;
+    color: var(--color-ink-faint);
+  }
+
+  .attribution-link {
+    color: var(--color-signal);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* ── Contributed work ──────────────────────────────────────────────────── */
+  .contributed-lede {
+    max-width: 44rem;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .contributed-group {
+    margin-top: clamp(2rem, 5vh, 3rem);
+  }
+
+  .contributed-owner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .contributed-owner-name {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1rem + 0.6vw, 1.4rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .contributed-count {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
 }

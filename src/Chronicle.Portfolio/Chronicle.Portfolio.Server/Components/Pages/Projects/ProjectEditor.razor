@@ -166,6 +166,50 @@ else
         </fieldset>
 
         <fieldset class="field-group">
+            <legend>Whose work this is</legend>
+
+            <p class="field-help">
+                Leave the owner empty for your own projects. Fill it in only for work an
+                organisation has agreed you may show — the public page groups those under
+                the owner's name, apart from your own work, and states that they agreed.
+            </p>
+
+            <div class="field">
+                <label for="owner">Owner <span class="optional">optional</span></label>
+                <InputText id="owner" @bind-Value="form.Owner" />
+                <p class="field-help">
+                    The organisation the work belongs to, e.g. "DMS Software Engineering
+                    (Pvt) Ltd".
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="owner-url">Owner's website <span class="optional">optional</span></label>
+                <InputText id="owner-url" @bind-Value="form.OwnerUrl" />
+            </div>
+
+            <div class="field">
+                <label for="permission">Permission</label>
+                <InputText id="permission" @bind-Value="form.PermissionNote" />
+                <p class="field-help">
+                    Required once an owner is named, and shown on the page word for word.
+                    Say how it was given — "Approved for portfolio use by the engineering
+                    manager, March 2026". Naming a company without this is a claim about
+                    them the page cannot back up, and the database rejects it.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="evidence">Evidence URL <span class="optional">optional</span></label>
+                <InputText id="evidence" @bind-Value="form.EvidenceUrl" />
+                <p class="field-help">
+                    Anything public that shows your involvement — a release note, a
+                    write-up, a reference. Full http(s) address.
+                </p>
+            </div>
+        </fieldset>
+
+        <fieldset class="field-group">
             <legend>Placement</legend>
 
             <div class="field-row">
@@ -263,6 +307,13 @@ else
         public string? GithubUrl { get; set; }
         public string? DemoUrl { get; set; }
         public string? DocsUrl { get; set; }
+
+        // Whose work this is. Owner null means a personal project. Lengths are enforced
+        // by SaveProjectCommandValidator, like every other field on this form.
+        public string? Owner { get; set; }
+        public string? OwnerUrl { get; set; }
+        public string? PermissionNote { get; set; }
+        public string? EvidenceUrl { get; set; }
         public DateTime StartDate { get; set; } = DateTime.Today;
         public DateTime? EndDate { get; set; }
         public bool Featured { get; set; }
@@ -295,6 +346,10 @@ else
             form.GithubUrl = project.GithubUrl;
             form.DemoUrl = project.DemoUrl;
             form.DocsUrl = project.DocsUrl;
+            form.Owner = project.Owner;
+            form.OwnerUrl = project.OwnerUrl;
+            form.PermissionNote = project.PermissionNote;
+            form.EvidenceUrl = project.EvidenceUrl;
             form.StartDate = project.StartDate.ToDateTime(TimeOnly.MinValue);
             form.EndDate = project.EndDate?.ToDateTime(TimeOnly.MinValue);
             form.Featured = project.Featured;
@@ -350,7 +405,11 @@ else
                 form.Featured,
                 form.SortOrder,
                 Split(form.Tags),
-                Split(form.TechStack)));
+                Split(form.TechStack),
+                form.Owner?.Trim(),
+                form.OwnerUrl?.Trim(),
+                form.PermissionNote?.Trim(),
+                form.EvidenceUrl?.Trim()));
 
             Id = id;
             slugEdited = true;

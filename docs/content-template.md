@@ -307,6 +307,29 @@ it feels like admitting weakness; it is the section that most reliably separates
 people who have shipped from people who have not.
 
 
+--- WHOSE WORK THIS IS ---
+
+Leave Owner blank for your own projects. That is the normal case and everything below
+it can be ignored.
+
+Fill it in only for work an organisation has agreed you may show. The site then groups
+those under the owner's name in a section of their own, apart from your own work, and
+states on the page that they agreed — because naming a company on a public page is a
+claim about that company, and the note is what backs it up.
+
+Owner (the organisation the work belongs to):
+Owner's website (optional):
+
+Permission — REQUIRED once an owner is named, and shown on the page word for word. Say
+how it was given: "Approved for portfolio use by the engineering manager, March 2026".
+The database rejects an owner without one, so this is not a field you can skip:
+
+Evidence URL (optional) — anything public that shows your involvement: a release note,
+a write-up, a reference:
+
+Note that the source is never linked for owned work, and the page says so. Write these
+case studies about the problem, the approach and what changed — not about their code.
+
 --- LINKS (all optional, all must be full https:// addresses) ---
 
 GitHub URL:

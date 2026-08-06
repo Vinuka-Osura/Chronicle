@@ -40,7 +40,11 @@ public sealed class GetProjectBySlugQueryHandler(IChronicleDbContext db)
                 p.Screenshots
                     .OrderBy(m => m.SortOrder)
                     .Select(m => new ScreenshotDto(m.Url, m.Caption))
-                    .ToList()))
+                    .ToList(),
+                p.Owner,
+                p.OwnerUrl,
+                p.PermissionNote,
+                p.EvidenceUrl))
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 

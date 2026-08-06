@@ -10,7 +10,15 @@ public sealed record ProjectCardDto(
     DateOnly? EndDate,
     IReadOnlyList<string> Tags,
     IReadOnlyList<string> TechStack,
-    string? ThumbnailUrl);
+    string? ThumbnailUrl,
+    /// <summary>
+    /// The organisation that owns the work, or null for a personal project.
+    /// </summary>
+    /// <remarks>
+    /// On the card because the projects page GROUPS by it. Grouping client-side from the
+    /// list already fetched avoids a second round trip for a field the card needs anyway.
+    /// </remarks>
+    string? Owner);
 
 /// <summary>
 /// Full case study: the eight-part template.
@@ -42,7 +50,17 @@ public sealed record ProjectDetailDto(
     bool Featured,
     IReadOnlyList<string> Tags,
     IReadOnlyList<string> TechStack,
-    IReadOnlyList<ScreenshotDto> Screenshots);
+    IReadOnlyList<ScreenshotDto> Screenshots,
+    /// <summary>Null for a personal project.</summary>
+    string? Owner,
+    string? OwnerUrl,
+    /// <summary>
+    /// How permission to publish was given. Always present when <paramref name="Owner"/>
+    /// is — a database check constraint enforces the pair, because naming a company on a
+    /// public page is a claim about them and the note is what says they agreed to it.
+    /// </summary>
+    string? PermissionNote,
+    string? EvidenceUrl);
 
 public sealed record ScreenshotDto(string Url, string? Caption);
 

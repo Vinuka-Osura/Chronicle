@@ -59,6 +59,15 @@ credential published to the internet — including a local one, because people r
 passwords. The fallback is the stock `postgres`/`postgres` pair, so a default install
 runs the suite with nothing configured:
 
+> **Point it at `chronicle_test`, never at `chronicle_dev`.** The host resets the database
+> it is given with Respawn, which **truncates every table**. Setting `CHRONICLE_TEST_DB` to
+> the development connection string therefore wipes the working content — and it does it
+> silently, because the suite then passes exactly as it should. That has happened once,
+> during a session where the variable was derived from the AppHost's own user-secrets for
+> convenience. The default already points at `chronicle_test`; the safest thing is to not
+> set the variable at all.
+
+
 ```powershell
 $env:CHRONICLE_TEST_DB = "Host=localhost;Port=5432;Database=chronicle_test;Username=postgres;Password=..."
 dotnet test Chronicle.slnx

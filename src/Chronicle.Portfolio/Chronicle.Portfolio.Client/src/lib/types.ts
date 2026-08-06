@@ -20,6 +20,8 @@ export interface ProjectCard {
   tags: string[];
   techStack: string[];
   thumbnailUrl: string | null;
+  /** The organisation that owns the work, or null for a personal project. */
+  owner: string | null;
 }
 
 /** One headline number from a project's results. */
@@ -58,6 +60,15 @@ export interface ProjectDetail {
   tags: string[];
   techStack: string[];
   screenshots: Screenshot[];
+  /** Null for a personal project. */
+  owner: string | null;
+  ownerUrl: string | null;
+  /**
+   * How permission to publish was given. Always present when `owner` is — the database
+   * enforces the pair, because naming a company is a claim and this is what backs it.
+   */
+  permissionNote: string | null;
+  evidenceUrl: string | null;
 }
 
 export interface Experience {

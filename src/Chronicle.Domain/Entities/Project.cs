@@ -51,6 +51,45 @@ public class Project : AuditableEntity
     public string? DemoUrl { get; set; }
     public string? DocsUrl { get; set; }
 
+    // --- Whose work this is ---
+
+    /// <summary>
+    /// The organisation that owns the work, when it is not the author's own.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Null means a personal project — the common case, and the reason this is nullable
+    /// rather than defaulted to a name. A project with an owner is work done for somebody
+    /// else, shown here because they agreed it could be, and the site groups those under
+    /// the owner's name rather than mixing them in with work the author is free to
+    /// publish.
+    /// </para>
+    /// <para>
+    /// Naming a real company on a public page is a claim about that company, so this is
+    /// deliberately paired with <see cref="PermissionNote"/>: the name alone asserts a
+    /// relationship, and the note is what says the relationship was agreed.
+    /// </para>
+    /// </remarks>
+    public string? Owner { get; set; }
+
+    /// <summary>The owner's own site, so the claim is checkable.</summary>
+    public string? OwnerUrl { get; set; }
+
+    /// <summary>
+    /// How permission to publish was given, in the author's words. Rendered verbatim
+    /// beside the owner's name.
+    /// </summary>
+    /// <remarks>
+    /// A sentence, not a flag. "Approved for portfolio use by X" is something a reader can
+    /// weigh; a boolean rendered as a tick is a claim with no author behind it.
+    /// </remarks>
+    public string? PermissionNote { get; set; }
+
+    /// <summary>
+    /// Optional evidence of involvement — a reference, a public write-up, a release note.
+    /// </summary>
+    public string? EvidenceUrl { get; set; }
+
     public DateOnly StartDate { get; set; }
 
     /// <summary>Null means ongoing.</summary>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Acquire } from "@/components/Acquire";
 import { SetLines } from "@/components/SetLines";
 import { getProjects } from "./api";
+import { ContributedWork } from "./components/ContributedWork";
 import { ProjectBrowser } from "./components/ProjectBrowser";
 import "./projects.css";
 
@@ -16,6 +17,33 @@ export default async function ProjectsPage() {
 
   // Counted rather than written, so the opening cannot go stale the day one is added.
   const technologies = new Set(projects.flatMap((project) => project.techStack)).size;
+
+  /*
+    Split by whose work it is, and grouped by owner.
+
+    Done here rather than in the browser because the browser paginates: nine per page
+    across a mixed list would cut a group in half and put the rest overleaf, which is the
+    one thing grouping exists to prevent. The browser keeps the author's own work; the
+    section below owns the rest.
+
+    Groups are ordered by size then name — the organisation with the most work first,
+    because that is the tenure a reader most wants — and are stable, since the incoming
+    list is already ordered by the editor's own sort.
+  */
+  const own = projects.filter((project) => !project.owner);
+
+  const groups = [
+    ...projects
+      .filter((project) => project.owner)
+      .reduce((map, project) => {
+        const owner = project.owner!;
+        map.set(owner, [...(map.get(owner) ?? []), project]);
+        return map;
+      }, new Map<string, typeof projects>())
+      .entries(),
+  ]
+    .map(([owner, items]) => ({ owner, projects: items }))
+    .sort((a, b) => b.projects.length - a.projects.length || a.owner.localeCompare(b.owner));
 
   return (
     <>
@@ -47,9 +75,15 @@ export default async function ProjectsPage() {
       </section>
 
       {projects.length > 0 ? (
-        <section className="scene projects-scene" data-scene="All work">
-          <ProjectBrowser projects={projects} />
-        </section>
+        <>
+          {own.length > 0 && (
+            <section className="scene projects-scene" data-scene="My own work">
+              <ProjectBrowser projects={own} />
+            </section>
+          )}
+
+          <ContributedWork groups={groups} />
+        </>
       ) : (
         <p className="rounded-lg border border-dashed border-rule p-6 text-sm text-ink-soft">
           Nothing published yet. Case studies are served from the API, so they appear here

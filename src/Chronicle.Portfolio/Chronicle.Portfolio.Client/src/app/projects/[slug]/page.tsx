@@ -183,6 +183,57 @@ async function CaseStudy({ params }: { params: Promise<Params> }) {
         )}
       </header>
 
+      {/*
+        Whose work this is, stated before the case study rather than after it.
+
+        A reader who gets to the bottom and only then learns this was built for a client
+        has read the whole thing under the wrong assumption. It sits directly under the
+        title for the same reason a byline does.
+
+        `permissionNote` is non-null whenever `owner` is — the API guarantees the pair and
+        a database check constraint guarantees the API — so this renders the attestation
+        unconditionally rather than hedging around a value that cannot be absent.
+      */}
+      {project.owner && (
+        <aside className="attribution" aria-label="Ownership and permission">
+          <p className="attribution-owner">
+            Built for{" "}
+            {project.ownerUrl ? (
+              <a
+                href={project.ownerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="attribution-link"
+              >
+                {project.owner}
+              </a>
+            ) : (
+              <strong>{project.owner}</strong>
+            )}
+          </p>
+
+          <p className="attribution-permission">{project.permissionNote}</p>
+
+          {project.evidenceUrl && (
+            <p className="attribution-evidence">
+              <a
+                href={project.evidenceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="attribution-link"
+              >
+                Evidence of involvement
+              </a>
+            </p>
+          )}
+
+          <p className="attribution-note">
+            The source belongs to them and is not linked. What follows is the problem, the
+            approach and what changed.
+          </p>
+        </aside>
+      )}
+
       {/* 2-7. The template. Absent sections vanish rather than showing empty headings. */}
       <Section heading="The problem" body={project.problem} />
       <Section heading="Solution and key decisions" body={project.solution} />

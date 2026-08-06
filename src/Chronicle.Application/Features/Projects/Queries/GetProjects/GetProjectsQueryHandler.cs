@@ -55,7 +55,8 @@ public sealed class GetProjectsQueryHandler(IChronicleDbContext db)
                 p.EndDate,
                 p.Tags.OrderBy(t => t.Name).Select(t => t.Name).ToList(),
                 p.TechStack.OrderBy(s => s.SortOrder).Select(s => s.Name).ToList(),
-                p.Screenshots.OrderBy(m => m.SortOrder).Select(m => m.Url).FirstOrDefault()))
+                p.Screenshots.OrderBy(m => m.SortOrder).Select(m => m.Url).FirstOrDefault(),
+                p.Owner))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

@@ -35,7 +35,13 @@ public sealed record SaveProjectCommand(
     bool Featured,
     int SortOrder,
     IReadOnlyList<string> Tags,
-    IReadOnlyList<string> TechStack) : IRequest<Guid>;
+    IReadOnlyList<string> TechStack,
+    /// <summary>The organisation that owns the work. Null for a personal project.</summary>
+    string? Owner = null,
+    string? OwnerUrl = null,
+    /// <summary>Required whenever <paramref name="Owner"/> is set.</summary>
+    string? PermissionNote = null,
+    string? EvidenceUrl = null) : IRequest<Guid>;
 
 public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectCommand>
 {
@@ -68,7 +74,9 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
             (c => c.VideoUrl, "Video URL"),
             (c => c.GithubUrl, "GitHub URL"),
             (c => c.DemoUrl, "Demo URL"),
-            (c => c.DocsUrl, "Docs URL")
+            (c => c.DocsUrl, "Docs URL"),
+            (c => c.OwnerUrl, "Owner URL"),
+            (c => c.EvidenceUrl, "Evidence URL")
         })
         {
             RuleFor(c => url.Selector(c))
@@ -77,6 +85,26 @@ public sealed class SaveProjectCommandValidator : AbstractValidator<SaveProjectC
                 .WithName(url.Name)
                 .WithMessage("Must be a full http(s) address.");
         }
+
+        RuleFor(c => c.Owner).MaximumLength(150);
+        RuleFor(c => c.PermissionNote).MaximumLength(300);
+
+        /*
+          Naming somebody else's organisation on a public page is a claim about them, so
+          the claim has to come with the sentence that says they agreed to it.
+
+          Checked here AND by a database check constraint, deliberately. This one exists
+          to give the editor a sentence they can act on; the constraint exists because a
+          seeder, a migration or a direct UPDATE never sees this validator, and the pairing
+          is the whole safeguard rather than a nicety.
+        */
+        RuleFor(c => c.PermissionNote)
+            .NotEmpty()
+            .When(c => !string.IsNullOrWhiteSpace(c.Owner))
+            .WithName("Permission")
+            .WithMessage(
+                "Say how permission to publish was given. Naming an organisation without it "
+                + "is a claim about them that the page cannot back up.");
 
         RuleForEach(c => c.Tags).NotEmpty().MaximumLength(60);
         RuleForEach(c => c.TechStack).NotEmpty().MaximumLength(60);

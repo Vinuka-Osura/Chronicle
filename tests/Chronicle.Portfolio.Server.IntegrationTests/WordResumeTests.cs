@@ -72,6 +72,8 @@ public class WordResumeTests
                 null,
                 ["fintech"],
                 ["C#", "PostgreSQL"],
+                null,
+                // A personal project: no owning organisation, so nothing to attribute.
                 null),
         ],
         [

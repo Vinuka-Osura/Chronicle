@@ -553,6 +553,10 @@ namespace Chronicle.Infrastructure.Data.Migrations
                     b.Property<DateOnly?>("EndDate")
                         .HasColumnType("date");
 
+                    b.Property<string>("EvidenceUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<bool>("Featured")
                         .HasColumnType("boolean");
 
@@ -565,6 +569,18 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.Property<string>("LessonsLearned")
                         .HasColumnType("text");
+
+                    b.Property<string>("Owner")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("OwnerUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("PermissionNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
 
                     b.Property<string>("Pitch")
                         .IsRequired()
@@ -607,6 +623,8 @@ namespace Chronicle.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Owner");
+
                     b.HasIndex("Slug")
                         .IsUnique();
 
@@ -614,7 +632,10 @@ namespace Chronicle.Infrastructure.Data.Migrations
                         .IsDescending(true, false, true)
                         .HasDatabaseName("IX_Projects_Featured_SortOrder_StartDate");
 
-                    b.ToTable("portfolio_projects", (string)null);
+                    b.ToTable("portfolio_projects", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_portfolio_projects_owner_permission", "\"Owner\" IS NULL OR \"PermissionNote\" IS NOT NULL");
+                        });
                 });
 
             modelBuilder.Entity("Chronicle.Domain.Entities.RoadmapItem", b =>

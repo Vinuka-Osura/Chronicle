@@ -255,7 +255,39 @@ chronological.
 
 The filtered list animates: cards fade and contract as they leave, and the survivors slide
 into the gap rather than jumping. A count on screen says "3 of 4" so a filtered list never
-looks like a short list.
+looks like a short list. Past nine projects it paginates, nine to a page; below that the
+pager does not appear at all, because a control that can only say "1 of 1" is furniture.
+
+#### Work you did for somebody else
+
+The page is in two halves. The browser above holds **your own projects**. Below it, a
+separate section holds **work an organisation owns**, grouped under their name.
+
+Fill in the *Owner* field on a project and it moves there. That field is blank by default
+and should stay blank for anything of your own — the split is not a category, it is a
+difference in what the reader is being shown. Your own work is yours to publish and yours
+to have built badly; work for a client was scoped by somebody else, built inside their
+systems, and is on the page only because they agreed it could be.
+
+**Naming an organisation requires saying they agreed.** Once you set an owner, the
+*Permission* field becomes required, and what you write there is printed on the case study
+word for word — "Approved for portfolio use by the engineering manager, March 2026". It is
+rendered as your sentence rather than summarised into a tick, because a badge is a claim
+with nobody behind it.
+
+This is enforced twice on purpose: the admin form asks for it, and the database refuses a
+row that has an owner without one. The form alone would not be enough, since a seeder or a
+direct edit never sees it — and the pairing is the whole safeguard.
+
+Optionally add the **owner's website**, so a reader can check who they are, and an
+**evidence URL** — a release note, a public write-up, a reference — for anything that
+shows your involvement.
+
+On the case study itself the attribution sits directly under the title rather than at the
+bottom, for the same reason a byline does: a reader who reaches the end and only then
+learns it was client work has read the whole thing under the wrong assumption. The page
+also states that the source belongs to them and is not linked, which is why these entries
+are written about the problem and the approach rather than about the code.
 
 **Each case study** carries the problem, the solution, the key decisions, the architecture
 (as prose and as a generated diagram), measured results with their caveats, lessons

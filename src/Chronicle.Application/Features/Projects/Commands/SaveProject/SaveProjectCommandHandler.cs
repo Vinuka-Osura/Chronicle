@@ -79,6 +79,19 @@ public sealed class SaveProjectCommandHandler(
         project.GithubUrl = Blank(request.GithubUrl);
         project.DemoUrl = Blank(request.DemoUrl);
         project.DocsUrl = Blank(request.DocsUrl);
+
+        /*
+          Ownership, cleared as a set rather than field by field.
+
+          Blanking the owner has to blank the permission note with it: a note left behind
+          on a project that is no longer attributed reads as an attestation about nobody,
+          and the check constraint would let it through because it only guards the other
+          direction.
+        */
+        project.Owner = Blank(request.Owner);
+        project.OwnerUrl = project.Owner is null ? null : Blank(request.OwnerUrl);
+        project.PermissionNote = project.Owner is null ? null : Blank(request.PermissionNote);
+        project.EvidenceUrl = project.Owner is null ? null : Blank(request.EvidenceUrl);
         project.StartDate = request.StartDate;
         project.EndDate = request.EndDate;
         project.Featured = request.Featured;

@@ -8,7 +8,20 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
 {
     public void Configure(EntityTypeBuilder<Project> builder)
     {
-        builder.ToTable("portfolio_projects");
+        /*
+          A named owner must carry the note that says publishing was agreed.
+
+          Enforced by the database rather than only by the form, for the same reason the
+          singleton rows are: this one is a claim about a third party on a public page, and
+          "the admin UI requires it" is not a guarantee — a seeder, a migration or a direct
+          UPDATE all bypass the form. The constraint means the pairing cannot be broken by
+          any route.
+
+          The reverse is allowed: a note with no owner is merely unused, not a claim.
+        */
+        builder.ToTable("portfolio_projects", t => t.HasCheckConstraint(
+            "ck_portfolio_projects_owner_permission",
+            @"""Owner"" IS NULL OR ""PermissionNote"" IS NOT NULL"));
 
         builder.Property(p => p.Title).IsRequired().HasMaxLength(200);
         builder.Property(p => p.Slug).IsRequired().HasMaxLength(200);
@@ -31,6 +44,16 @@ public sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.Property(p => p.GithubUrl).HasMaxLength(500);
         builder.Property(p => p.DemoUrl).HasMaxLength(500);
         builder.Property(p => p.DocsUrl).HasMaxLength(500);
+
+        // Whose work this is. Owner length matches Company on portfolio_experiences, since
+        // the same organisation is very often named in both.
+        builder.Property(p => p.Owner).HasMaxLength(150);
+        builder.Property(p => p.OwnerUrl).HasMaxLength(300);
+        builder.Property(p => p.PermissionNote).HasMaxLength(300);
+        builder.Property(p => p.EvidenceUrl).HasMaxLength(500);
+
+        // Grouping the projects page by owner reads every non-null owner in slug order.
+        builder.HasIndex(p => p.Owner);
 
         builder.HasIndex(p => p.Slug).IsUnique();
 
