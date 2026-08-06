@@ -35,11 +35,34 @@ export default async function AboutPage() {
           Engineering through curiosity.
         </SetLines>
 
-        <p className="about-lede reveal-mask">
-          I enjoy building software, but what keeps me engaged is understanding why
-          systems behave the way they do — and that question is usually more useful than
-          the feature that prompted it.
-        </p>
+        <div className="about-intro">
+          <div>
+            <p className="about-lede reveal-mask">
+              I enjoy building software, but what keeps me engaged is understanding why
+              systems behave the way they do — and that question is usually more useful
+              than the feature that prompted it.
+            </p>
+          </div>
+
+          {/*
+            A stand-in portrait. An illustration rather than a stock photograph, because
+            a stock face is a picture of somebody else on a page about this person.
+
+            It is a static asset rather than CMS content on purpose: there is no avatar
+            field on the profile yet, and inventing a column for a placeholder would mean
+            a migration to add it and another to change it the moment a real photograph
+            arrives. Marked decorative — every fact about who this is, is in the text
+            beside it.
+          */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/avatar-placeholder.svg"
+            alt=""
+            width={200}
+            height={200}
+            className="about-portrait rm-hide"
+          />
+        </div>
       </section>
 
       {/*

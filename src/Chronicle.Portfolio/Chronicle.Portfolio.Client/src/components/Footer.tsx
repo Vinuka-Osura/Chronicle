@@ -87,41 +87,60 @@ const elsewhere = [
 ];
 
 /**
- * The end of the document, rather than a line of small print under it.
+ * The end of the document, and the one place the site states its terms.
  *
- * A footer is the second most-used navigation on a site — it is where someone goes when
- * they have finished reading and have not yet found what they came for.
+ * ── The idea ──────────────────────────────────────────────────────────────────────
  *
- * **The wordmark is gone.** A site's name set at 11vw is a full stop, and it read as one
- * — but it added the height of a small screen to every page on the site to say something
- * the header already says, and the tab title says, and the copyright line below says
- * again. Three of those are load-bearing; the fourth was decoration charging rent.
+ * A footer is the second most-used navigation on a site: it is where somebody goes when
+ * they have finished reading and have not yet found what they came for. So the first
+ * thing in it is not a link column — it is the sentence that tells them whether to keep
+ * going, and the one action worth taking. Everything else is filed behind that.
  *
- * The site column is a two-up grid rather than a single stack, which halves the row count
- * for the same eight links. Between that and the wordmark, the footer is roughly a third
- * of the height it was.
+ * The structure is a **masthead over a ledger**. The masthead is a statement of
+ * availability and a direct way to answer it; the ledger below is three plain columns of
+ * everywhere else, set small, because a person scanning for "contact" and a person
+ * scanning for "that article about ledgers" are doing different things and should not be
+ * given the same visual weight.
+ *
+ * Not copied from anywhere: no centred row of social circles, no newsletter box asking
+ * for an address the site has no way to send to. A form that cannot deliver is a lie
+ * with a submit button.
+ *
+ * ── What is deliberately absent ────────────────────────────────────────────────────
+ *
+ * The wordmark. CHRONICLE at 11vw was a full stop and read as one, but it added the
+ * height of a small screen to every page to say what the header already says, the tab
+ * title says, and the copyright line says again.
  *
  * Opaque, like the header and the status strip. Chrome is solid; content floats.
  */
 export function Footer() {
   return (
     <footer className="chrome mt-24 border-t border-rule">
-      <div className="mx-auto max-w-6xl px-4 pt-10 pb-7 sm:px-5">
-        <div className="grid gap-x-8 gap-y-9 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <p className="font-mono text-xs tracking-[0.2em] text-ink uppercase">
-              Vinuka Osura Anupama
+      <div className="mx-auto max-w-6xl px-4 pt-11 pb-7 sm:px-5">
+        {/* ── Masthead ─────────────────────────────────────────────────────────
+            The status dot is the only animated thing down here. It earns it: it is
+            the single fact a visitor at the bottom of the page most wants. */}
+        <div className="footer-masthead">
+          <div>
+            <p className="footer-status">
+              <span className="footer-status-dot" aria-hidden />
+              Open to work
             </p>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
-              Full-stack software engineer working on enterprise systems — backend
-              services, the databases under them, and the architecture that keeps both
-              maintainable as the requirements move.
+            <p className="footer-pitch">
+              Full-stack engineer on enterprise systems — backend services, the databases
+              under them, and the architecture that keeps both maintainable as the
+              requirements move.
             </p>
+          </div>
 
-            {/* The same destinations as the Elsewhere column, as marks. A row of icons is
-                found by shape at a glance; the column beside it is for anyone who would
-                rather read the word. Labelled, because an icon alone is a guess. */}
-            <ul className="mt-4 flex items-center gap-2">
+          <div className="footer-actions">
+            <Link href="/contact" className="footer-cta">
+              Get in touch
+              <span aria-hidden>&rarr;</span>
+            </Link>
+
+            <ul className="footer-marks">
               {elsewhere.map((item) => (
                 <li key={`mark-${item.href}`}>
                   {item.external ? (
@@ -149,13 +168,14 @@ export function Footer() {
               ))}
             </ul>
           </div>
+        </div>
 
-          <nav aria-label="The site" className="lg:col-span-4">
-            <h2 className="font-mono text-[0.65rem] tracking-[0.16em] text-ink-faint uppercase">
-              The site
-            </h2>
+        {/* ── Ledger ───────────────────────────────────────────────────────── */}
+        <div className="footer-ledger">
+          <nav aria-label="The site">
+            <h2 className="footer-column-head">The site</h2>
             {/* Two-up: eight links in four rows rather than eight. */}
-            <ul className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <ul className="footer-links footer-links-split">
               {links.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="footer-link">
@@ -166,11 +186,9 @@ export function Footer() {
             </ul>
           </nav>
 
-          <nav aria-label="Elsewhere" className="lg:col-span-2">
-            <h2 className="font-mono text-[0.65rem] tracking-[0.16em] text-ink-faint uppercase">
-              Elsewhere
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm">
+          <nav aria-label="Elsewhere">
+            <h2 className="footer-column-head">Elsewhere</h2>
+            <ul className="footer-links">
               {elsewhere.map((item) => (
                 <li key={item.href}>
                   {item.external ? (
@@ -193,13 +211,11 @@ export function Footer() {
             </ul>
           </nav>
 
-          <div className="lg:col-span-2">
-            <h2 className="font-mono text-[0.65rem] tracking-[0.16em] text-ink-faint uppercase">
-              Colophon
-            </h2>
+          <div>
+            <h2 className="footer-column-head">Colophon</h2>
             {/* Not decoration: on a portfolio whose whole argument is "the site is the
                 work sample", naming the stack in the footer is the argument. */}
-            <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+            <p className="footer-colophon">
               .NET&nbsp;10, Aspire and PostgreSQL behind a Next.js&nbsp;16 front end.
               Content is served by an API and edited in a CMS, so nothing here needs a
               deploy to change.
@@ -210,18 +226,18 @@ export function Footer() {
               <Link href="/city" className="footer-link">
                 Software City
               </Link>{" "}
-              <span className="text-xs text-ink-faint">— in progress</span>
+              <span className="text-xs text-ink-faint">&mdash; in progress</span>
             </p>
           </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-2 border-t border-rule pt-5 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
+        <div className="footer-baseline">
           {/* The build year and the browser's year differ for one night a year, and the
               browser is the one that is right. */}
           <p suppressHydrationWarning>
             &copy; {YEAR} Vinuka Osura Anupama. All rights reserved.
           </p>
-          <p className="font-mono">Built in the open — the source is on GitHub.</p>
+          <p className="font-mono">Built in the open &mdash; the source is on GitHub.</p>
         </div>
       </div>
     </footer>

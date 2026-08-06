@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Illustrated placeholder portrait">
+  <!--
+    A stand-in portrait until there is a photograph.
+
+    Deliberately an ILLUSTRATION and deliberately not a likeness: a stock face would be a
+    picture of somebody else on a page about this person, and a generated one would be a
+    picture of nobody presented as a photograph. A flat drawing in the site's own palette
+    is honestly a placeholder while still being a face-shaped thing where a face goes.
+
+    Committed to `public/` rather than uploaded, because it is part of the design rather
+    than content — the moment a real photograph exists it belongs in the CMS, and this
+    file goes.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#2f5f86" />
+      <stop offset="1" stop-color="#16324a" />
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22415c" />
+      <stop offset="1" stop-color="#16304a" />
+    </linearGradient>
+    <clipPath id="disc"><circle cx="200" cy="200" r="200" /></clipPath>
+  </defs>
+
+  <g clip-path="url(#disc)">
+    <rect width="400" height="400" fill="url(#bg)" />
+
+    <!-- The site's channel rule, echoed as a horizon so the disc belongs to this design. -->
+    <rect x="0" y="286" width="400" height="1" fill="#ffffff" opacity="0.10" />
+
+    <!-- Shoulders. -->
+    <path d="M64 400c0-70 61-108 136-108s136 38 136 108z" fill="url(#shirt)" />
+    <path d="M200 292c-18 0-33 3-33 3l33 46 33-46s-15-3-33-3z" fill="#e8a24f" opacity="0.92" />
+
+    <!-- Neck. -->
+    <path d="M176 246h48v46c0 10-48 10-48 0z" fill="#c98d63" />
+    <path d="M176 262c14 10 34 10 48 0v-16h-48z" fill="#00000022" />
+
+    <!-- Head. -->
+    <ellipse cx="200" cy="188" rx="66" ry="74" fill="#dfa077" />
+    <!-- Ears. -->
+    <ellipse cx="134" cy="192" rx="10" ry="14" fill="#d0946d" />
+    <ellipse cx="266" cy="192" rx="10" ry="14" fill="#d0946d" />
+
+    <!-- Hair: one solid shape, no strands. Flat illustration, not a rendering. -->
+    <path d="M134 176c0-46 30-70 66-70s66 24 66 70c0 0-6-26-22-32-14-5-30 4-44 4s-30-9-44-4c-16 6-22 32-22 32z" fill="#1d232c" />
+
+    <!-- Brows, eyes, mouth. Minimal on purpose: the fewer the features, the less it
+         reads as a claim about what somebody looks like. -->
+    <rect x="164" y="176" width="26" height="5" rx="2.5" fill="#1d232c" opacity="0.85" />
+    <rect x="210" y="176" width="26" height="5" rx="2.5" fill="#1d232c" opacity="0.85" />
+    <circle cx="177" cy="196" r="6.5" fill="#1d232c" />
+    <circle cx="223" cy="196" r="6.5" fill="#1d232c" />
+    <path d="M184 226c10 8 22 8 32 0" fill="none" stroke="#1d232c" stroke-width="5" stroke-linecap="round" opacity="0.8" />
+  </g>
+
+  <circle cx="200" cy="200" r="199" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2" />
+</svg>

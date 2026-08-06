@@ -1004,6 +1004,171 @@
     transform: scaleX(1);
   }
 
+  /* ── Footer ──────────────────────────────────────────────────────────────────
+     A masthead over a ledger. The masthead answers "should I contact this person and
+     how"; the ledger below is everywhere else, set small, because those are two
+     different errands and should not carry the same weight. */
+  .footer-masthead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .footer-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+  }
+
+  /*
+     The one animated thing in the footer, and the only one that earns it: availability
+     is the single fact a visitor who has reached the bottom most wants. A ring that
+     breathes outward reads as "live" where a static dot reads as a bullet.
+  */
+  .footer-status-dot {
+    position: relative;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--color-signal);
+  }
+
+  .footer-status-dot::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: footer-pulse 2.6s var(--ease-move) infinite;
+  }
+
+  @keyframes footer-pulse {
+    from { opacity: 0.55; transform: scale(1); }
+    to   { opacity: 0;    transform: scale(2.6); }
+  }
+
+  /* It loops, which the site's motion rules otherwise forbid — so it stops entirely
+     rather than being slowed, wherever motion is not wanted. */
+  [data-motion="reduced"] .footer-status-dot::after,
+  [data-motion="still"] .footer-status-dot::after,
+  [data-recruiter="on"] .footer-status-dot::after {
+    animation: none;
+    display: none;
+  }
+
+  .footer-pitch {
+    max-width: 34rem;
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .footer-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .footer-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--color-signal);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--color-signal);
+    transition:
+      background-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move),
+      gap var(--t-quick) var(--ease-move);
+  }
+
+  .footer-cta:hover {
+    gap: 0.75rem;
+    background: var(--color-signal);
+    color: var(--color-paper-solid);
+  }
+
+  .footer-marks {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+  }
+
+  .footer-ledger {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1.75rem 2.5rem;
+    padding-block: 1.75rem;
+  }
+
+  .footer-column-head {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .footer-links {
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .footer-links > li + li {
+    margin-top: 0.5rem;
+  }
+
+  /* Two-up, so eight links take four rows rather than eight. */
+  .footer-links-split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1.5rem;
+  }
+
+  .footer-links-split > li + li {
+    margin-top: 0;
+  }
+
+  .footer-colophon {
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+  }
+
+  .footer-baseline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-rule);
+    font-size: 0.72rem;
+    color: var(--color-ink-faint);
+  }
+
+  @media (width >= 40rem) {
+    .footer-baseline {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+
   /*
     The icon row: the same destinations as the Elsewhere column, as marks.
 

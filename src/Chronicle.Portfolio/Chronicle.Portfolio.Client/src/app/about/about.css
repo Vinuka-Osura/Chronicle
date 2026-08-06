@@ -22,6 +22,28 @@
     margin-block: clamp(2rem, 6vh, 4rem) clamp(5rem, 10vh, 8rem);
   }
 
+  /* The lede and the portrait share a row on a wide screen and stack on a narrow one,
+     where a 200px illustration beside two lines of text would crowd both. */
+  .about-intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .about-intro > div {
+    flex: 1 1 22rem;
+    min-width: 0;
+  }
+
+  .about-portrait {
+    flex: 0 0 auto;
+    width: clamp(7rem, 16vw, 11rem);
+    height: auto;
+    border-radius: 999px;
+    box-shadow: var(--shadow-raised);
+  }
+
   .about-heading {
     max-width: 20ch;
     margin-top: clamp(1.5rem, 4vh, 2.5rem);
