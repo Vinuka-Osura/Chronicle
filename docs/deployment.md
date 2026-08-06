@@ -1,12 +1,39 @@
 # Deployment — what it costs, what you need to buy, what you need to do
 
-Written so you can research before committing to anything. Nothing here is decided;
-every recommendation says *why*, so you can disagree with the reasoning rather than just
-the conclusion.
+Written so you can research before committing to anything. Every recommendation says
+*why*, so you can disagree with the reasoning rather than just the conclusion.
 
 **The headline: this can run for about £9 a year, and all of it is the domain.**
 Everything else has a genuine permanently-free tier — not a trial, not credits that run
 out. Where "free" comes with a catch, the catch is named.
+
+---
+
+## The shopping list
+
+Everything below this line except the domain **costs nothing to create an account for**
+— no card commitment is being made on your behalf anywhere in this list. This is the
+concrete sequence to actually execute, in the order it needs doing. Everything else in
+this document is the reasoning behind these picks, kept so a choice can be revisited.
+
+| # | Do this | Provider (chosen) | Cost | Card asked for? |
+|---|---|---|---|---|
+| 1 | Pick a domain name and buy it | **Cloudflare Registrar** — see §2 for the two name candidates | **~£9/year — the one real cost** | Yes |
+| 2 | Point the domain's DNS at Cloudflare | Cloudflare (same account as above) | £0 | No |
+| 3 | Create an R2 bucket for media | **Cloudflare R2** | £0 (10 GB free) | Yes, to enable R2 |
+| 4 | Provision the always-on server | **Oracle Cloud Always Free**, ARM VM | £0, permanently | Yes, identity check only |
+| 5 | Run PostgreSQL | on that same Oracle VM | £0 | — |
+| 6 | Create a transactional-email account | **Resend** | £0 (3,000/month) | No |
+| 7 | Connect the public site | **Vercel Hobby** | £0 | No |
+
+Do them in roughly this order because §3 and §4 gate everything after them: the R2
+bucket has to exist before the app can be pointed at it, and the VM has to exist before
+there is anywhere to deploy the API to.
+
+**Nothing in the Ask feature (the chatbot in the corner) needs anything on this list.**
+It has no model, no API key and no third-party service behind it — it is a database
+query against content already on the site, so it costs nothing beyond what is already
+here and needs no separate provisioning step.
 
 ---
 
@@ -188,14 +215,17 @@ You already chose **Cloudflare R2**, and it is a good choice.
 Zero egress is R2's real advantage — S3 charges for every byte served, which is exactly
 the cost that surprises people.
 
-**The admin storage gauge** you asked for is being built: `/admin` will show bytes used
-against the free-tier ceiling, so you can see the margin without opening Cloudflare.
+**Both shipped, not still being built.** The admin storage gauge is live on the
+Dashboard: it sums bytes from the database rather than listing the bucket (listing is a
+billable R2 operation, and the app already knows what it uploaded), and shows that
+figure against the free-tier ceiling. And local disk and R2 are two adapters behind one
+`IMediaStorage` port — switching between them is the one config key below, `Media:Provider`,
+not a code change.
 
-**The alternative, now worth reconsidering:** if the server lands on a VM with a
-persistent disk, local disk costs nothing and needs no card. I am building both adapters
-behind one interface, so this is a one-line config change at deploy time rather than a
-decision you have to make now. R2 still wins on not tying your media to that server's
-lifetime — if you ever move hosts, the images do not move with you.
+**The alternative, if the VM path is chosen:** a persistent disk on the same Oracle box
+costs nothing and needs no card, and is a one-line config change either way. R2 still
+wins on not tying your media to that server's lifetime — if you ever move hosts, the
+images do not move with you.
 
 ---
 
@@ -220,17 +250,21 @@ Sending mail that claims to come from someone else's domain fails SPF and lands 
 
 ## 8. What I will need from you, and when
 
-**Nothing yet.** All of this is a config change at deploy time. Development continues
-against local PostgreSQL and local disk.
+**The code side is ready.** Both media adapters, the CMS, the API and the public site
+are all built and behind config keys — deployment from here on is accounts and secrets,
+not development. Development continues against local PostgreSQL and local disk either
+way, so none of this blocks anything before you choose to act on it.
 
-When we deploy, in this order:
+Same sequence as the shopping list above, expanded with the exact accounts and where
+each value goes.
 
-### Now-ish, if you want to research
+### First — the things everything else depends on
 
 - [ ] Decide on a domain name and buy it (§2). ~£9.
 - [ ] Create a Cloudflare account. Free, and you need it for DNS anyway.
+- [ ] Point the domain's DNS at Cloudflare.
 
-### Before the R2 work lands (tomorrow, per your message)
+### The R2 bucket — the media adapter is already built and waiting on this
 
 - [ ] Cloudflare → R2 → add a payment method → create bucket `chronicle-media`
 - [ ] Note the **Account ID** (visible in the R2 dashboard URL)
@@ -241,8 +275,8 @@ When we deploy, in this order:
 
 - [ ] Oracle Cloud account + an Always Free VM (or a Hetzner box), and its SSH details
 - [ ] A Resend account and an SMTP API key
-- [ ] Point the domain's DNS at Cloudflare
 - [ ] Choose the admin email and a strong password for the CMS
+- [ ] Rotate the local PostgreSQL password (§9) — do this regardless of hosting choice
 
 ### What you give me, and what you do not
 
@@ -269,14 +303,18 @@ key names and nothing else.
 | `GitHub:Pat` | Read-only token for the contribution graph | user-secrets | Deployment secret |
 | `Smtp:Host` / `Port` / `Username` / `Password` | Resend SMTP | user-secrets | Deployment secret |
 | `Smtp:ToAddress` | Where contact mail lands | user-secrets | Deployment secret |
-| `R2:AccountId` / `AccessKeyId` / `SecretAccessKey` / `Bucket` | Media storage | user-secrets | Deployment secret |
+| `R2:AccountId` / `AccessKeyId` / `SecretAccessKey` / `Bucket` / `PublicBaseUrl` | Media storage | user-secrets | Deployment secret |
 | `Cors:AllowedOrigins` | The public site's URL | AppHost sets it | Deployment config |
 | `NEXT_PUBLIC_API_BASE_URL` | Where the client finds the API | AppHost sets it | Vercel env var |
 | `NEXT_PUBLIC_SITE_URL` | Canonical URL for sitemap, OG tags, JSON-LD | defaults to localhost | Vercel env var |
 
-**One outstanding item:** the local PostgreSQL password `#compaq123` was typed into our
-conversation early on. Rotate it before anything is public. Nothing containing it is
-committed.
+**One outstanding item, and it is more live than this line previously admitted:** an
+earlier version of this file quoted the actual local PostgreSQL password in plain text.
+That is a real credential that was sitting in `docs/deployment.md` on `origin/development`
+— removed from the file now, but **still present in that commit's history on the public
+remote**, which a redaction in a later commit does not undo. Rotate that password
+everywhere it is used before this repository goes anywhere near production; do not treat
+the file edit alone as the fix.
 
 ---
 
