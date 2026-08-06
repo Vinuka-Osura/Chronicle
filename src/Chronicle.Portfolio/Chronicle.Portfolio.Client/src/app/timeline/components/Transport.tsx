@@ -20,6 +20,26 @@ interface Anchor {
 }
 
 /**
+ * Drop points that would land closer together than `gap` months.
+ *
+ * Keeps the first of any cluster rather than the densest or the last, so which marks
+ * survive is stable as the reader filters — a mark that moved every time a lens changed
+ * would read as the data changing.
+ */
+function thin<T extends { at: number }>(points: T[], gap: number): T[] {
+  const kept: T[] = [];
+  let previous = Number.NEGATIVE_INFINITY;
+
+  for (const point of points) {
+    if (point.at - previous < gap) continue;
+    kept.push(point);
+    previous = point.at;
+  }
+
+  return kept;
+}
+
+/**
  * The whole career as five curves, and the control for moving through it.
  *
  * ── Why five lines rather than one stacked area ────────────────────────────────────
@@ -215,6 +235,32 @@ export function Transport({ timeline }: { timeline: Timeline }) {
     [shown, yOf],
   );
 
+  /*
+    How many years actually get a label.
+
+    The control's WIDTH is fixed — `max-w-6xl`, the page container — so it can never grow
+    longer as content is added. What grows is the number of things competing for that
+    width, and the year row is the first to break: a four-digit label at this size needs
+    roughly 45px of room, so about a dozen fit. Nine years fit comfortably; seventy would
+    be a grey smear, and nothing in the data model stops someone entering a goal for 2090.
+
+    So the step is chosen from the span rather than fixed, and it snaps to round multiples
+    — 2020, 2030, 2040 reads as an axis; 2021, 2031, 2041 reads as an accident. Every
+    month still occupies the same width whether it is labelled or not, so the shape of the
+    curves is untouched by this.
+  */
+  const yearStep = (() => {
+    for (const step of [1, 2, 5, 10, 20, 25, 50]) {
+      if (Math.ceil(density.years.length / step) <= 12) return step;
+    }
+    return 100;
+  })();
+
+  const labelledYears =
+    yearStep === 1
+      ? density.years
+      : density.years.filter((y) => Number(y.year) % yearStep === 0);
+
   if (width === 0) return null;
 
   const pct = (index: number) => (index / lastMonth) * 100;
@@ -359,7 +405,19 @@ export function Transport({ timeline }: { timeline: Timeline }) {
             into a lens and a square into a letterbox.
           */}
           {lines.map((line) =>
-            line.points.map((point) => (
+            /*
+              Thinned so glyphs cannot pile on top of one another.
+
+              A mark is about 7px wide; the control is a fixed width, so the months per
+              pixel rises with the span. Past roughly a mark every 9px they stop being
+              separate shapes and become a smear — which costs more than the marks they
+              drop, because the point of drawing them as shapes rather than dots is that
+              a reader who cannot separate the colours can still separate the glyphs.
+
+              The line itself is unthinned: every month is still plotted, so the curve is
+              the whole data whatever the axis does. Only the labels on it are rationed.
+            */
+            thin(line.points, Math.max(1, lastMonth / 128)).map((point) => (
               <span
                 key={`${line.key}-${point.date}-${point.title}`}
                 className="transport-point"
@@ -390,22 +448,34 @@ export function Transport({ timeline }: { timeline: Timeline }) {
           </span>
         </div>
 
-        {/* Eras, below the line, as the sectors asked for. */}
+        {/*
+          Eras, below the line, as the sectors asked for.
+
+          A sector narrower than about a twelfth of the axis gets its boundary rule but no
+          name. Six characters of a chapter title, cut mid-word, tells a reader less than
+          the tick alone does — and as more eras are added the axis divides further, so
+          this is the row that degrades next after the years. The name stays on the
+          element's title, so it is still reachable by pointer.
+        */}
         <div className="transport-eras" aria-hidden>
-          {density.eras.map((era) => (
-            <span
-              key={era.id}
-              className="transport-era"
-              style={{ left: `${pct(era.from)}%`, width: `${pct(era.to) - pct(era.from)}%` }}
-              title={era.name}
-            >
-              <span className="transport-era-name">{era.name}</span>
-            </span>
-          ))}
+          {density.eras.map((era) => {
+            const span = pct(era.to) - pct(era.from);
+
+            return (
+              <span
+                key={era.id}
+                className="transport-era"
+                style={{ left: `${pct(era.from)}%`, width: `${span}%` }}
+                title={era.name}
+              >
+                {span >= 8 && <span className="transport-era-name">{era.name}</span>}
+              </span>
+            );
+          })}
         </div>
 
         <div className="transport-years" aria-hidden>
-          {density.years.map((year) => (
+          {labelledYears.map((year) => (
             <span key={year.year} className="transport-year" style={{ left: `${pct(year.at)}%` }}>
               {year.year}
             </span>

@@ -64,12 +64,29 @@
   --color-ink-soft: #33404d;
   --color-ink-faint: #4c5a68;
   /*
-    Amber, darkened from #a8630a until it clears 4.5:1 on --water-deep. Amber against
-    blue is the one pairing that gains from this background rather than tolerating it:
-    they are opposite in hue, so the accent reads as a signal light on the water.
+    Amber. Against blue it is the one pairing that gains from this background rather than
+    tolerating it: opposite in hue, so the accent reads as a signal light on the water.
+
+    Lightened from #703a00, which was darkened until it cleared 4.5:1 and then kept
+    going — it measured 7.78:1 on the surface and 9.15:1 on white. That is not a safer
+    accent, it is a different colour: at OKLCH L 0.38 the hue stops reading as gold and
+    starts reading as dark brown, which is exactly how it looked beside the dark theme's
+    #e8a24f.
+
+    Contrast is a floor, not a target. Spending the headroom back on lightness gets the
+    colour to L 0.51 while still clearing the floor on every light surface it is used
+    against, with margin rather than by a hair:
+
+      4.95:1 on --color-paper-solid #e4eef5
+      5.25:1 on --color-paper-raised
+      5.82:1 on white, for anything printed
+
+    This is as gold as a light surface allows. A brighter amber cannot hold 4.5:1 on a
+    near-white ground, and the accent carries body-sized text — so brighter would mean
+    illegible rather than merely bold.
   */
-  --color-signal: #703a00;
-  --color-signal-soft: rgb(112 58 0 / 0.13);
+  --color-signal: #985407;
+  --color-signal-soft: rgb(152 84 7 / 0.13);
   --color-rule: rgb(16 44 68 / 0.17);
 
   /* The one colour allowed to compete with the accent, and only to say something

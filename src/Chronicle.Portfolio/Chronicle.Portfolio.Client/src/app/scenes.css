@@ -766,6 +766,18 @@
     gap: 0.4rem;
   }
 
+  /*
+    A surface, not just a border.
+
+    These had a border and no background at all, so the animated water ran straight
+    through every tag chip — legible enough on a still frame and distinctly not on a
+    moving one, which is why it read as the filter being transparent rather than as a
+    deliberate ghost button. The selected state already set a background, so the row
+    changed material the moment you pressed one.
+
+    Matched to `.browser-input` beside it, down to the reduced-motion fallback: they are
+    one control, and two different materials in one row is the thing to avoid.
+  */
   .browser-chip {
     display: inline-flex;
     align-items: center;
@@ -773,12 +785,22 @@
     padding: 0.28rem 0.7rem;
     border: 1px solid var(--color-rule);
     border-radius: 999px;
+    background: var(--color-paper-raised);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
     font-size: 0.75rem;
     color: var(--color-ink-soft);
     transition:
       border-color var(--t-quick) var(--ease-move),
       color var(--t-quick) var(--ease-move),
       background-color var(--t-quick) var(--ease-move);
+  }
+
+  [data-motion="reduced"] .browser-chip,
+  [data-motion="still"] .browser-chip {
+    background: var(--color-paper-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   .browser-chip:hover {

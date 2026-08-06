@@ -110,10 +110,29 @@ export function Counter({
 
       The rules that fall out:
 
-      - **Never zero a counter that has not already played.** `ran` gates the reset, so the
-        first callback cannot touch the server-rendered value.
-      - Reset only on a *full* exit (`intersectionRatio === 0`), never on a partial one, so
-        a figure clipped by the header keeps its value.
+      4. **The counter was left showing 0 after scrolling away and back.** Reported from a
+         screenshot; not reproducible here across 24 wheel-driven scroll stops, which is
+         the strongest reason to stop trying to reproduce it and remove the mechanism
+         instead.
+
+         Rearming used to also `setShown(0)`, so that returning replayed the count from
+         zero. That write was never necessary: `run()` computes `value * eased` from t=0,
+         so its very first frame is already ~0 and immediately overwrites whatever was
+         there. The only thing `setShown(0)` added was a window — however brief, however
+         hard to hit — in which a counter could be displaying 0 while not animating. Every
+         way of getting stranded in that window ends with a reader looking at a figure
+         that says nothing happened.
+
+         So the rearm now clears `ran` and stops the frame, and leaves the NUMBER alone.
+         The replay is identical, and a counter can no longer show 0 unless 0 is the
+         answer.
+
+      The rules that fall out:
+
+      - **Never zero a counter.** Not on mount, not on exit, not ever. The count animates
+        up from zero on its own; nothing needs to write zero to get there.
+      - Rearm only on a *full* exit (`intersectionRatio === 0`), never on a partial one, so
+        a figure clipped by the header is not restarted while it is being read.
       - Trigger as soon as the element is meaningfully on screen rather than at a band in
         the middle, so the count is **finished by the time the reader's eye arrives** —
         which is the whole point of it and was the remaining complaint.
@@ -127,12 +146,13 @@ export function Counter({
       (entries) => {
         for (const entry of entries) {
           if (entry.intersectionRatio === 0) {
-            // Genuinely gone. Rearm so returning replays it — but only if it has already
-            // played, or this is the mount callback wiping a value nobody has seen yet.
+            // Genuinely gone. Rearm so returning replays it, and stop any count still in
+            // flight — but leave the displayed number alone. See rule 4 above: the replay
+            // starts from zero by itself, so writing zero here only creates a state in
+            // which the figure can be seen reading 0 while nothing is animating it.
             if (ran) {
               ran = false;
               cancelAnimationFrame(frame);
-              setShown(0);
             }
             continue;
           }

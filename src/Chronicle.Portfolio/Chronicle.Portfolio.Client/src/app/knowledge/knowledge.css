@@ -563,9 +563,22 @@
     does not; a hosted card needs no picture, because the whole article is one tap
     away and the excerpt is already doing the work.
   */
+  /*
+    16/9, not 16/8 — matched to what the images actually are.
+
+    A 2:1 box cropping a 16:9 cover with `object-fit: cover` throws away about 11% off
+    the top and the bottom, and an article cover is the one image where that is
+    guaranteed to hurt: the title is usually set across the middle band and the author's
+    name near an edge, so the crop takes the parts the image was made to carry.
+
+    LinkedIn and Medium both publish covers at 16:9 or very near it, so this now fits
+    with no crop at all in the common case. `cover` stays rather than `contain`, because
+    a card with letterboxed bars reads as a broken image; a hair off the sides of an
+    unusually wide cover does not.
+  */
   .article-plate {
     display: block;
-    aspect-ratio: 16 / 8;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     border-bottom: 1px solid var(--color-rule);
   }
