@@ -35,5 +35,6 @@ export const links: NavLink[] = [
   { href: "/knowledge", label: "Knowledge" },
   { href: "/analytics", label: "Analytics" },
   { href: "/resume", label: "Résumé" },
+  { href: "/ask", label: "Ask" },
   { href: "/contact", label: "Contact" },
 ];

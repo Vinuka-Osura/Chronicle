@@ -484,3 +484,19 @@ export interface GitHubStats {
   /** The longest run of days with nothing at all. The counterweight to the streak. */
   longestGapDays: number;
 }
+
+/** Where an Ask answer came from, so the reader can check it. */
+export interface AskSource {
+  label: string;
+  /** Site-relative, never an absolute URL. */
+  path: string;
+}
+
+export interface AskAnswer {
+  question: string;
+  answer: string;
+  sources: AskSource[];
+  suggestions: string[];
+  /** Which intent answered, or `none` when nothing matched. `error` is client-side only. */
+  matched: string;
+}

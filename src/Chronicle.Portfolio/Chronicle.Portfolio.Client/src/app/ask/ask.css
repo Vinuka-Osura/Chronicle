@@ -1,0 +1,227 @@
+/*
+  ═══════════════════════════════════════════════════════════════════════════════
+  Ask
+  ═══════════════════════════════════════════════════════════════════════════════
+
+  A transcript, not a chat window. There is no bubble on the right and no avatar on
+  the left: this is not two people talking, it is a reader querying a record, and
+  dressing it as a conversation would imply a correspondent who is not there.
+
+  So the question is set as a heading over its answer, the way a question is set in
+  an interview transcript, and the answer sits under it in the reading type.
+*/
+
+@layer components {
+  .ask-open {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(46vh, 26rem);
+    margin-block: clamp(1.5rem, 5vh, 3rem) clamp(2rem, 5vh, 3.5rem);
+  }
+
+  .ask-heading {
+    max-width: 20ch;
+    margin-top: clamp(1.25rem, 3.5vh, 2rem);
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    font-weight: 600;
+    line-height: 0.99;
+    letter-spacing: -0.035em;
+  }
+
+  .ask-lede {
+    --in-delay: 820ms;
+    max-width: 42rem;
+    margin-top: 1.5rem;
+    font-size: var(--text-lede);
+    line-height: 1.65;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  .ask-note {
+    max-width: 42rem;
+    margin-top: 1rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--color-ink-faint);
+    text-wrap: pretty;
+  }
+
+  /* ── The console ──────────────────────────────────────────────────────────── */
+  .ask {
+    max-width: 44rem;
+  }
+
+  .ask-thread {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.5rem, 4vh, 2.5rem);
+    list-style: none;
+  }
+
+  .ask-thread:empty {
+    display: none;
+  }
+
+  .ask-turn {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* The question, set as its own heading. */
+  .ask-question {
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--color-signal);
+    font-family: var(--font-display);
+    font-size: clamp(1.05rem, 1rem + 0.5vw, 1.3rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+
+  .ask-answer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+
+  /*
+    Answers list things a line at a time, and those lines begin with a middot from the
+    server. Kept as plain paragraphs with a tightened gap rather than converted to a
+    list: the text is deliberately not markup, and re-parsing it here to build one
+    would put a parser between the record and the page for no gain.
+  */
+  .ask-answer > p {
+    margin: 0;
+  }
+
+  .ask-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+    list-style: none;
+  }
+
+  .ask-source {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-faint);
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-source:hover {
+    border-color: var(--color-signal);
+    color: var(--color-signal);
+  }
+
+  .ask-pending {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--color-ink-faint);
+  }
+
+  /* ── Prompts ──────────────────────────────────────────────────────────────── */
+  .ask-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .ask-prompt {
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+    font-size: 0.82rem;
+    color: var(--color-ink-soft);
+    text-align: left;
+    transition:
+      border-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  [data-motion="reduced"] .ask-prompt,
+  [data-motion="still"] .ask-prompt {
+    background: var(--color-paper-solid);
+  }
+
+  .ask-prompt:hover:not(:disabled) {
+    border-color: var(--color-signal);
+    color: var(--color-ink);
+  }
+
+  .ask-prompt:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* ── The field ────────────────────────────────────────────────────────────── */
+  .ask-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .ask-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--color-rule);
+    border-radius: 999px;
+    background: var(--color-paper-raised);
+    font-size: 0.95rem;
+    color: var(--color-ink);
+    transition: border-color var(--t-quick) var(--ease-move);
+  }
+
+  [data-motion="reduced"] .ask-input,
+  [data-motion="still"] .ask-input {
+    background: var(--color-paper-solid);
+  }
+
+  .ask-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .ask-input:focus {
+    border-color: var(--color-signal);
+    outline: none;
+  }
+
+  .ask-send {
+    padding: 0.7rem 1.4rem;
+    border: 1px solid var(--color-signal);
+    border-radius: 999px;
+    font-size: 0.9rem;
+    color: var(--color-signal);
+    transition:
+      background-color var(--t-quick) var(--ease-move),
+      color var(--t-quick) var(--ease-move);
+  }
+
+  .ask-send:hover:not(:disabled) {
+    background: var(--color-signal);
+    color: var(--color-paper-solid);
+  }
+
+  .ask-send:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}

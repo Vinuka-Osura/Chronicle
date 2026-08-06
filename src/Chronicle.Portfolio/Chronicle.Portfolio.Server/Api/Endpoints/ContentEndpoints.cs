@@ -1,5 +1,7 @@
 using Chronicle.Application.Common.Interfaces;
 using Chronicle.Application.Features.Analytics;
+using Chronicle.Application.Features.Ask;
+using Chronicle.Application.Features.Ask.Queries.Ask;
 using Chronicle.Application.Features.CareerGraph;
 using Chronicle.Application.Features.CareerGraph.Queries.GetCareerGraph;
 using Chronicle.Application.Features.Analytics.Queries.GetGitHubStats;
@@ -157,6 +159,28 @@ public static class ContentEndpoints
                 "zero, which would be a different and usually false claim.")
             .Produces<ExternalStatsDto>()
             .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(10)).Tag(CacheTags.ExternalStats))
+            .RequireRateLimiting("api");
+
+        /*
+          Ask. A GET rather than a POST, deliberately: the question is a lookup with no
+          side effect, so it caches, it is shareable as a link, and it needs no
+          antiforgery. Varying the cache by the query string is what makes that safe —
+          without it every visitor would be served the first visitor's answer.
+        */
+        app.MapGet("/api/ask", (string? q, ISender sender, CancellationToken ct) =>
+                sender.Send(new AskQuery(q ?? string.Empty), ct))
+            .WithTags("Ask")
+            .WithName("Ask")
+            .WithSummary("Answer a question from this site's own content")
+            .WithDescription(
+                "Retrieval, not generation. Every answer is assembled from rows already on the " +
+                "site and carries the pages it came from, so it cannot invent a role, a skill or " +
+                "a credential. No model, no key, no per-question cost. A question it cannot " +
+                "answer returns `matched: none` and says so rather than guessing.")
+            .Produces<AskAnswerDto>()
+            .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(5))
+                .SetVaryByQuery("q")
+                .Tag(CacheTags.Projects))
             .RequireRateLimiting("api");
 
         app.MapGet("/api/career-graph", (ISender sender, CancellationToken ct) =>
